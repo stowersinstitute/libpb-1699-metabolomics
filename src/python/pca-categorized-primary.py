@@ -48,6 +48,24 @@ astyanax_data = astyanax_data.apply(log10)
 categories = list(sorted(ame.compounds_by_category_from_dataset.keys()))
 outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
 
+colors = {
+  'Pachon': 'firebrick',
+  'Tinaja': 'goldenrod',
+  'Surface': 'gray'
+}
+
+#https://stackoverflow.com/questions/37765197/darken-or-lighten-a-color-in-matplotlib
+
+def adjust_lightness(color, amount=0.5):
+    import matplotlib.colors as mc
+    import colorsys
+    try:
+        c = mc.cnames[color]
+    except:
+        c = color
+    c = colorsys.rgb_to_hls(*mc.to_rgb(c))
+    return colorsys.hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
+
 def process_outlier(exclude,subset):
     for outlier in outliers:
         if exclude and outlier in subset.columns:
@@ -58,9 +76,9 @@ if True:
     height_ratios = [1.]*len(categories)
 else:
     height_ratios = [float(len(ame.compounds_by_category_from_dataset[c])) for c in categories]
-gridspec_kw = {"height_ratios":height_ratios, "width_ratios" : [3.,3.,3.,1.,1]}
+gridspec_kw = {"height_ratios":height_ratios, "width_ratios" : [3.,3.,3.,2.,1]}
 
-f,axs = plt.subplots(nrows=len(categories),ncols=5,figsize=(12, 8), gridspec_kw=gridspec_kw)
+fig,ax = plt.subplots(nrows=len(categories),ncols=5,figsize=(12, 8), gridspec_kw=gridspec_kw)
 for j,category in zip(range(len(categories)),categories):
     for i,tissue in zip(range(3),['Brain', 'Muscle', 'Liver']):
         # get 4d starved, 30d starved, and refed groups
@@ -75,33 +93,36 @@ for j,category in zip(range(len(categories)),categories):
 
         for color_theme,pop in zip(['Blues', 'Greens', "Reds"], ['Surface', 'Tinaja', 'Pachon']):
             cmap = matplotlib.cm.get_cmap(color_theme)
-            for color_pos,feeding_state in zip([0.25, 0.5, 0.9], ['4d Starved', '30d Starved', 'Refed']):
+            for color,feeding_state in zip([adjust_lightness(colors[pop],c) for c in [0.5, 1.0, 1.5]], ['4d Starved', '30d Starved', 'Refed']):
                 p = tf_data.iloc[subset.columns.str.contains(feeding_state) & subset.columns.str.contains(pop)]
                 label = ', '.join((pop, feeding_state))
-                axs[j,i].scatter(p['C1'],p['C2'], label=label, color=cmap(color_pos))
-        handles, labels = axs[j,i].get_legend_handles_labels()
+                ax[j,i].scatter(p['C1'],p['C2'], label=label, color=color)
+        handles, labels = ax[j,i].get_legend_handles_labels()
 
         if j == 0:
-            axs[j,i].set_title(tissue)
+            ax[j,i].set_title(tissue)
 
-for j,category in zip(range(len(categories)),categories):
-    xpos = 0.1
-    axs[j,3].text(xpos,0.5,category,size=11,rotation=90.,ha='center',va='center',transform=axs[j,3].transAxes)
+for i,category in zip(range(len(categories)),categories):
+    for j in range(3):
+        ax[i,j].set_yticks([], minor=[])
+        ax[i,j].set_xticks([], minor=[])
+    xpos = -0.1
+    ax[i,3].text(xpos,0.5,category,size=16,rotation=0.,fontweight='bold',ha='left',va='center',transform=ax[i,3].transAxes)
     # hide graphics
-    axs[j,3].set_yticks([], minor=[])
-    axs[j,3].set_xticks([], minor=[])
-    axs[j,3].patch.set_visible(False)
+    ax[i,3].set_yticks([], minor=[])
+    ax[i,3].set_xticks([], minor=[])
+    ax[i,3].patch.set_visible(False)
     for s in ["top", "bottom", "left", "right"]:
-        axs[j,3].spines[s].set_visible(False)
+        ax[i,3].spines[s].set_visible(False)
     # hide graphics
-    axs[j,4].set_yticks([], minor=[])
-    axs[j,4].set_xticks([], minor=[])
-    axs[j,4].patch.set_visible(False)
+    ax[i,4].set_yticks([], minor=[])
+    ax[i,4].set_xticks([], minor=[])
+    ax[i,4].patch.set_visible(False)
     for s in ["top", "bottom", "left", "right"]:
-        axs[j,4].spines[s].set_visible(False)
+        ax[i,4].spines[s].set_visible(False)
 
 
-f.legend(handles, labels, loc='center right')
+#fig.legend(handles, labels, loc='center right')
 
 plt.savefig(args.output)
 

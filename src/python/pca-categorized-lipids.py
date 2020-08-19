@@ -48,6 +48,7 @@ outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d S
 cattype = 'Category'
 
 categories = list(sorted(set(ali.lmdata[cattype])))
+outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
 
 if True:
     height_ratios = [1.]*len(categories)
@@ -86,10 +87,13 @@ for i,category in zip(range(len(categories)),categories):
             ax[i,j].set_title(tissue)
 
 for i,category in zip(range(len(categories)),categories):
-    xpos = 0.1
+    for j in range(3):
+        ax[i,j].set_yticks([], minor=[])
+        ax[i,j].set_xticks([], minor=[])
+    xpos = -0.1
     if category == 'Glycerophospholipids':
         category = 'Glycerophospho-\nlipids'
-    ax[i,3].text(xpos,0.5,category,size=11,rotation=90.,ha='center',va='center',transform=ax[i,3].transAxes)
+    ax[i,3].text(xpos,0.5,category,size=16,rotation=0.,fontweight='bold',ha='left',va='center',transform=ax[i,3].transAxes)
     # hide graphics
     ax[i,3].set_yticks([], minor=[])
     ax[i,3].set_xticks([], minor=[])
@@ -103,7 +107,7 @@ for i,category in zip(range(len(categories)),categories):
     for s in ["top", "bottom", "left", "right"]:
         ax[i,4].spines[s].set_visible(False)
 
-fig.legend(handles, labels, loc='center right')
+#fig.legend(handles, labels, loc='center right')
 
 plt.savefig(args.output)
 
