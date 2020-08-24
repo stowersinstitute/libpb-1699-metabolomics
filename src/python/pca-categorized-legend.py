@@ -21,7 +21,7 @@ parser.add_argument("--astyanax", type=str, help="Astyanax metabolomics csv file
 parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
 parser.add_argument("--groups", type=str, help="Groups to compare (30d Starved, 4d Starved, Refed).")
-parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
+parser.add_argument("--exclude-outlier", type=bool, help="Exclude the single Tinaja outlier?")
 parser.add_argument("--output", type=str, help="Output primary PCA.")
 args = parser.parse_args()
 
@@ -74,17 +74,10 @@ def process_outlier(exclude,subset):
     for outlier in outliers:
         if exclude and outlier in subset.columns:
             subset = subset.loc[:,~subset.columns.str.contains(outlier)]
-    #print(subset.columns)
     return subset
 
-if True:
-    height_ratios = [1.]*len(categories)
-else:
-    height_ratios = [float(len(ame.compounds_by_category_from_dataset[c])) for c in categories]
-gridspec_kw = {"height_ratios":height_ratios, "width_ratios" : [3.,3.,3.,1.,1]}
 
-fig,ax = plt.subplots(nrows=len(categories),ncols=5,figsize=(12, 8), gridspec_kw=gridspec_kw)
-fig.suptitle('Primary',fontsize=24,fontweight='bold',y=1.0)
+fig,ax = plt.subplots(figsize=(8, 8))
 for i,category in zip(range(len(categories)),categories):
     for j,tissue in zip(range(3),['Brain', 'Muscle', 'Liver']):
         # get 4d starved, 30d starved, and refed groups
@@ -97,40 +90,27 @@ for i,category in zip(range(len(categories)),categories):
         pca_analysis = pca.fit(pca_data)
         tf_data = DataFrame(pca_analysis.transform(pca_data), columns=['C1','C2'], index=subset.columns)
 
+        ax.cla()
         for pop in ['Surface', 'Tinaja', 'Pachon']:
             for color,feeding_state in zip([adjust_lightness(colors[pop],c) for c in [0.5, 1.0, 1.5]], ['4d Starved', '30d Starved', 'Refed']):
                 p = tf_data.iloc[subset.columns.str.contains(feeding_state) & subset.columns.str.contains(pop)]
-                #print(subset.columns)
-                #print(pop,feeding_state,tissue,p)
                 label = ', '.join((pop, feeding_state))
-                ax[i,j].scatter(p['C1'],p['C2'], label=label, color=color)
-        handles, labels = ax[i,j].get_legend_handles_labels()
+                ax.scatter(p['C1'],p['C2'], label=label, color=color)
+        handles, labels = ax.get_legend_handles_labels()
 
         if i == 0:
-            #https://stackoverflow.com/questions/12444716/how-do-i-set-the-figure-title-and-axes-labels-font-size-in-matplotlib
-            ax[i,j].set_title(tissue,fontsize=24,y=1.15)
+            ax.set_title(tissue)
 
-for i,category in zip(range(len(categories)),categories):
-    for j in range(3):
-        ax[i,j].set_yticks([], minor=[])
-        ax[i,j].set_xticks([], minor=[])
-    xpos = -0.1
-    ax[i,3].text(xpos,0.5,category,size=16,rotation=0.,fontweight='bold',ha='left',va='center',transform=ax[i,3].transAxes)
-    # hide graphics
-    ax[i,3].set_yticks([], minor=[])
-    ax[i,3].set_xticks([], minor=[])
-    ax[i,3].patch.set_visible(False)
-    for s in ["top", "bottom", "left", "right"]:
-        ax[i,3].spines[s].set_visible(False)
-    # hide graphics
-    ax[i,4].set_yticks([], minor=[])
-    ax[i,4].set_xticks([], minor=[])
-    ax[i,4].patch.set_visible(False)
-    for s in ["top", "bottom", "left", "right"]:
-        ax[i,4].spines[s].set_visible(False)
+fig,ax = plt.subplots(figsize=(2.5, 2.5))
 
+# hide graphics
+ax.set_yticks([], minor=[])
+ax.set_xticks([], minor=[])
+ax.patch.set_visible(False)
+for s in ["top", "bottom", "left", "right"]:
+    ax.spines[s].set_visible(False)
 
-#fig.legend(handles, labels, loc='center right')
+fig.legend(handles, labels, loc='center')
 
 plt.savefig(args.output)
 

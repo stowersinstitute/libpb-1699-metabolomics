@@ -13,20 +13,45 @@ import Development.Shake.FilePath
 -- import qualified System.Environment as Env
 
 main = shakeArgs shakeOptions $ do
-    want [ "out/fig/pca-categorized-primary.pdf"
-         , "out/fig/pca-categorized-lipids.pdf"
+    want [ "out/fig/no-outliers/pca-categorized-primary.pdf"
+         , "out/fig/no-outliers/pca-categorized-lipids.pdf"
+         , "out/fig/no-outliers/pca-categorized-legend.pdf"
+         , "out/fig/no-outliers/orotic-acid-plot.pdf"
+         , "out/fig/no-outliers/sugar-phosphate-plot.pdf"
+         , "out/fig/no-outliers/inflammation-plot.pdf"
 --     ,"out"</>"lipids"</>"opls"</>"no-outlier"</>"Liver"</>"Ref"</>"PvT.csv"
          ]
-    "out/fig/pca-categorized-primary.pdf" %> \out -> do
+    "out/fig/no-outliers/pca-categorized-primary.pdf" %> \out -> do
       need ["src/python/pca-categorized-primary.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-categorized-primary.py --astyanax /run/media/nine/SamsungPortable/stowers/data/Astyanax/metabolome/jenna-metabolomics.csv --mammals-annotation /run/media/nine/SamsungPortable/stowers/data/Mammals/ma-metabolme/mammalian-metabolome-annotation.csv --mammals-normalized /run/media/nine/SamsungPortable/stowers/data/Mammals/ma-metabolme/mammalian-metabolome-normalized.csv --compounds /run/media/nine/SamsungPortable/stowers/data/databases/kegg/compounds.json --hmdb /run/media/nine/SamsungPortable/stowers/data/databases/hmdb/hmdb.json --exclude-outlier True --output ./out/fig/pca-categorized-primary.pdf"
+--       PIPENV_VENV_IN_PROJECT
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-categorized-primary.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds /run/media/nine/SamsungPortable/stowers/data/databases/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --output ./out/fig/no-outliers/pca-categorized-primary.pdf"
 
-    "out/fig/pca-categorized-lipids.pdf" %> \out -> do
+    "out/fig/no-outliers/pca-categorized-lipids.pdf" %> \out -> do
 --       features <- getEnvWithDefault "" "PY38_ENS_FEATURES"
 --       https://stackoverflow.com/questions/35938956/haskell-shake-special-rule-for-building-directories
 --       needDir [takeDirectory out];
 --       cmd "make -p" [takeDirectory out];
       need ["src/python/pca-categorized-lipids.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-categorized-lipids.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --exclude-outlier True --output ./out/fig/pca-categorized-lipids.pdf"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-categorized-lipids.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --exclude-outlier True --output ./out/fig/no-outliers/pca-categorized-lipids.pdf"
+
+    "out/fig/no-outliers/pca-categorized-legend.pdf" %> \out -> do
+--       features <- getEnvWithDefault "" "PY38_ENS_FEATURES"
+--       https://stackoverflow.com/questions/35938956/haskell-shake-special-rule-for-building-directories
+--       needDir [takeDirectory out];
+--       cmd "make -p" [takeDirectory out];
+      need ["src/python/pca-categorized-legend.py"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-categorized-legend.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds /run/media/nine/SamsungPortable/stowers/data/databases/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --output ./out/fig/no-outliers/pca-categorized-legend.pdf"
+
+    "out/fig/no-outliers/orotic-acid-plot.pdf" %> \out -> do
+      need ["src/python/orotic-acid-plot.py"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/orotic-acid-plot.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds /run/media/nine/SamsungPortable/stowers/data/databases/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --output ./out/fig/no-outliers/orotic-acid-plot.pdf"
+
+    "out/fig/no-outliers/sugar-phosphate-plot.pdf" %> \out -> do
+      need ["src/python/sugar-phosphate-plot.py"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/sugar-phosphate-plot.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds /run/media/nine/SamsungPortable/stowers/data/databases/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --output ./out/fig/no-outliers/sugar-phosphate-plot.pdf"
+
+    "out/fig/no-outliers/inflammation-plot.pdf" %> \out -> do
+      need ["src/python/sugar-phosphate-plot.py"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/inflammation-plot.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds /run/media/nine/SamsungPortable/stowers/data/databases/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --output ./out/fig/no-outliers/inflammation-plot.pdf"
 --     "out"</>"lipids"</>"opls"</>"no-outlier"</>"Liver"</>"Ref"</>"PvT.csv" *> \out -> do
 --       cmd_ ("python3 ./src/python/orthogonal-lipids-pop-compare.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json")
