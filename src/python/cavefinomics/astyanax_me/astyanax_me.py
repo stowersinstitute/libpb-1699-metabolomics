@@ -192,6 +192,7 @@ class AstyanaxMe:
     data_csv: str
     kegg_compounds_file: str
     hmdb_file: str
+    sample_sheet_path: str
 
     def __attrs_post_init__(self):
         self.column_table = (
@@ -221,18 +222,9 @@ class AstyanaxMe:
         colnames = self.column_table.iloc[0]
         self.column_table = self.column_table.iloc[1:, :]
         self.column_table.columns = colnames
-        if 'JENNA_METABOLOMICS_PREFIX' in os.environ:
-            self.sample_sheet = read_csv(os.path.join(os.environ['JENNA_METABOLOMICS_PREFIX'], 'sample-sheet.csv'),index_col='Sample Label')
-            #print(self.sample_sheet)
-            #print(self.sample_sheet['Mass (mg)'].to_dict())
-        else:
-            raise RuntimeError('No prefix set in env')
+        self.sample_sheet = read_csv(self.sample_sheet_path,index_col='Sample Label')
         sample_dict = self.sample_sheet['Mass (mg)'].to_dict()
         self.column_table['Mass (mg)'] = self.column_table['comment'].apply(lambda c: sample_dict[c] if c in sample_dict else np.nan)
-        #print(self.column_table)
-        #https://stackoverflow.com/questions/19124601/pretty-print-an-entire-pandas-series-dataframe
-        #pd.set_option('display.max_rows', 1000)
-        #print(self.column_table['Mass (mg)'])
         self.treatment_descriptors = []
         for d in self.column_table.iterrows():
             species = d[1]['species']
