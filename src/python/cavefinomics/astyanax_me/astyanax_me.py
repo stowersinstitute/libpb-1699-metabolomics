@@ -389,6 +389,7 @@ class AstyanaxMe:
               'C00489', # Glutarate, fatty acid degradation
               'C05984', # 2-Hydroxybutanoic acid, fatty acids in BRITE, insulin resistance
               'C08362', # palmitoleic acid
+              'C00376', # retinal
             ]
             # carbon metabolism
             self.compounds_by_category_from_dataset['Carbohydrates /\nCCM'] = [
@@ -402,6 +403,14 @@ class AstyanaxMe:
               'C00199', # D-Ribulose 5-phosphate
               'C00800', # L-Gulonate
               'C03546', # myo-Inositol 4-phosphate
+              'C00989', # 4-hydroxybutyric acid
+              'C02336', # fructose
+              'C01113', # galactose-6-phosphate
+              'C00252', # isomaltose
+              'C01432', # lactic acid
+              'C00711', # malic acid
+              'C08250', # sophorose
+              'C00159', # mannose
               ] + \
                 categories['Carbohydrates and carbohydrate conjugates']
             # amino acids
@@ -413,7 +422,7 @@ class AstyanaxMe:
                 'C02714', # N-Acetylputrescine
                 'C00493', # Shikimate
                 'C00547', # L-Noradrenaline
-                'C00530', # Hydroquinone
+                'C02989', # methionine sulfoxide
               ]
             # misc. / secondary metabolites
             self.compounds_by_category_from_dataset['Misc. / sec.\nmetabolites'] = [
@@ -437,6 +446,23 @@ class AstyanaxMe:
               'C06180', # Anabasine
               'C06202', # Salicylaldehyde
               'C06337', # Terephthalate
+              'C00530', # Hydroquinone
+              'C03844', # Pinitol
+              'C02814', # 1,2,4-benzenetriol
+              'C02721', # 2-aminobutyric acid
+              'C08352', # 6-deoxyglucose
+              'C00072', # ascorbic acid
+              'C05422', # dehydroascorbic acid
+              'C00180', # benzoic acid
+              'C00503', # erythritol
+              'C00051', # glutathione
+              'C03189', # glycerol-alpha-phosphate
+              'C00160', # glycolic acid
+              'C07272', # maleimide
+              'C12276', # pantothenic acid
+              'C00802', # parabanic acid
+              'C00146', # phenol
+              'C00138', #
             ]
             curated_categories = set(chain.from_iterable(self.compounds_by_category_from_dataset.values()))
             #print(curated_categories)
