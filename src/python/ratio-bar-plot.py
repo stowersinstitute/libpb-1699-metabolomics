@@ -29,6 +29,9 @@ import json
 #matplotlib.rcParams['axes.prop_cycle'] = matplotlib.cycler(color=["#e7305b", "#e2979c", "#f7f5dd","#9bdeac"])
 #https://colorhunt.co/palette/189676
 #matplotlib.rcParams['axes.prop_cycle'] = matplotlib.cycler(color=["#726a95", "#709fb0", "#a0c1b8","#f4ebc1"])
+#https://colorhunt.co/palette/201413
+#https://colorhunt.co/palette/201843
+#https://colorhunt.co/palette/195532
 
 parser = ArgumentParser(description="PCA vs mammals.")
 parser.add_argument("--lipids-normalized", type=str, help="Normalized lipids dir.")
@@ -104,7 +107,8 @@ for tissue in tissues:
                     return mc
             else:
                 return nan
-        lmd['MAIN_CLASS'] = lmd.apply(assignfa,axis=1)
+        lmd['MAIN_CLASS'] = lmd.apply(lambda u: ali.lipidmaps[u[0]]['MAIN_CLASS'] if isinstance(u[0],str) else nan,axis=1)
+        #lmd['MAIN_CLASS'] = lmd.apply(assignfa,axis=1)
         d = ali.normalized[tissue,polarity]
         d = fix_cols(d,tissue)
         d['CATEGORY'] = lmd['CATEGORY']
@@ -148,7 +152,10 @@ classs = classs.groupby(['Tissue','Category','Population','Condition']).sum().re
 cattypes = ['Categories','Classes']
 
 
-class_subsets = ['Saturated Fatty Acids', 'Monounsaturated Fatty Acids', 'Polyunsaturated Fatty Acids']
+#class_subsets = ['Saturated Fatty Acids', 'Monounsaturated Fatty Acids', 'Polyunsaturated Fatty Acids']
+#class_subsets = ['Ceramides','Fatty Acids and Conjugates','Glycerophosphocholines','Glycerophosphoethanolamines','Neutral glycosphingolipids','Sphingoid bases','Triradylglycerols']
+#class_subsets = ['Ceramides','Fatty Acids and Conjugates','Glycerophosphocholines','Glycerophosphoethanolamines','Sphingoid bases','Triradylglycerols']
+class_subsets = ['Ceramides','Fatty Acids and Conjugates','Glycerophosphocholines','Glycerophosphoethanolamines','Triradylglycerols']
 class_renamer = {
   'Fatty Acids and Conjugates': 'Fatty Acids /\nConjugates',
   'Glycerophosphoinositols': 'Glycerophospho-\ninositols',
@@ -211,8 +218,8 @@ def make_fig(class_subsets, class_renamer, name):
             d = d.groupby('Condition').mean()
             #print(d)
             #print(class_subsets)
-            condition_totals = d[class_subsets].sum(axis=1)
-            print(condition_totals)
+            condition_totals = d.sum(axis=1)
+            #print(condition_totals)
             #stop
             d = d.rename(class_renamer,axis=1)
             #print(d)
@@ -223,6 +230,7 @@ def make_fig(class_subsets, class_renamer, name):
                 #print(cls)
                 c[tissue,pop,cls] = d[cls]/condition_totals
                 #d = d[class_subsets].mean()
+                print(tissue,pop,cls)
                 if not all(isfinite(c[tissue,pop,cls].values)):
                     c[tissue,pop,cls] = [0.]*len(c)
                     #print(tissue,condition,pop,'Non finite values')
@@ -233,7 +241,12 @@ def make_fig(class_subsets, class_renamer, name):
         for j,condition in zip(range(1,4),conditions):
             last_bar = None
             for cls in class_subsets:
-                vals = {pop: c[tissue,pop,cls][condition] for pop in pops}
+                if cls in class_renamer:
+                    cls = class_renamer[cls]
+                try:
+                    vals = {pop: c[tissue,pop,cls][condition] for pop in pops}
+                except:
+                    continue
                 kwds = {}
                 if i==0 and j==1:
                     kwds['label'] = cls
@@ -243,13 +256,14 @@ def make_fig(class_subsets, class_renamer, name):
                 else:
                     last_bar = array(list(vals.values()))
                 #for _,cv in zip(range(3),c):
-                print(list(vals.keys()))
-                print(list(vals.values()))
-                ax[i,j].bar(list(vals.keys()), list(vals.values()), tick_label=conditions_short[j-1], **kwds) #
-                    #if i == 0:
-                        #ax[i,j].set_title(d[class_subsets.index])
+                #print(list(vals.keys()))
+                #print(list(vals.values()))
+                ax[i,j].bar(list(vals.keys()), list(vals.values()), tick_label=pops, **kwds) #
+                if i == 0:
+                    ax[i,j].set_title(conditions_short[j-1])
+            ax[i,j].bar(pops, array([1.]*3)-last_bar, tick_label=pops, bottom=last_bar, label='Other' if i==0 and j==1 else "") #
             # hide graphics
-            #ax[i,j].set_yticks([], minor=[])
+            ax[i,j].set_yticks([], minor=[])
             #ax[i,j].set_xticks([], minor=[])
             ax[i,j].patch.set_visible(False)
             for s in ["top", "bottom", "left", "right"]:
@@ -260,6 +274,6 @@ def make_fig(class_subsets, class_renamer, name):
     pathlib.Path('/tmp/classes/bar').mkdir(parents=True, exist_ok=True)
     plt.savefig(f'/tmp/classes/bar/{name}.pdf',bbox_inches='tight',transparent=True,pad_inches=0)
 
-#make_fig(list(data.columns)[3:], {}, 'all')
-matplotlib.rcParams['axes.prop_cycle'] = matplotlib.cycler(color=["#726a95", "#709fb0", "#a0c1b8","#f4ebc1"])
+make_fig(list(data.columns)[3:], {}, 'all')
+matplotlib.rcParams['axes.prop_cycle'] = matplotlib.cycler(color=["#726a95", "#709fb0", "#a0c1b8","#f4ebc1","#005086","#318fb5","#f7d6bf","#b0cac7"])
 make_fig(class_subsets, class_renamer, 'subset')
