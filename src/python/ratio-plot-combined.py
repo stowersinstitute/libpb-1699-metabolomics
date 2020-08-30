@@ -361,24 +361,6 @@ def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, nam
         for j,condition in zip(range(1,4),conditions):
             primary_last_bar = None
             lipids_last_bar = None
-            for cls in lipid_subsets:
-                if cls in lipid_renamer:
-                    cls = lipid_renamer[cls]
-                try:
-                    vals = {pop: lc[tissue,pop,cls][condition] for pop in pops}
-                except:
-                    continue
-                kwds = {}
-                if i==0 and j==1:
-                    kwds['label'] = cls
-                if lipids_last_bar is not None:
-                    kwds['bottom']=array(lipids_last_bar)
-                    lipids_last_bar += array(list(vals.values()))
-                else:
-                    lipids_last_bar = array(list(vals.values()))
-                ax[i,j].bar(array(range(3)) + width/2., list(vals.values()), bar_width, tick_label=pops, **kwds) #
-                if i == 0:
-                    ax[i,j].set_title(conditions_short[j-1])
             for cls in primary_subsets:
                 if cls in primary_renamer:
                     cls = primary_renamer[cls]
@@ -401,6 +383,24 @@ def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, nam
                 ax[i,j].bar(array(range(3)) - width/2., list(vals.values()), bar_width, tick_label=pops, **kwds) #
                 if i == 0:
                     ax[i,j].set_title(conditions_short[j-1])
+            for cls in lipid_subsets:
+                if cls in lipid_renamer:
+                    cls = lipid_renamer[cls]
+                try:
+                    vals = {pop: lc[tissue,pop,cls][condition] for pop in pops}
+                except:
+                    continue
+                kwds = {}
+                if i==0 and j==1:
+                    kwds['label'] = cls
+                if lipids_last_bar is not None:
+                    kwds['bottom']=array(lipids_last_bar)
+                    lipids_last_bar += array(list(vals.values()))
+                else:
+                    lipids_last_bar = array(list(vals.values()))
+                ax[i,j].bar(array(range(3)) + width/2., list(vals.values()), bar_width, tick_label=pops, **kwds) #
+                if i == 0:
+                    ax[i,j].set_title(conditions_short[j-1])
             ax[i,j].bar(array(range(3)) + width/2., array([1.]*3)-lipids_last_bar, bar_width, tick_label=pops, bottom=lipids_last_bar, label='Other lipids' if i==0 and j==1 else "") #
             # hide graphics
             ax[i,j].set_yticks([], minor=[])
@@ -415,5 +415,10 @@ def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, nam
     plt.savefig(args.output,bbox_inches='tight',transparent=True,pad_inches=0)
 
 #make_fig(list(data.columns)[3:], {}, 'all')
-matplotlib.rcParams['axes.prop_cycle'] = matplotlib.cycler(color=["#726a95", "#709fb0", "#a0c1b8","#f4ebc1","#005086","#363062", "#4d4c7d", "#827397","#d8b9c3","#ffb6b6","#fde2e2","#aacfcf","#679b9b","#318fb5"])
+matplotlib.rcParams['axes.prop_cycle'] = matplotlib.cycler(color=[
+  "#363062", "#4d4c7d", "#827397","#d8b9c3","#ffb6b6",
+  #"#726a95",
+  "#709fb0", "#a0c1b8",
+  #"#f4ebc1",
+  "#005086","#318fb5","#111d5e","#99b898"])
 make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, 'subset')
