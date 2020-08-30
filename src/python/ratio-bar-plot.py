@@ -201,7 +201,7 @@ def make_fig(class_subsets, class_renamer, name):
     #print(class_subsets)
     gridspec_kw = {"height_ratios":[1.]*3, "width_ratios" : [1.,3.,3.,3.]}
     fig,ax = plt.subplots(nrows=3,ncols=len(tissues)+1,sharex=False,sharey=False,gridspec_kw=gridspec_kw,figsize=(12.,12.))
-    fig.suptitle(f'Lipid Composition')
+    #fig.suptitle(f'Lipid Composition')
     c = {}
     for i,tissue in zip(range(3),tissues):
         # plot by categories
@@ -218,6 +218,7 @@ def make_fig(class_subsets, class_renamer, name):
             d = d.groupby('Condition').mean()
             #print(d)
             #print(class_subsets)
+            #condition_totals = d[class_subsets].sum(axis=1)
             condition_totals = d.sum(axis=1)
             #print(condition_totals)
             #stop
@@ -230,7 +231,7 @@ def make_fig(class_subsets, class_renamer, name):
                 #print(cls)
                 c[tissue,pop,cls] = d[cls]/condition_totals
                 #d = d[class_subsets].mean()
-                print(tissue,pop,cls)
+                #print(tissue,pop,cls)
                 if not all(isfinite(c[tissue,pop,cls].values)):
                     c[tissue,pop,cls] = [0.]*len(c)
                     #print(tissue,condition,pop,'Non finite values')
@@ -274,6 +275,6 @@ def make_fig(class_subsets, class_renamer, name):
     pathlib.Path('/tmp/classes/bar').mkdir(parents=True, exist_ok=True)
     plt.savefig(f'/tmp/classes/bar/{name}.pdf',bbox_inches='tight',transparent=True,pad_inches=0)
 
-make_fig(list(data.columns)[3:], {}, 'all')
+#make_fig(list(data.columns)[3:], {}, 'all')
 matplotlib.rcParams['axes.prop_cycle'] = matplotlib.cycler(color=["#726a95", "#709fb0", "#a0c1b8","#f4ebc1","#005086","#318fb5","#f7d6bf","#b0cac7"])
 make_fig(class_subsets, class_renamer, 'subset')
