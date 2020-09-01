@@ -37,6 +37,7 @@ set_palette('Set2')
 parser = ArgumentParser(description="PCA vs mammals.")
 parser.add_argument("--astyanax", type=str, help="Astyanax metabolomics csv file.")
 parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
+parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
 parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
 parser.add_argument("--output", type=str, help="Output.")
@@ -45,13 +46,51 @@ args = parser.parse_args()
 ame = AstyanaxMe(
     data_csv=args.astyanax,
     kegg_compounds_file=args.compounds,
+    sample_sheet_path=args.sample_sheet,
     hmdb_file=args.hmdb,
     )
 
 compounds = [
     'ascorbic acid',
     'dehydroascorbic acid',
+    'pantothenic acid',
   ]
+
+if args.exclude_outlier:
+    outlier = 'no-outliers'
+else:
+    outlier = 'outliers'
+pops = ['Pachon', 'Tinaja', 'Surface']
+tissues = ['Brain', 'Muscle', 'Liver']
+conditions = ['4d Starved', '30d Starved', 'Refed']
+conditions_really_short = ['4', r'30', 'R']
+comparisons = {'PvS':('Pachon','Surface'), 'TvS':('Tinaja','Surface'), 'PvT':('Pachon','Tinaja')}
+condmap = {'30d':'30d Starved', '4d':'4d Starved', 'Ref': 'Refed'}
+categories = {"Aminoacids":'Amino acids',"Carbohydrates_-CCM": 'Carbohydrates / CCM',"Fattyacids":'Fatty acids',"Misc._-_sec.metabolites":'Misc',"Nucleotides":'Nucleotides'}
+datasets = []
+sig = {}
+up = {}
+for cat in categories:
+    for tissue in tissues:
+        for cond in condmap:
+            for comp in comparisons:
+                d = read_csv(f'out/work/primary/glm/singlefactor/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',index_col=0)
+                d['Category'] = cat
+                d['Tissue'] = tissue
+                d['Condition'] = cond
+                d['Comparison'] = comp
+                for m in d.index:
+                    if d.loc[m,'Pr(>|z|)'] < 0.05:
+                        sig[m,tissue,cond,comp] = True
+                    else:
+                        sig[m,tissue,cond,comp] = False
+                    if d.loc[m,'Estimate'] > 0.:
+                        up[m,tissue,cond,comp] = True
+                    else:
+                        up[m,tissue,cond,comp] = False
+                datasets.append(d)
+significance_data = concat(datasets,axis=0).dropna()
+print(significance_data)
 
 astyanax_data = ame.get_data_by_kegg_id().set_index('KEGG')
 astyanax_data.columns = [' '.join(u) for u in ame.treatment_descriptors]
@@ -59,7 +98,7 @@ astyanax_data = astyanax_data.loc[:,['pools' not in c for c in astyanax_data.col
 #astyanax_data = astyanax_data.apply(log10)
 astyanax_data.columns = (' '.join((c,str(n))) for c,n in zip(astyanax_data.columns,chain.from_iterable(repeat(range(1,6+1),9*3))))
 astyanax_data = astyanax_data.rename(ame.get_kegg_to_name_map(), axis=0)
-print(list(astyanax_data.index))
+#print(list(astyanax_data.index))
 astyanax_data = astyanax_data.loc[compounds]
 
 outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
@@ -95,7 +134,8 @@ data = DataFrame(data)
 
 #g = FacetGrid(data,col='Compound')
 #g = (g.map(catplot, row='Population',hue='Condition',col='Tissue', y='Value'))
-catplot('Condition', 'Value', data=data, kind='point', row='Compound',hue='Population',col='Tissue',palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
+catplot('Condition', 'Value', data=data, kind='point', row='Compound',row_order=compounds,hue='Population',col='Tissue',palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
+#catplot('Condition', 'Value', data=data, kind='point', row='Compound',row_order=compounds,hue='Population',col='Tissue',sharey=False,palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
 
 for ax in plt.gcf().get_axes():
     ax.yaxis.set_major_locator(plticker.MultipleLocator(2e5))
