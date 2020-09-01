@@ -37,6 +37,7 @@ set_palette('Set2')
 parser = ArgumentParser(description="PCA vs mammals.")
 parser.add_argument("--astyanax", type=str, help="Astyanax metabolomics csv file.")
 parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
+parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
 parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
 parser.add_argument("--output", type=str, help="Output.")
@@ -45,6 +46,7 @@ args = parser.parse_args()
 ame = AstyanaxMe(
     data_csv=args.astyanax,
     kegg_compounds_file=args.compounds,
+    sample_sheet_path=args.sample_sheet,
     hmdb_file=args.hmdb,
     )
 
@@ -55,9 +57,17 @@ compounds = [
     #'ribulose-5-phosphate',
     #'pyruvic acid',
     #'phosphoenolpyruvate',
+    'glucose-1-phosphate',
     'glucose-6-phosphate',
-    #'galactose-6-phosphate',
+    'galactose-6-phosphate',
+    'fructose-1-phosphate',
     'fructose-6-phosphate',
+    'ribose-5-phosphate',
+    'ribulose-5-phosphate',
+    'glucose',
+    'fructose',
+    'glucuronic acid',
+    'gluconic acid',
     #'orotic acid',
     #'2-hydroxyglutaric acid',
   ]
@@ -68,7 +78,7 @@ astyanax_data = astyanax_data.loc[:,['pools' not in c for c in astyanax_data.col
 #astyanax_data = astyanax_data.apply(log10)
 astyanax_data.columns = (' '.join((c,str(n))) for c,n in zip(astyanax_data.columns,chain.from_iterable(repeat(range(1,6+1),9*3))))
 astyanax_data = astyanax_data.rename(ame.get_kegg_to_name_map(), axis=0)
-print(list(astyanax_data.index))
+#print(list(astyanax_data.index))
 astyanax_data = astyanax_data.loc[compounds]
 
 outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
@@ -104,14 +114,15 @@ data = DataFrame(data)
 
 #g = FacetGrid(data,col='Compound')
 #g = (g.map(catplot, row='Population',hue='Condition',col='Tissue', y='Value'))
-catplot('Condition', 'Value', data=data, kind='point', row='Compound',hue='Population',col='Tissue',palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
+catplot('Condition', 'Value', data=data, kind='point', row='Compound',row_order=compounds,hue='Population',col='Tissue',sharey='row',palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
+#catplot('Condition', 'Value', data=data, kind='point', row='Compound',row_order=compounds,hue='Population',col='Tissue',sharey=False,palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
 
 for ax in plt.gcf().get_axes():
     ax.yaxis.set_major_locator(plticker.MultipleLocator(2e5))
     ax.yaxis.set_major_formatter(EngFormatter(unit="", places=0, sep="\N{THIN SPACE}"))
     ax.set_xlabel('')
     ax.set_ylabel('')
-    ax.tick_params(axis='x', labelsize=14.)
+    ax.tick_params(axis='x', labelsize=20.)
     ax.tick_params(axis='y', labelsize=16.)
     ax.set_yticks([], minor=[])
     #https://cduvallet.github.io/posts/2018/11/facetgrid-ylabel-access
@@ -119,10 +130,10 @@ for ax in plt.gcf().get_axes():
     #ax.texts[0].remove()
 #print(plt.gcf().get_axes().shape)
 for i in range(len(compounds)):
-    plt.gcf().get_axes()[i*3].set_ylabel(compounds[i], fontsize='xx-large')
+    plt.gcf().get_axes()[i*3].set_ylabel(compounds[i], fontsize='xx-large', fontweight='bold')
 #plt.gcf().get_axes()[3].set_ylabel(compounds[1], fontsize='xx-large')
 for ax,name in zip(plt.gcf().get_axes(),chain.from_iterable((tissues,['']*3*(len(compounds)-1)))):
-    ax.set_title(name, fontsize='xx-large')
+    ax.set_title(name, fontsize='xx-large', fontweight='bold')
 
 
 #stop
