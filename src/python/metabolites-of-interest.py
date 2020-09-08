@@ -53,7 +53,10 @@ ame = AstyanaxMe(
 compounds = [
     'ascorbic acid',
     'dehydroascorbic acid',
-    'pantothenic acid',
+    'nicotinamide',
+    'nicotinic acid',
+    'orotic acid',
+    'alpha-ketoglutarate',
   ]
 
 if args.exclude_outlier:
@@ -134,7 +137,8 @@ data = DataFrame(data)
 
 #g = FacetGrid(data,col='Compound')
 #g = (g.map(catplot, row='Population',hue='Condition',col='Tissue', y='Value'))
-catplot('Condition', 'Value', data=data, kind='point', row='Compound',row_order=compounds,hue='Population',col='Tissue',palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
+#catplot('Condition', 'Value', data=data, kind='point', row='Compound',row_order=compounds,hue='Population',col='Tissue',palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
+catplot('Condition', 'Value', data=data, kind='point', row='Compound',row_order=compounds,hue='Population',col='Tissue',sharey='row',palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
 #catplot('Condition', 'Value', data=data, kind='point', row='Compound',row_order=compounds,hue='Population',col='Tissue',sharey=False,palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
 
 for ax in plt.gcf().get_axes():

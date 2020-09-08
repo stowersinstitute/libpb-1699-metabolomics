@@ -18,6 +18,7 @@ pyrsistent = "*"
 attrs = "*"
 pyopls = "*"
 statsmodels = "*"
+openpyxl = "*"
 
 [requires]
 python_version = "3.8"

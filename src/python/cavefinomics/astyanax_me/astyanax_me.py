@@ -455,6 +455,7 @@ class AstyanaxMe:
               'C00802', # parabanic acid
               'C00146', # phenol
               'C00138', #
+              'C00134', # putrescine
             ]
             curated_categories = set(chain.from_iterable(self.compounds_by_category_from_dataset.values()))
             #print(curated_categories)
