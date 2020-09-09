@@ -78,13 +78,23 @@ main = shakeArgs shakeOptions $ do
       need ["src/python/ratio-plot-combined.py"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/ratio-plot-combined.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --sample-sheet ./data/primary/sample-sheet.csv --lipids-normalized ./data/lipids/normalized --lipidmaps-fa ./data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --output ./out/fig/no-outliers/ratios-combined.pdf"
 
-    -- OPLS lipid cats
+    -- OPLS lipids
     "out/work/lipids/opls/outliers/category/Sphingolipids/Muscle/Ref/PvT.csv" %> \out -> do
       need ["src/python/opls/lipids-pop-compare.py"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/opls/lipids-pop-compare.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --output-dir out/work/lipids"
 
-    -- GLM lipid cats
+    -- GLM lipids
     "out/work/lipids/glm/singlefactor/no-outliers/Muscle/Ref/PvT.csv" %> \out -> do
       need ["src/R/glm/lipids-pop-compare.R", "out/work/lipids/opls/outliers/category/Sphingolipids/Muscle/Ref/PvT.csv"]
       cmd_ "Rscript ./src/R/glm/lipids-pop-compare.R"
+
+    -- OPLS lipid cats
+    "out/work/lipidcats/opls/Liver/Ref/Classes/PvT.csv" %> \out -> do
+      need ["src/python/opls/lipidcats-pop-compare.py","data/lipids/normalized","data/lipidmaps/lipidmaps-20200724.json","data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/opls/lipidcats-pop-compare.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --lipidmaps-fa ./data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json --output-dir out/work/lipidcats"
+
+    -- GLM lipid cats
+--     "out/work/lipids/glm/singlefactor/no-outliers/Muscle/Ref/PvT.csv" %> \out -> do
+--       need ["src/R/glm/lipids-pop-compare.R", "out/work/lipids/opls/outliers/category/Sphingolipids/Muscle/Ref/PvT.csv"]
+--       cmd_ "Rscript ./src/R/glm/lipids-pop-compare.R"
 
