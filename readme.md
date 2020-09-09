@@ -9,11 +9,13 @@
 
 # Running
 
-```
-runhaskell shake.hs
-```
+Run the following three commands:
 
-(If you do not have the `runhaskell` command you can run `cabal new-run pipeline` instead.)
+```
+cabal new-update
+cabal new-build
+cabal new-run pipeline
+```
 
 This will generate all figures under `out/fig`, and supplementary information under `out/supp`.
 

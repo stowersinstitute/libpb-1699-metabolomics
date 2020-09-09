@@ -118,33 +118,33 @@ comparisons = {'PvS':['Pachon','Surface'],'TvS':['Tinaja','Surface'],'PvT':['Pac
 dq2s = []
 for tissue in tissues:
     for condlabel,condition in conditions.items():
-        d = classes
-        subset = {}
-        for pop in pops:
-            df = d.loc[(d['Tissue'] == tissue) & (d['Population'] == pop) & (d['Condition'] == condition)]
-            df = df.set_index('Category')
-            df = df.iloc[:,3:]
-            df.columns = [pop]*len(df.columns)
-            subset[pop] = df
+        for d,c in zip([cats,classes],cattypes):
+            subset = {}
+            for pop in pops:
+                df = d.loc[(d['Tissue'] == tissue) & (d['Population'] == pop) & (d['Condition'] == condition)]
+                df = df.set_index('Category')
+                df = df.iloc[:,3:]
+                df.columns = [pop]*len(df.columns)
+                subset[pop] = df
 
-        for comp,groups in comparisons.items():
-            df = concat((subset[groups[0]].transpose(),subset[groups[1]].transpose()),axis=0)
-            df = df.apply(log10)
-            with option_context('mode.use_inf_as_null', True):
-                df = df.dropna()
-            normalized_data = DataFrame(StandardScaler().fit_transform(df), index=df.index, columns=df.columns)
-            pls, opls, Z, q2, dq2, p, acc, y_pred_pre, y_pred = run_opls(
-                  normalized_data,
-                  array([1 if groups[0] in u else -1 for u in df.index]),
-                  category_names=[groups[0], groups[1]],
-                  population=pop,
-                  tissue='any',
-                  n_components=1,
-                  n_p_val_iter=0,
-                  )
-            dq2s.append({'Tissue':tissue,'Condition':condition,'Comparison':comp,'CatType':'FAs','DQ2':dq2})
-            pathname = f'{args.output_dir}/opls/fas/{tissue}/{condlabel}'
-            pathlib.Path(pathname).mkdir(parents=True, exist_ok=True)
-            normalized_data.to_csv(os.path.join(pathname,f'{comp}.csv'),header=True)
+            for comp,groups in comparisons.items():
+                df = concat((subset[groups[0]].transpose(),subset[groups[1]].transpose()),axis=0)
+                df = df.apply(log10)
+                with option_context('mode.use_inf_as_null', True):
+                    df = df.dropna()
+                normalized_data = DataFrame(StandardScaler().fit_transform(df), index=df.index, columns=df.columns)
+                pls, opls, Z, q2, dq2, p, acc, y_pred_pre, y_pred = run_opls(
+                      normalized_data,
+                      array([1 if groups[0] in u else -1 for u in df.index]),
+                      category_names=[groups[0], groups[1]],
+                      population=pop,
+                      tissue='any',
+                      n_components=1,
+                      n_p_val_iter=0,
+                      )
+                dq2s.append({'Tissue':tissue,'Condition':condition,'Comparison':comp,'CatType':c,'DQ2':dq2})
+                pathname = f'{args.output_dir}/opls/{tissue}/{condlabel}/{c}'
+                pathlib.Path(pathname).mkdir(parents=True, exist_ok=True)
+                normalized_data.to_csv(os.path.join(pathname,f'{comp}.csv'),header=True)
 dq2s = DataFrame(dq2s)
 

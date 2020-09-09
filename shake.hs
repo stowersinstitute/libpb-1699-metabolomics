@@ -21,8 +21,9 @@ main = shakeArgs shakeOptions $ do
          , "out/supp/no-outliers/primary-pop-compare-significance.xlsx"
          , "out/supp/outliers/primary-pop-compare-significance.xlsx"
          , "out/fig/no-outliers/ratios-combined.pdf"
-         , "out/work/lipids/opls/outliers/category/Sphingolipids/Muscle/Ref/PvT.csv"
-         , "out/work/lipids/glm/singlefactor/no-outliers/Muscle/Ref/PvT.csv"
+         , "out/work/lipids/opls/outliers/category/Sphingolipids/Muscle/Ref/PvT.csv" -- Lipid OPLS
+         , "out/work/lipids/glm/singlefactor/no-outliers/Muscle/Ref/PvT.csv" -- Lipid GLM
+         , "out/work/lipidcats/opls/Liver/Ref/Classes/PvT.csv" -- Lipid cats/classes OPLS
          ]
 
     -- categorized pca for primary
@@ -90,7 +91,7 @@ main = shakeArgs shakeOptions $ do
 
     -- OPLS lipid cats
     "out/work/lipidcats/opls/Liver/Ref/Classes/PvT.csv" %> \out -> do
-      need ["src/python/opls/lipidcats-pop-compare.py","data/lipids/normalized","data/lipidmaps/lipidmaps-20200724.json","data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json"]
+      need ["src/python/opls/lipidcats-pop-compare.py","data/lipids/normalized/positive/liver.csv","data/lipidmaps/lipidmaps-20200724.json","data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/opls/lipidcats-pop-compare.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --lipidmaps-fa ./data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json --output-dir out/work/lipidcats"
 
     -- GLM lipid cats
