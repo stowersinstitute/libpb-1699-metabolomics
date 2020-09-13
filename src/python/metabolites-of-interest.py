@@ -7,6 +7,8 @@ from pandas import DataFrame, read_csv
 import matplotlib.pyplot as plt
 from matplotlib.ticker import EngFormatter
 import matplotlib.ticker as plticker
+from itertools import chain
+flatten = chain.from_iterable
 from pandas import concat
 
 SMALL_SIZE = 12
@@ -53,10 +55,12 @@ ame = AstyanaxMe(
 compounds = [
     'ascorbic acid',
     'dehydroascorbic acid',
-    'nicotinamide',
-    'nicotinic acid',
-    'orotic acid',
+    'glutathione',
     'alpha-ketoglutarate',
+    'nicotinamide',
+    #'nicotinic acid',
+    'orotic acid',
+    #'phosphoethanolamine',
   ]
 
 if args.exclude_outlier:
@@ -141,14 +145,22 @@ data = DataFrame(data)
 catplot('Condition', 'Value', data=data, kind='point', row='Compound',row_order=compounds,hue='Population',col='Tissue',sharey='row',palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
 #catplot('Condition', 'Value', data=data, kind='point', row='Compound',row_order=compounds,hue='Population',col='Tissue',sharey=False,palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
 
-for ax in plt.gcf().get_axes():
-    ax.yaxis.set_major_locator(plticker.MultipleLocator(2e5))
+for ax,compound in zip(plt.gcf().get_axes(),flatten([c]*3 for c in compounds)):
+    #ax.yaxis.set_major_locator(plticker.MultipleLocator(2e5))
+    if data[data['Compound'] == compound]['Value'].max() > 1e6:
+        ax.yaxis.set_major_locator(plticker.MultipleLocator(1e6))
+    elif data[data['Compound'] == compound]['Value'].max() > 1e5:
+        ax.yaxis.set_major_locator(plticker.MultipleLocator(1e5))
+    elif data[data['Compound'] == compound]['Value'].max() > 1e4:
+        ax.yaxis.set_major_locator(plticker.MultipleLocator(1e4))
+    else:
+        ax.yaxis.set_major_locator(plticker.MultipleLocator(2e3))
     ax.yaxis.set_major_formatter(EngFormatter(unit="", places=0, sep="\N{THIN SPACE}"))
     ax.set_xlabel('')
     ax.set_ylabel('')
     ax.tick_params(axis='x', labelsize=14.)
     ax.tick_params(axis='y', labelsize=16.)
-    ax.set_yticks([], minor=[])
+    #ax.set_yticks([], minor=[])
     #https://cduvallet.github.io/posts/2018/11/facetgrid-ylabel-access
     #print(len(ax.texts))
     #ax.texts[0].remove()
