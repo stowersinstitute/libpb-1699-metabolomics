@@ -16,14 +16,17 @@ main = shakeArgs shakeOptions $ do
          , "out/fig/no-outliers/orotic-acid-plot.pdf"
          , "out/fig/no-outliers/sugar-phosphate-plot.pdf"
          , "out/fig/no-outliers/metabolites-of-interest.pdf"
-         , "out/work/primary/opls/no-outliers/Nucleotides/Muscle/Ref/PvT.csv"
-         , "out/work/primary/glm/singlefactor/no-outliers/Nucleotides/Muscle/Ref/PvT.csv"
+         , "out/work/primary/opls/no-outliers/Nucleotides/Muscle/Ref/PvT.csv" -- OPLS primary cross-pop
+         , "out/work/primary/glm/singlefactor/no-outliers/Nucleotides/Muscle/Ref/PvT.csv" -- GLM primary cross-pop
+         , "out/work/primary/opls/no-outliers/Nucleotides/Muscle/Pachon/30vR.csv" -- OPLS primary starvation response
+         , "out/work/primary/glm/singlefactor/no-outliers/Nucleotides/Muscle/CvS/30vR.csv" -- GLM primary cross-pop
          , "out/supp/no-outliers/primary-pop-compare-significance.xlsx"
          , "out/supp/outliers/primary-pop-compare-significance.xlsx"
          , "out/fig/no-outliers/ratios-combined.pdf"
          , "out/work/lipids/opls/outliers/category/Sphingolipids/Muscle/Ref/PvT.csv" -- Lipid OPLS
          , "out/work/lipids/glm/singlefactor/no-outliers/Muscle/Ref/PvT.csv" -- Lipid GLM
-         , "out/work/lipidcats/opls/Liver/Ref/Classes/PvT.csv" -- Lipid cats/classes OPLS
+         , "out/work/lipidcats/opls/no-outliers/Liver/Ref/Classes/PvT.csv" -- Lipid cats/classes OPLS
+         , "out/work/lipidcats/glm/no-outliers/Muscle/Ref/Categories/PvT.csv" -- Lipid cats/classes GLM
          ]
 
     -- categorized pca for primary
@@ -57,15 +60,25 @@ main = shakeArgs shakeOptions $ do
       need ["src/python/metabolites-of-interest.py"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/metabolites-of-interest.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet /opt/src/stowers/pipelines/jenna-metabolomics/data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --output ./out/fig/no-outliers/metabolites-of-interest.pdf"
 
-    -- OPLS primary data
+    -- OPLS primary cross-pop
     "out/work/primary/opls/no-outliers/Nucleotides/Muscle/Ref/PvT.csv" %> \out -> do
       need ["src/python/opls/primary-pop-compare.py"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/opls/primary-pop-compare.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet /opt/src/stowers/pipelines/jenna-metabolomics/data/primary/sample-sheet.csv --hmdb ./data/hmdb/hmdb.json --compounds ./data/kegg/compounds.json --output-dir out/work/primary"
 
-    -- GLM primary data
+    -- GLM primary cross-pop
     "out/work/primary/glm/singlefactor/no-outliers/Nucleotides/Muscle/Ref/PvT.csv" %> \out -> do
       need ["src/R/glm/primary-pop-compare.R", "out/work/primary/opls/no-outliers/Nucleotides/Muscle/Ref/PvT.csv"]
       cmd_ "Rscript ./src/R/glm/primary-pop-compare.R"
+
+    -- OPLS primary starvation response
+    "out/work/primary/opls/no-outliers/Nucleotides/Muscle/Pachon/30vR.csv" %> \out -> do
+      need ["src/python/opls/primary-starvation-response.py"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/opls/primary-starvation-response.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet /opt/src/stowers/pipelines/jenna-metabolomics/data/primary/sample-sheet.csv --hmdb ./data/hmdb/hmdb.json --compounds ./data/kegg/compounds.json --output-dir out/work/primary"
+
+    -- GLM primary starvation response
+    "out/work/primary/glm/singlefactor/no-outliers/Nucleotides/Muscle/CvS/30vR.csv" %> \out -> do
+      need ["src/R/glm/primary-starvation-response.R", "out/work/primary/opls/no-outliers/Nucleotides/Muscle/Pachon/30vR.csv"]
+      cmd_ "Rscript ./src/R/glm/primary-starvation-response.R"
 
     -- significance table primary
     "out/supp/no-outliers/primary-pop-compare-significance.xlsx" %> \out -> do
@@ -90,12 +103,12 @@ main = shakeArgs shakeOptions $ do
       cmd_ "Rscript ./src/R/glm/lipids-pop-compare.R"
 
     -- OPLS lipid cats
-    "out/work/lipidcats/opls/Liver/Ref/Classes/PvT.csv" %> \out -> do
+    "out/work/lipidcats/opls/no-outliers/Liver/Ref/Classes/PvT.csv" %> \out -> do
       need ["src/python/opls/lipidcats-pop-compare.py","data/lipids/normalized/positive/liver.csv","data/lipidmaps/lipidmaps-20200724.json","data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/opls/lipidcats-pop-compare.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --lipidmaps-fa ./data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json --output-dir out/work/lipidcats"
 
     -- GLM lipid cats
---     "out/work/lipids/glm/singlefactor/no-outliers/Muscle/Ref/PvT.csv" %> \out -> do
---       need ["src/R/glm/lipids-pop-compare.R", "out/work/lipids/opls/outliers/category/Sphingolipids/Muscle/Ref/PvT.csv"]
---       cmd_ "Rscript ./src/R/glm/lipids-pop-compare.R"
+    "out/work/lipidcats/glm/no-outliers/Muscle/Ref/Categories/PvT.csv" %> \out -> do
+      need ["src/R/glm/lipid-cats-pop-compare.R", "out/work/lipidcats/opls/no-outliers/Liver/Ref/Classes/PvT.csv"]
+      cmd_ "Rscript ./src/R/glm/lipid-cats-pop-compare.R"
 
