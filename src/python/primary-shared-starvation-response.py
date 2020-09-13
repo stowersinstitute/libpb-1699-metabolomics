@@ -42,7 +42,7 @@ for tissue in tissues:
 for comp,groups in comparisons.items():
     gridspec_kw = {"height_ratios":[1.], "width_ratios" : [3.,3.,3.]}
     fig,ax = plt.subplots(nrows=1,ncols=3,figsize=(12, 8), gridspec_kw=gridspec_kw)
-    fig.suptitle(' vs '.join(groups))
+    fig.suptitle(' vs '.join(groups),fontsize='xx-large',fontweight='bold')
 
     vmin = -1.7
     vmax = 1.7
@@ -57,10 +57,10 @@ for comp,groups in comparisons.items():
         heatmap(array([list(reg.iloc[:20].values)]).T, vmin=vmin, vmax=vmax, annot=array([list(reg.iloc[:20].index)]).T, fmt = '', ax=ax[j], cbar=False, xticklabels=False, yticklabels=j==0, cmap='coolwarm')
         ax[j].set_yticks([], minor=[])
         ax[j].set_xticks([], minor=[])
-        ax[j].set_title(tissue,fontsize='xx-large')
+        ax[j].set_title(tissue,fontsize='xx-large',fontweight='bold')
 
     filename=f'/tmp/primary-shared-heatmap-{comp}.pdf'
-    plt.savefig(filename)
+    plt.savefig(filename,bbox_inches='tight',transparent=True,pad_inches=0)
 
 fig,ax = plt.subplots(figsize=(3, 12))
 # draw c bar
@@ -71,8 +71,9 @@ cax = fig.add_axes([0.1,0.1,0.25,0.8])
 fig.colorbar(sm, cax=cax)
 #cax.set_title(r'$-d\log_{10}p$',fontsize='xx-large')
 cax.yaxis.set_major_locator(plt.FixedLocator([vmin, 0., vmax]))
-cax.set_yticklabels([f'$p = {10.**vmin:.2f} (\\mathrm{{down}})$',r'$p = 1$',f'$p = {10.**(-vmax):.2f} (\\mathrm{{up}})$'],fontsize='xx-large')
-ax[i,j].text(0.1,0.1,'Up in \ncave+starved',size=16,ha='center',va='center',transform=ax.transAxes)
+cax.set_yticklabels([f'$p = {10.**vmin:.2f} (\\mathrm{{down}})$',r'$p = 1$',f'$p = {10.**(-vmax):.2f} (\\mathrm{{up}})$'],fontsize='xx-large',fontweight='bold')
+cax.text(0.5,1.1,'Up in \ncave+starved',size=20,ha='center',va='center',fontweight='bold',transform=ax.transAxes)
+cax.text(0.5,-0.1,'Down in \ncave+starved',size=20,ha='center',va='center',fontweight='bold',transform=ax.transAxes)
 # clear extra axes
 # hide graphics
 ax.set_yticks([], minor=[])
