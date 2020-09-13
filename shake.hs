@@ -16,6 +16,7 @@ main = shakeArgs shakeOptions $ do
          , "out/fig/no-outliers/orotic-acid-plot.pdf"
          , "out/fig/no-outliers/sugar-phosphate-plot.pdf"
          , "out/fig/no-outliers/metabolites-of-interest.pdf"
+         , "out/fig/no-outliers/primary-shared-starvation-response.pdf"
          , "out/work/primary/opls/no-outliers/Nucleotides/Muscle/Ref/PvT.csv" -- OPLS primary cross-pop
          , "out/work/primary/glm/singlefactor/no-outliers/Nucleotides/Muscle/Ref/PvT.csv" -- GLM primary cross-pop
          , "out/work/primary/opls/no-outliers/Nucleotides/Muscle/Pachon/30vR.csv" -- OPLS primary starvation response
@@ -55,10 +56,15 @@ main = shakeArgs shakeOptions $ do
       need ["src/python/sugar-phosphate-plot.py"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/sugar-phosphate-plot.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet /opt/src/stowers/pipelines/jenna-metabolomics/data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --output ./out/fig/no-outliers/sugar-phosphate-plot.pdf"
 
-    -- proinflammatory metabolite plot
+    -- metabolites of interest
     "out/fig/no-outliers/metabolites-of-interest.pdf" %> \out -> do
       need ["src/python/metabolites-of-interest.py"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/metabolites-of-interest.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet /opt/src/stowers/pipelines/jenna-metabolomics/data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --output ./out/fig/no-outliers/metabolites-of-interest.pdf"
+
+    -- conserved metabolites in starvation resistance
+    "out/fig/no-outliers/primary-shared-starvation-response.pdf" %> \out -> do
+      need ["src/python/primary-shared-starvation-response.py"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-shared-starvation-response.py"
 
     -- OPLS primary cross-pop
     "out/work/primary/opls/no-outliers/Nucleotides/Muscle/Ref/PvT.csv" %> \out -> do
