@@ -12,7 +12,11 @@ from pprint import pprint
 from collections import defaultdict
 from pandas import read_csv
 
-from cavefinomics import AstyanaxMe, MaMammalianMe
+from cavefinomics import AstyanaxMe
+
+parser = ArgumentParser(description="Heatmap of conserved metabolites.")
+parser.add_argument("--output-dir", type=str, help="Output directory.")
+args = parser.parse_args()
 
 conditions = {'4d':'4d Starved', '30d':'30d Starved', 'Ref':'Refed'}
 pops = ['Pachon', 'Tinaja', 'Surface']
@@ -59,7 +63,7 @@ for comp,groups in comparisons.items():
         ax[j].set_xticks([], minor=[])
         ax[j].set_title(tissue,fontsize='xx-large',fontweight='bold')
 
-    filename=f'/tmp/primary-shared-heatmap-{comp}.pdf'
+    filename=f'{args.output_dir}/{outlier}/primary-shared-starvation-response-{comp}.pdf'
     plt.savefig(filename,bbox_inches='tight',transparent=True,pad_inches=0)
 
 fig,ax = plt.subplots(figsize=(3, 12))
@@ -81,5 +85,5 @@ ax.set_xticks([], minor=[])
 ax.patch.set_visible(False)
 for s in ["top", "bottom", "left", "right"]:
     ax.spines[s].set_visible(False)
-filename=f'/tmp/primary-shared-heatmap-colorbar.pdf'
+filename=f'{args.output_dir}/{outlier}/primary-shared-starvation-response-colorbar.pdf'
 plt.savefig(filename)

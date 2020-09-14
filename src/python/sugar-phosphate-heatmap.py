@@ -39,6 +39,7 @@ parser = ArgumentParser(description="PCA vs mammals.")
 parser.add_argument("--astyanax", type=str, help="Astyanax metabolomics csv file.")
 parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
 parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
+parser.add_argument("--level", type=float, help="P value cutoff.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
 parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
 parser.add_argument("--output", type=str, help="Output.")
@@ -89,6 +90,7 @@ tissues = ['Brain', 'Muscle', 'Liver']
 conditions = {'4d':'4d Starved', '30d':'30d Starved', 'Ref':'Refed'}
 condmap = {v:k for k,v in {'30d':'30d Starved', '4d':'4d Starved', 'Ref': 'Refed'}.items()}
 comparisons = ['PvS','TvS','PvT']
+categories = {"Aminoacids":'Amino acids',"Carbohydrates_-CCM": 'Carbohydrates / CCM',"Fattyacids":'Fatty acids',"Misc._-_sec.metabolites":'Misc',"Nucleotides":'Nucleotides'}
 
 data = []
 for pop in pops:
@@ -100,6 +102,36 @@ for pop in pops:
                 for val in subset:
                     data.append({'Population':pop if pop != 'Pachon' else 'Pachón','Tissue':tissue,'Condition':condmap[condition],'Compound':compound,'Value':val})
 data = DataFrame(data)
+
+# significance data
+datasets = []
+sig = {}
+up = {}
+if args.exclude_outlier:
+    outlier_text = 'no-outliers'
+else:
+    outlier_text = 'outliers'
+for cat in categories:
+    for tissue in tissues:
+        for cond in conditions:
+            for comp in comparisons:
+                d = read_csv(f'out/work/primary/glm/singlefactor/{outlier_text}/{cat}/{tissue}/{cond}/{comp}.csv',index_col=0)
+                d['Category'] = cat
+                d['Tissue'] = tissue
+                d['Condition'] = cond
+                d['Comparison'] = comp
+                for m in d.index:
+                    if d.loc[m,'Pr(>|z|)'] < args.level:
+                        sig[m,tissue,cond,comp] = True
+                    else:
+                        sig[m,tissue,cond,comp] = False
+                    if d.loc[m,'Estimate'] > 0.:
+                        up[m,tissue,cond,comp] = True
+                    else:
+                        up[m,tissue,cond,comp] = False
+                datasets.append(d)
+sig_data = concat(datasets,axis=0).dropna()
+print(sig_data)
 
 
 fig,ax = plt.subplots(nrows=len(set(data['Compound'])),ncols=len(tissues)*len(conditions),figsize=(12.,12.))
@@ -114,11 +146,24 @@ for tissue in tissues:
         data2d = data2d.div(data2d.max(axis=1),axis=0)
         #https://stackoverflow.com/questions/39273441/flatten-pandas-pivot-table
         data2d.columns = data2d.columns.to_series().str.join('_').str.replace('Value_','')
-        print(list(data2d.columns))
+        #print(list(data2d.columns))
         data2d = data2d[pops2]
+        data2d = data2d.loc[compounds,:]
         print(data2d)
+        print(len(data2d.index))
+
+        #print(list(sig_data.columns))
+        #print(sig_data['Comparison'] == 'PvS')
+        sig2d = sig_data.loc[(sig_data['Comparison'] == 'PvS') & (sig_data['Condition'] == cond_label) & (sig_data['Tissue'] == tissue)]#.loc[data2d.index,'Pr(>|z|)']
+        print(sig2d)
+        print(sig2d.index)
+        print(list(sig2d.index))
+        print(list(c in sig2d.index for c in compounds))
+        print(len(sig2d.index))
+        sig2d = sig2d.loc[compounds,:]
+        #print(data2d)
         stop
-        #heatmap(-ps.apply(log10), vmin=0., vmax=vmax, annot=array([annot]), fmt = '', ax=axs[j,i], cbar=False, xticklabels=j==len(categories)-1, yticklabels=i==0, cmap='coolwarm')
+        #heatmap(data2d, vmin=0., vmax=1., annot=array([annot]), fmt = '', ax=axs[j,i], cbar=False, xticklabels=j==len(categories)-1, yticklabels=i==0, cmap='coolwarm')
 
 
 
