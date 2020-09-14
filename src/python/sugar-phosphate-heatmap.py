@@ -66,6 +66,28 @@ compounds = [
     'gluconic acid',
   ]
 
+sugar_phosphates = [
+    'glucose-1-phosphate',
+    'glucose-6-phosphate',
+    'galactose-6-phosphate',
+    'fructose-1-phosphate',
+    'fructose-6-phosphate',
+    'ribose-5-phosphate',
+    'ribulose-5-phosphate',
+    ]
+
+sugars = [
+    'glucose',
+    'fructose',
+    ]
+
+uronic_acids = [
+    'glucuronic acid',
+    'gluconic acid',
+    ]
+
+compounds_by_class = [sugar_phosphates, sugars, uronic_acids]
+
 astyanax_data = ame.get_data_by_kegg_id().set_index('KEGG')
 astyanax_data.columns = [' '.join(u) for u in ame.treatment_descriptors]
 astyanax_data = astyanax_data.loc[:,['pools' not in c for c in astyanax_data.columns]]
@@ -151,7 +173,8 @@ sig_data = concat(datasets,axis=0).dropna()
 
 
 #fig,ax = plt.subplots(nrows=len(set(data['Compound'])),ncols=len(tissues)*len(conditions),figsize=(12.,12.))
-fig,ax = plt.subplots(nrows=1,ncols=len(tissues)*len(conditions),figsize=(12.,12.))
+gridspec_kw = {"height_ratios":[3.,1.,1.]}
+fig,ax = plt.subplots(nrows=3,ncols=len(tissues)*len(conditions),figsize=(12.,12.),gridspec_kw=gridspec_kw)
 
 #print(data)
 #j = 0
@@ -161,33 +184,35 @@ for kc,(cond_label,condition) in enumerate(conditions.items()):
     #stop
     #cond_data.iloc[2:] = cond_data.div(cond_data.iloc[2:].max(axis=1),axis=0)
     for kt,tissue in enumerate(tissues):
-        data2d = cond_data.loc[(cond_data['Tissue'] == tissue)]
-        data2d = data2d.drop('Tissue',axis=1).drop('Condition',axis=1)
-        data2d = data2d.pivot_table(index='Compound',columns='Population')
-        #https://stackoverflow.com/questions/35678874/normalize-rows-of-pandas-data-frame-by-their-sums/35679163
-        #https://stackoverflow.com/questions/39273441/flatten-pandas-pivot-table
-        data2d.columns = data2d.columns.to_series().str.join('_').str.replace('Value_','')
-        #print(list(data2d.columns))
-        data2d = data2d[pops2]
-        data2d = data2d.loc[compounds,:]
-        print(data2d)
-        print(len(data2d.index))
+        for i,cpds in enumerate(compounds_by_class):
+            data2d = cond_data.loc[(cond_data['Tissue'] == tissue)]
+            data2d = data2d.drop('Tissue',axis=1).drop('Condition',axis=1)
+            data2d = data2d.pivot_table(index='Compound',columns='Population')
+            #https://stackoverflow.com/questions/35678874/normalize-rows-of-pandas-data-frame-by-their-sums/35679163
+            #https://stackoverflow.com/questions/39273441/flatten-pandas-pivot-table
+            data2d.columns = data2d.columns.to_series().str.join('_').str.replace('Value_','')
+            #print(list(data2d.columns))
+            data2d = data2d[pops2]
+            data2d = data2d.loc[cpds,:]
+            print(data2d)
+            print(len(data2d.index))
 
-        #print(list(sig_data.columns))
-        #print(sig_data['Comparison'] == 'PvS')
-        sig2d = concat(
-          [sig_data.loc[(sig_data['Comparison'] == comp) & (sig_data['Condition'] == cond_label) & (sig_data['Tissue'] == tissue)]
-           .loc[data2d.index,'Pr(>|z|)']
-           .loc[compounds] for comp in ['PvS','TvS']],
-          axis=1)
-        sig2d.insert(2,'',0.)
-        print(sig2d)
-        #print(data2d)
-        #stop
-        j = kt*3+kc
-        #heatmap(data2d, vmin=0., vmax=1., annot=sig2d, fmt = '.2f', ax=ax[j], cbar=False, xticklabels=j==0, yticklabels=True, cmap='coolwarm')
-        heatmap(data2d, vmin=0., vmax=1., annot=None, fmt = '.2f', ax=ax[j], cbar=False, xticklabels=True, yticklabels=j==0, cmap='coolwarm')
-        #break
+            #print(list(sig_data.columns))
+            #print(sig_data['Comparison'] == 'PvS')
+            sig2d = concat(
+              [sig_data.loc[(sig_data['Comparison'] == comp) & (sig_data['Condition'] == cond_label) & (sig_data['Tissue'] == tissue)]
+              .loc[data2d.index,'Pr(>|z|)']
+              .loc[cpds] for comp in ['PvS','TvS']],
+              axis=1)
+            sig2d.insert(2,'',0.)
+            print(sig2d)
+            #print(data2d)
+            #stop
+            j = kt*3+kc
+            data2d.index.name = ''
+            #heatmap(data2d, vmin=0., vmax=1., annot=sig2d, fmt = '.2f', ax=ax[j], cbar=False, xticklabels=j==0, yticklabels=True, cmap='coolwarm')
+            heatmap(data2d, vmin=0., vmax=1., annot=None, fmt = '.2f', ax=ax[i,j], cbar=False, xticklabels=i==2, yticklabels=j==0, cmap='coolwarm')
+            #break
 
 
 
