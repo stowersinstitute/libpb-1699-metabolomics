@@ -55,7 +55,7 @@ thunderbirds = ['#c82121','#dee1ec','#becbff','#0d0cb5'][::-1]
 #https://colorhunt.co/palette/3460
 thunderbirds2 = ['#eb586f','#d8e9f0','#4aa0d5','#454553'][::-1]
 #https://colorhunt.co/palette/80280
-thunderbirds2 = ['#e2eff1','#65799b','#555273','#e23e57'][::-1]
+thunderbirds3 = ['#e2eff1','#65799b','#555273','#e23e57']
 #https://colorhunt.co/palette/116523
 sandysunset = ['#84b9ef','#fbe4c9','#ff5d5d','#952e4b']
 #https://colorhunt.co/palette/14114
@@ -286,7 +286,7 @@ for i in range(3):
 #plt.yticks(rotation=0)
 for x,tissue in zip([0.2325,0.515,0.7925],tissues):
     fig.text(x,0.95,tissue,size=20,ha='center',va='center',fontweight='bold',transform=fig.transFigure)
-for y,cls in zip([0.675,0.3575,0.1715],['Sugar\nphos.-\nphates','Sugars','Uronic\nacids']):
+for y,cls in zip([0.675,0.3575,0.1715],['Sugar\nphos-\nphates','Sugars','Uronic\nacids']):
     fig.text(0.915,y,cls,size=20,ha='left',va='center',rotation=0.,fontweight='bold',transform=fig.transFigure)
 
 ax2 = fig.add_subplot(111)
