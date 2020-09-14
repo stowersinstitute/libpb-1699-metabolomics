@@ -154,13 +154,9 @@ for tissue in tissues:
 
         #print(list(sig_data.columns))
         #print(sig_data['Comparison'] == 'PvS')
-        sig2d = sig_data.loc[(sig_data['Comparison'] == 'PvS') & (sig_data['Condition'] == cond_label) & (sig_data['Tissue'] == tissue)]#.loc[data2d.index,'Pr(>|z|)']
+        sig2d = sig_data.loc[(sig_data['Comparison'] == 'PvS') & (sig_data['Condition'] == cond_label) & (sig_data['Tissue'] == tissue)].loc[data2d.index,'Pr(>|z|)']
+        sig2d = sig2d.loc[compounds]
         print(sig2d)
-        print(sig2d.index)
-        print(list(sig2d.index))
-        print(list(c in sig2d.index for c in compounds))
-        print(len(sig2d.index))
-        sig2d = sig2d.loc[compounds,:]
         #print(data2d)
         stop
         #heatmap(data2d, vmin=0., vmax=1., annot=array([annot]), fmt = '', ax=axs[j,i], cbar=False, xticklabels=j==len(categories)-1, yticklabels=i==0, cmap='coolwarm')
