@@ -125,21 +125,15 @@ for pop in pops:
                     data.append({'Population':pop if pop != 'Pachon' else 'Pachón','Tissue':tissue,'Condition':condmap[condition],'Compound':compound,'Value':val})
 data = DataFrame(data)
 # normalize to condition
-#print(list(data.columns))
 #cond_maxes = data[['Condition','Compound','Value']].groupby(['Condition','Compound']).max()
-cond_maxes = data[['Condition','Compound','Value']].groupby(['Condition','Compound']).max()
-#print(data[['Condition','Compound','Value']].groupby(['Condition','Compound']).max())
-#print(cond_maxes)
-#print(data.set_index(['Condition','Compound'])[cond_maxes.index])
-#data.apply(lambda u: print(u))
-#print(cond_maxes.loc['4d', 'glucose-1-phosphate'])
+#data['Value'] = data.apply(lambda u: u['Value']/cond_maxes.loc[u['Condition'],u['Compound']],axis=1)
+averaged_data = data.pivot_table(index=['Condition','Compound'],columns=['Population','Tissue'])
+averaged_data = averaged_data.max(axis=1)
+print(averaged_data)
 #stop
-data['Value'] = data.apply(lambda u: u['Value']/cond_maxes.loc[u['Condition'],u['Compound']],axis=1)
-#print(data.apply(lambda u: u['Value']/cond_maxes.loc[u['Condition'],u['Compound']],axis=1))
-#data = data.div(data)
-#print(data)
-#stop
-#.div(cond_data.iloc[2:].max(axis=1),axis=0)
+data['Value'] = data.apply(lambda u: u['Value']/averaged_data.loc[u['Condition'],u['Compound']],axis=1)
+print(data)
+
 
 # significance data
 datasets = []
@@ -173,8 +167,8 @@ sig_data = concat(datasets,axis=0).dropna()
 
 
 #fig,ax = plt.subplots(nrows=len(set(data['Compound'])),ncols=len(tissues)*len(conditions),figsize=(12.,12.))
-gridspec_kw = {"height_ratios":[3.,1.,1.]}
-fig,ax = plt.subplots(nrows=3,ncols=len(tissues)*len(conditions),figsize=(12.,12.),gridspec_kw=gridspec_kw)
+gridspec_kw = {"height_ratios":[3.,1.,1.], "width_ratios" : [3.,3.,3.,2.]*2+[3.,3.,3.]}
+fig,ax = plt.subplots(nrows=3,ncols=11,figsize=(12.,10.),gridspec_kw=gridspec_kw)
 
 #print(data)
 #j = 0
@@ -194,8 +188,8 @@ for kc,(cond_label,condition) in enumerate(conditions.items()):
             #print(list(data2d.columns))
             data2d = data2d[pops2]
             data2d = data2d.loc[cpds,:]
-            print(data2d)
-            print(len(data2d.index))
+            #print(data2d)
+            #print(len(data2d.index))
 
             #print(list(sig_data.columns))
             #print(sig_data['Comparison'] == 'PvS')
@@ -205,15 +199,31 @@ for kc,(cond_label,condition) in enumerate(conditions.items()):
               .loc[cpds] for comp in ['PvS','TvS']],
               axis=1)
             sig2d.insert(2,'',0.)
-            print(sig2d)
+            #print(sig2d)
             #print(data2d)
             #stop
-            j = kt*3+kc
+            j = kt*4+kc
             data2d.index.name = ''
             #heatmap(data2d, vmin=0., vmax=1., annot=sig2d, fmt = '.2f', ax=ax[j], cbar=False, xticklabels=j==0, yticklabels=True, cmap='coolwarm')
             heatmap(data2d, vmin=0., vmax=1., annot=None, fmt = '.2f', ax=ax[i,j], cbar=False, xticklabels=i==2, yticklabels=j==0, cmap='coolwarm')
+            #https://stackoverflow.com/questions/26540035/rotate-label-text-in-seaborn-factorplot/34722235
+            ax[i,j].set_yticklabels(ax[i,j].get_yticklabels(),fontsize='x-large',rotation=0)
+            ax[i,j].set_xticklabels(ax[i,j].get_xticklabels(),fontsize='large')
+            if i==0:
+                ax[i,j].set_title(f'{cond_label}',fontsize='x-large')
             #break
 
+for i in range(3):
+    for j in [3,7]:
+        ax[i,j].set_yticks([], minor=[])
+        ax[i,j].set_xticks([], minor=[])
+        ax[i,j].patch.set_visible(False)
+        for s in ["top", "bottom", "left", "right"]:
+            ax[i,j].spines[s].set_visible(False)
 
+#https://stackoverflow.com/questions/27037241/changing-the-rotation-of-tick-labels-in-seaborn-heatmap
+#plt.yticks(rotation=0)
+for x,tissue in zip([0.2325,0.525,0.7925],tissues):
+    fig.text(x,0.95,tissue,size=20,ha='center',va='center',fontweight='bold',transform=fig.transFigure)
 
-plt.savefig(args.output)
+plt.savefig(args.output,bbox_inches='tight',transparent=True,pad_inches=0)
