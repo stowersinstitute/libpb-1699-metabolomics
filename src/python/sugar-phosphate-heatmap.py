@@ -1,6 +1,6 @@
 from cavefinomics import AstyanaxMe
 from argparse import ArgumentParser
-from numpy import log10
+from numpy import log10, array
 from itertools import repeat, chain
 from seaborn import (catplot, FacetGrid, palplot,
                      color_palette, set_palette, heatmap)
@@ -102,6 +102,22 @@ for pop in pops:
                 for val in subset:
                     data.append({'Population':pop if pop != 'Pachon' else 'Pachón','Tissue':tissue,'Condition':condmap[condition],'Compound':compound,'Value':val})
 data = DataFrame(data)
+# normalize to condition
+#print(list(data.columns))
+#cond_maxes = data[['Condition','Compound','Value']].groupby(['Condition','Compound']).max()
+cond_maxes = data[['Condition','Compound','Value']].groupby(['Condition','Compound']).max()
+#print(data[['Condition','Compound','Value']].groupby(['Condition','Compound']).max())
+#print(cond_maxes)
+#print(data.set_index(['Condition','Compound'])[cond_maxes.index])
+#data.apply(lambda u: print(u))
+#print(cond_maxes.loc['4d', 'glucose-1-phosphate'])
+#stop
+data['Value'] = data.apply(lambda u: u['Value']/cond_maxes.loc[u['Condition'],u['Compound']],axis=1)
+#print(data.apply(lambda u: u['Value']/cond_maxes.loc[u['Condition'],u['Compound']],axis=1))
+#data = data.div(data)
+#print(data)
+#stop
+#.div(cond_data.iloc[2:].max(axis=1),axis=0)
 
 # significance data
 datasets = []
@@ -131,19 +147,24 @@ for cat in categories:
                         up[m,tissue,cond,comp] = False
                 datasets.append(d)
 sig_data = concat(datasets,axis=0).dropna()
-print(sig_data)
+#print(sig_data)
 
 
-fig,ax = plt.subplots(nrows=len(set(data['Compound'])),ncols=len(tissues)*len(conditions),figsize=(12.,12.))
+#fig,ax = plt.subplots(nrows=len(set(data['Compound'])),ncols=len(tissues)*len(conditions),figsize=(12.,12.))
+fig,ax = plt.subplots(nrows=1,ncols=len(tissues)*len(conditions),figsize=(12.,12.))
 
 #print(data)
-for tissue in tissues:
-    for cond_label,condition in conditions.items():
-        data2d = data.loc[(data['Tissue'] == tissue) & (data['Condition'] == cond_label)]
+#j = 0
+for kc,(cond_label,condition) in enumerate(conditions.items()):
+    cond_data = data.loc[(data['Condition'] == cond_label)]
+    #print(cond_data)
+    #stop
+    #cond_data.iloc[2:] = cond_data.div(cond_data.iloc[2:].max(axis=1),axis=0)
+    for kt,tissue in enumerate(tissues):
+        data2d = cond_data.loc[(cond_data['Tissue'] == tissue)]
         data2d = data2d.drop('Tissue',axis=1).drop('Condition',axis=1)
         data2d = data2d.pivot_table(index='Compound',columns='Population')
         #https://stackoverflow.com/questions/35678874/normalize-rows-of-pandas-data-frame-by-their-sums/35679163
-        data2d = data2d.div(data2d.max(axis=1),axis=0)
         #https://stackoverflow.com/questions/39273441/flatten-pandas-pivot-table
         data2d.columns = data2d.columns.to_series().str.join('_').str.replace('Value_','')
         #print(list(data2d.columns))
@@ -154,12 +175,19 @@ for tissue in tissues:
 
         #print(list(sig_data.columns))
         #print(sig_data['Comparison'] == 'PvS')
-        sig2d = sig_data.loc[(sig_data['Comparison'] == 'PvS') & (sig_data['Condition'] == cond_label) & (sig_data['Tissue'] == tissue)].loc[data2d.index,'Pr(>|z|)']
-        sig2d = sig2d.loc[compounds]
+        sig2d = concat(
+          [sig_data.loc[(sig_data['Comparison'] == comp) & (sig_data['Condition'] == cond_label) & (sig_data['Tissue'] == tissue)]
+           .loc[data2d.index,'Pr(>|z|)']
+           .loc[compounds] for comp in ['PvS','TvS']],
+          axis=1)
+        sig2d.insert(2,'',0.)
         print(sig2d)
         #print(data2d)
-        stop
-        #heatmap(data2d, vmin=0., vmax=1., annot=array([annot]), fmt = '', ax=axs[j,i], cbar=False, xticklabels=j==len(categories)-1, yticklabels=i==0, cmap='coolwarm')
+        #stop
+        j = kt*3+kc
+        #heatmap(data2d, vmin=0., vmax=1., annot=sig2d, fmt = '.2f', ax=ax[j], cbar=False, xticklabels=j==0, yticklabels=True, cmap='coolwarm')
+        heatmap(data2d, vmin=0., vmax=1., annot=None, fmt = '.2f', ax=ax[j], cbar=False, xticklabels=True, yticklabels=j==0, cmap='coolwarm')
+        #break
 
 
 
