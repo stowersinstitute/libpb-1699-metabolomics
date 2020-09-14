@@ -61,7 +61,7 @@ main = shakeArgs shakeOptions $ do
     -- sugar phosphate heatmap
     "out/fig/no-outliers/sugar-phosphate-heatmap.pdf" %> \out -> do
       need ["src/python/sugar-phosphate-heatmap.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/ssugar-phosphate-heatmap.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet /opt/src/stowers/pipelines/jenna-metabolomics/data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --level 0.05 --output ./out/fig/no-outliers/sugar-phosphate-plot.pdf"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/ssugar-phosphate-heatmap.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet /opt/src/stowers/pipelines/jenna-metabolomics/data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --level 0.05 --output ./out/fig/no-outliers/sugar-phosphate-heatmap.pdf --output-cbar ./out/fig/no-outliers/sugar-phosphate-heatmap-cbar.pdf"
 
     -- metabolites of interest
     "out/fig/no-outliers/metabolites-of-interest.pdf" %> \out -> do
