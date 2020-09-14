@@ -223,7 +223,9 @@ for i in range(3):
 
 #https://stackoverflow.com/questions/27037241/changing-the-rotation-of-tick-labels-in-seaborn-heatmap
 #plt.yticks(rotation=0)
-for x,tissue in zip([0.2325,0.525,0.7925],tissues):
+for x,tissue in zip([0.2325,0.515,0.7925],tissues):
     fig.text(x,0.95,tissue,size=20,ha='center',va='center',fontweight='bold',transform=fig.transFigure)
+for y,cls in zip([0.675,0.3575,0.1715],['Sugar\nphos.-\nphates','Sugars','Uronic\nacids']):
+    fig.text(0.915,y,cls,size=20,ha='left',va='center',rotation=0.,fontweight='bold',transform=fig.transFigure)
 
 plt.savefig(args.output,bbox_inches='tight',transparent=True,pad_inches=0)
