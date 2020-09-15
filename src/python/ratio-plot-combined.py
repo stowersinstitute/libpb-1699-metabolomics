@@ -167,7 +167,6 @@ for tissue in tissues:
                 classes_subset = sum_by_class.loc[:,sum_by_class.columns.str.contains(condition) & sum_by_class.columns.str.contains(pop)]
 
                 def process_df(d):
-                    #d.index.name = 'Category'
                     d = d.reset_index()
                     d.columns = ['Category'] + ['Intensity']*(len(d.columns)-1)
                     d.insert(0,'Tissue',[tissue]*len(d.index))
@@ -175,7 +174,6 @@ for tissue in tissues:
                     d.insert(2,'Population',[pop]*len(d.index))
                     d.insert(3,'Condition',[condition]*len(d.index))
                     d['Category'] = d['Category'].apply(lambda u: u.split('[')[0].strip())
-                    #print(d)
                     return d
 
                 category_subset,classes_subset = (process_df(d) for d in [category_subset,classes_subset])
