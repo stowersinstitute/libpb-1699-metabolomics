@@ -59,7 +59,6 @@ astyanax_data = astyanax_data.loc[:,['pools' not in c for c in astyanax_data.col
 weights_series = weights_series.loc[['pools' not in c for c in weights_series.index]]
 kegg_to_category = {kegg:cat for cat,keggs in ame.compounds_by_category_from_dataset.items() for kegg in keggs}
 astyanax_data['Category'] = astyanax_data.apply(lambda u: kegg_to_category[u.name],axis=1)
-print(astyanax_data)
 
 pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']
