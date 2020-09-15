@@ -98,7 +98,7 @@ for cat in categories:
                         up[m,tissue,cond,comp] = False
                 datasets.append(d)
 significance_data = concat(datasets,axis=0).dropna()
-#print(significance_data)
+
 
 astyanax_data = ame.get_data_by_kegg_id().set_index('KEGG')
 astyanax_data.columns = [' '.join(u) for u in ame.treatment_descriptors]
@@ -163,10 +163,6 @@ def fix_catplot(cpds):
                 stars = []
                 for comp,color in zip(comparisons,['firebrick','goldenrod','#35d0ba']):
                     pval = significance_data.loc[(significance_data['Tissue'] == tissue) & (significance_data['Condition'] == cond) & (significance_data['Comparison'] == comp)]['Pr(>|z|)'][cpd]
-                    #print(significance_data)
-                    #print(tissue,cond,comp)
-                    #print(significance_data.loc[(significance_data['Tissue'] == tissue) & (significance_data['Condition'] == cond) & (significance_data['Comparison'] == comp)]['Pr(>|z|)'][cpd])
-                    #print(float(pval))
                     if pval < 0.05:
                         stars.append(color)
                 w = 0.1
@@ -185,18 +181,22 @@ if args.output_dir_extra is not None:
       ['nicotinamide','orotic acid'],
       ]
     for k,cpds in enumerate(compounds,start=1):
-        #print(data)
         d = data[data['Compound'].isin(cpds)]
-        print(d)
         catplot('Condition', 'Value', data=d, kind='point', row='Compound',row_order=cpds,hue='Population',col='Tissue',sharey='row',palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.,legend=None)
 
         fix_catplot(cpds)
 
         handles, labels = plt.gcf().get_axes()[0].get_legend_handles_labels()
 
-        plt.savefig(os.path.join(args.output_dir_extra,f'metabolites-of-interest{k}.pdf'))
+        plt.savefig(os.path.join(args.output_dir_extra,f'metabolites-of-interest{k}.pdf'),bbox_inches='tight',transparent=True,pad_inches=0)
 
 # plot just legend
 fig,ax = plt.subplots(figsize=(2.5, 2.5))
 ax.legend(handles, labels, loc='center')
-plt.savefig(os.path.join(args.output_dir_extra,f'metabolites-of-interest-legend.pdf'))
+# hide graphics
+ax.set_yticks([], minor=[])
+ax.set_xticks([], minor=[])
+ax.patch.set_visible(False)
+for s in ["top", "bottom", "left", "right"]:
+    ax.spines[s].set_visible(False)
+plt.savefig(os.path.join(args.output_dir_extra,f'metabolites-of-interest-legend.pdf'),bbox_inches='tight',transparent=True,pad_inches=0)
