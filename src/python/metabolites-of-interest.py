@@ -1,6 +1,6 @@
 from cavefinomics import AstyanaxMe
 from argparse import ArgumentParser
-from numpy import log10
+from numpy import log10, linspace
 from itertools import repeat, chain
 from seaborn import catplot, FacetGrid, palplot, color_palette, set_palette
 from pandas import DataFrame, read_csv
@@ -170,7 +170,7 @@ def fix_catplot(cpds):
                     if pval < 0.05:
                         stars.append(color)
                 w = 0.1
-                for star_color,offset in zip(stars,linspace(-len(stars)*w/2.,len(stars)*w/2.)):
+                for star_color,offset in zip(stars,linspace(-len(stars)*w/2.,len(stars)*w/2.,len(stars))):
                         plt.gcf().get_axes()[i*3+j].text(x+offset,0.985,'*',size=18,fontweight='bold',ha='center',va='center',color=star_color,transform=plt.gcf().get_axes()[i*3+j].get_xaxis_transform())
 
 fix_catplot(compounds)
@@ -192,4 +192,11 @@ if args.output_dir_extra is not None:
 
         fix_catplot(cpds)
 
+        handles, labels = plt.gcf().get_axes()[0].get_legend_handles_labels()
+
         plt.savefig(os.path.join(args.output_dir_extra,f'metabolites-of-interest{k}.pdf'))
+
+# plot just legend
+fig,ax = plt.subplots(figsize=(2.5, 2.5))
+ax.legend(handles, labels, loc='center')
+plt.savefig(os.path.join(args.output_dir_extra,f'metabolites-of-interest-legend.pdf'))
