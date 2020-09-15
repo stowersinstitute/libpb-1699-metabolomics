@@ -103,7 +103,7 @@ main = shakeArgs shakeOptions $ do
 
     "out/fig/no-outliers/ratios-combined.pdf" %> \out -> do
       need ["src/python/ratio-plot-combined.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/ratio-plot-combined.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --sample-sheet ./data/primary/sample-sheet.csv --lipids-normalized ./data/lipids/normalized --lipidmaps-fa ./data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --output ./out/fig/no-outliers/ratios-combined.pdf"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/ratio-plot-combined.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --sample-sheet ./data/primary/sample-sheet.csv --lipids-normalized ./data/lipids/normalized --lipidmaps-fa ./data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --output ./out/fig/no-outliers/ratios-combined.pdf --output-legend ./out/fig/no-outliers/ratios-combined-legend.pdf"
 
     -- OPLS lipids
     "out/work/lipids/opls/outliers/category/Sphingolipids/Muscle/Ref/PvT.csv" %> \out -> do

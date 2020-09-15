@@ -12,7 +12,7 @@ import pathlib
 import os
 from cavefinomics import run_opls
 from sklearn.preprocessing import StandardScaler, Normalizer
-from numpy import log10, mean, isnan, quantile, nan, array
+from numpy import (log10, mean, isnan, quantile, nan, array, arange)
 import matplotlib.patches as patches
 import json
 #https://colorhunt.co/palette/192017
@@ -29,7 +29,7 @@ import json
 #https://colorhunt.co/palette/179483
 #https://colorhunt.co/palette/178369
 
-parser = ArgumentParser(description="PCA vs mammals.")
+parser = ArgumentParser(description="Ratio of metabolite categories.")
 parser.add_argument("--astyanax", type=str, help="Astyanax metabolomics csv file.")
 parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
 parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
@@ -38,6 +38,7 @@ parser.add_argument("--lipids-normalized", type=str, help="Normalized lipids dir
 parser.add_argument("--lipidmaps-json", type=str, help="Lipidmaps JSON.")
 parser.add_argument("--lipidmaps-fa", type=str, help="Lipidmaps fa.")
 parser.add_argument("--output", type=str, help="Output file.")
+parser.add_argument("--output-legend", type=str, help="Output legend file.")
 args = parser.parse_args()
 
 
@@ -271,13 +272,13 @@ bar_width = 0.35
 width = 0.35
 
 def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, name):
-    gridspec_kw = {"height_ratios":[1.]*3, "width_ratios" : [1.,3.,3.,3.]}
+    gridspec_kw = {"height_ratios":[1.]*3, "width_ratios" : [0.5,3.,3.,3.]}
     fig,ax = plt.subplots(nrows=3,ncols=len(tissues)+1,sharex=False,sharey=False,gridspec_kw=gridspec_kw,figsize=(12.,12.))
     c = {}
     lc = {}
     for i,tissue in zip(range(3),tissues):
         # plot by categories
-        ax[i,0].text(0.5,0.5,tissue,size=12,rotation=90.,ha='center',va='center',transform=ax[i,0].transAxes)
+        ax[i,0].text(0.95,0.5,tissue,size=18,fontweight='bold',rotation=90.,ha='center',va='center',transform=ax[i,0].transAxes)
         # hide graphics
         ax[i,0].set_yticks([], minor=[])
         ax[i,0].set_xticks([], minor=[])
@@ -348,17 +349,38 @@ def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, nam
                     lipids_last_bar = array(list(vals.values()))
                 ax[i,j].bar(array(range(3)) + width/2., list(vals.values()), bar_width, tick_label=pops, **kwds) #
                 if i == 0:
-                    ax[i,j].set_title(conditions_short[j-1])
+                    ax[i,j].set_title(conditions_short[j-1],size=16,fontweight='bold')
             ax[i,j].bar(array(range(3)) + width/2., array([1.]*3)-lipids_last_bar, bar_width, tick_label=pops, bottom=lipids_last_bar, label='Other lipids' if i==0 and j==1 else "") #
+            ax[i,j].set_xticks(arange(3))
+            ax[i,j].set_xticklabels(ax[i,j].get_xticklabels(),fontsize='large')
             # hide graphics
             ax[i,j].set_yticks([], minor=[])
             ax[i,j].patch.set_visible(False)
             for s in ["top", "bottom", "left", "right"]:
                 ax[i,j].spines[s].set_visible(False)
 
-    fig.legend()
+    #fig.legend()
+    handles, labels = ax[0,1].get_legend_handles_labels()
 
     plt.savefig(args.output,bbox_inches='tight',transparent=True,pad_inches=0)
+
+    # plot just legend
+    fig,ax = plt.subplots(nrows=2,figsize=(2.5, 5.))
+
+    # hide graphics
+    for a in ax:
+        a.set_yticks([], minor=[])
+        a.set_xticks([], minor=[])
+        a.patch.set_visible(False)
+        for s in ["top", "bottom", "left", "right"]:
+            a.spines[s].set_visible(False)
+
+    ax[0].legend(handles[:5], labels[:5], loc='center')
+    ax[0].text(0.5,1.1,'Primary\nmetabolites',size=14,fontweight='bold',ha='center',va='center',transform=ax[0].transAxes)
+    ax[1].legend(handles[5:], labels[5:], loc='center')
+    ax[1].text(0.5,1.05,'Lipids',size=14,fontweight='bold',ha='center',va='center',transform=ax[1].transAxes)
+
+    plt.savefig(args.output_legend,bbox_inches='tight',transparent=True,pad_inches=0)
 
 matplotlib.rcParams['axes.prop_cycle'] = matplotlib.cycler(color=[
   "#363062", "#4d4c7d", "#827397","#d8b9c3","#ffb6b6",

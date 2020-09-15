@@ -19,7 +19,9 @@ cabal new-run pipeline
 
 This will generate all figures under `out/fig`, and supplementary information under `out/supp`.
 
-# Newer Python Versions (3.9+)
+# Notes
+
+## Newer Python Versions (3.9+)
 
 If running a newer version of Python, you may need to edit the Pipfile and change the line:
 
@@ -34,3 +36,13 @@ python_version = "3.9"
 ```
 
 However, some packages may not work with newer versions of Python or may have different behavior.
+
+## Outliers
+
+Most analyses produce outputs with and without the following outliers:
+
+* Pachon Muscle Refed 5
+* Tinaja Liver Refed 6
+* Pachon Liver 30d Starved 3
+
+Results including the outliers are in an `outliers` subdirectory whereas results excluding the outliers are in a `no-outliers` subdirectory (this would be more clear if English had a word like *kein*, but alas it does not). Most results from the paper exclude outliers.
