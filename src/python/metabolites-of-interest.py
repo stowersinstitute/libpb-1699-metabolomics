@@ -157,6 +157,7 @@ def fix_catplot(cpds):
         plt.gcf().get_axes()[i*3].set_ylabel(cpds[i], fontsize='xx-large')
     for ax,name in zip(plt.gcf().get_axes(),chain.from_iterable((tissues,['']*3*(len(cpds)-1)))):
         ax.set_title(name, fontsize='xx-large')
+    plt.gcf().get_axes()[0].text(0,0.985,'*',size=16,fontweight='bold',ha='center',va='center',transform=plt.gcf().get_axes()[0].get_xaxis_transform())
 
 fix_catplot(compounds)
 
