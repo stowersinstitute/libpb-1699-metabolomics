@@ -98,7 +98,7 @@ for cat in categories:
                         up[m,tissue,cond,comp] = False
                 datasets.append(d)
 significance_data = concat(datasets,axis=0).dropna()
-print(significance_data)
+#print(significance_data)
 
 astyanax_data = ame.get_data_by_kegg_id().set_index('KEGG')
 astyanax_data.columns = [' '.join(u) for u in ame.treatment_descriptors]
@@ -157,7 +157,21 @@ def fix_catplot(cpds):
         plt.gcf().get_axes()[i*3].set_ylabel(cpds[i], fontsize='xx-large')
     for ax,name in zip(plt.gcf().get_axes(),chain.from_iterable((tissues,['']*3*(len(cpds)-1)))):
         ax.set_title(name, fontsize='xx-large')
-    plt.gcf().get_axes()[0].text(0,0.985,'*',size=16,fontweight='bold',ha='center',va='center',transform=plt.gcf().get_axes()[0].get_xaxis_transform())
+    for i,cpd in enumerate(cpds):
+        for j,tissue in enumerate(tissues):
+            for x,cond in enumerate(condmap.values()):
+                stars = []
+                for comp,color in zip(comparisons,['firebrick','goldenrod','#35d0ba']):
+                    pval = significance_data.loc[(significance_data['Tissue'] == tissue) & (significance_data['Condition'] == cond) & (significance_data['Comparison'] == comp)]['Pr(>|z|)'][cpd]
+                    #print(significance_data)
+                    #print(tissue,cond,comp)
+                    #print(significance_data.loc[(significance_data['Tissue'] == tissue) & (significance_data['Condition'] == cond) & (significance_data['Comparison'] == comp)]['Pr(>|z|)'][cpd])
+                    #print(float(pval))
+                    if pval < 0.05:
+                        stars.append(color)
+                w = 0.1
+                for star_color,offset in zip(stars,linspace(-len(stars)*w/2.,len(stars)*w/2.)):
+                        plt.gcf().get_axes()[i*3+j].text(x+offset,0.985,'*',size=18,fontweight='bold',ha='center',va='center',color=star_color,transform=plt.gcf().get_axes()[i*3+j].get_xaxis_transform())
 
 fix_catplot(compounds)
 
