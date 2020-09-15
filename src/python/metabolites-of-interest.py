@@ -9,6 +9,7 @@ from matplotlib.ticker import EngFormatter
 import matplotlib.ticker as plticker
 from itertools import chain
 flatten = chain.from_iterable
+import os
 from pandas import concat
 
 SMALL_SIZE = 12
@@ -33,16 +34,16 @@ colors = ['#d92027','#ff9234','#ffcd3c','#35d0ba']
 #https://colorhunt.co/palette/183823
 #colors = ['#ffc4a3','#ff9a76','#f96d80','#bb596b']
 
-#palplot(color_palette('Set1'))
 set_palette('Set2')
 
-parser = ArgumentParser(description="PCA vs mammals.")
+parser = ArgumentParser(description="Plot metabolites of interest.")
 parser.add_argument("--astyanax", type=str, help="Astyanax metabolomics csv file.")
 parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
 parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
 parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
 parser.add_argument("--output", type=str, help="Output.")
+parser.add_argument("--output-dir-extra", type=str, help="Output for smaller plots.")
 args = parser.parse_args()
 
 ame = AstyanaxMe(
@@ -102,10 +103,8 @@ print(significance_data)
 astyanax_data = ame.get_data_by_kegg_id().set_index('KEGG')
 astyanax_data.columns = [' '.join(u) for u in ame.treatment_descriptors]
 astyanax_data = astyanax_data.loc[:,['pools' not in c for c in astyanax_data.columns]]
-#astyanax_data = astyanax_data.apply(log10)
 astyanax_data.columns = (' '.join((c,str(n))) for c,n in zip(astyanax_data.columns,chain.from_iterable(repeat(range(1,6+1),9*3))))
 astyanax_data = astyanax_data.rename(ame.get_kegg_to_name_map(), axis=0)
-#print(list(astyanax_data.index))
 astyanax_data = astyanax_data.loc[compounds]
 
 outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
@@ -114,11 +113,9 @@ def process_outlier(exclude,subset):
     for outlier in outliers:
         if exclude and outlier in subset.columns:
             subset = subset.loc[:,~subset.columns.str.contains(outlier)]
-    #print(subset.columns)
     return subset
 
 astyanax_data = process_outlier(args.exclude_outlier,astyanax_data)
-#print(list(astyanax_data.columns))
 
 pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']
@@ -133,44 +130,51 @@ for pop in pops:
             for compound in compounds:
                 subset = astyanax_data.loc[compound,
                   astyanax_data.columns.str.contains(pop) & astyanax_data.columns.str.contains(tissue) & astyanax_data.columns.str.contains(condition)]
-                #print(subset)
                 for val in subset:
                     data.append({'Population':pop if pop != 'Pachon' else 'Pachón','Tissue':tissue,'Condition':condmap[condition],'Compound':compound,'Value':val})
 data = DataFrame(data)
-#print(data)
 
-#g = FacetGrid(data,col='Compound')
-#g = (g.map(catplot, row='Population',hue='Condition',col='Tissue', y='Value'))
-#catplot('Condition', 'Value', data=data, kind='point', row='Compound',row_order=compounds,hue='Population',col='Tissue',palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
+# plot all compounds at once
 catplot('Condition', 'Value', data=data, kind='point', row='Compound',row_order=compounds,hue='Population',col='Tissue',sharey='row',palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
-#catplot('Condition', 'Value', data=data, kind='point', row='Compound',row_order=compounds,hue='Population',col='Tissue',sharey=False,palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.)
 
-for ax,compound in zip(plt.gcf().get_axes(),flatten([c]*3 for c in compounds)):
-    #ax.yaxis.set_major_locator(plticker.MultipleLocator(2e5))
-    if data[data['Compound'] == compound]['Value'].max() > 1e6:
-        ax.yaxis.set_major_locator(plticker.MultipleLocator(1e6))
-    elif data[data['Compound'] == compound]['Value'].max() > 1e5:
-        ax.yaxis.set_major_locator(plticker.MultipleLocator(1e5))
-    elif data[data['Compound'] == compound]['Value'].max() > 1e4:
-        ax.yaxis.set_major_locator(plticker.MultipleLocator(1e4))
-    else:
-        ax.yaxis.set_major_locator(plticker.MultipleLocator(2e3))
-    ax.yaxis.set_major_formatter(EngFormatter(unit="", places=0, sep="\N{THIN SPACE}"))
-    ax.set_xlabel('')
-    ax.set_ylabel('')
-    ax.tick_params(axis='x', labelsize=14.)
-    ax.tick_params(axis='y', labelsize=16.)
-    #ax.set_yticks([], minor=[])
-    #https://cduvallet.github.io/posts/2018/11/facetgrid-ylabel-access
-    #print(len(ax.texts))
-    #ax.texts[0].remove()
-#print(plt.gcf().get_axes().shape)
-for i in range(len(compounds)):
-    plt.gcf().get_axes()[i*3].set_ylabel(compounds[i], fontsize='xx-large')
-#plt.gcf().get_axes()[3].set_ylabel(compounds[1], fontsize='xx-large')
-for ax,name in zip(plt.gcf().get_axes(),chain.from_iterable((tissues,['']*3*(len(compounds)-1)))):
-    ax.set_title(name, fontsize='xx-large')
+def fix_catplot(cpds):
+    for ax,compound in zip(plt.gcf().get_axes(),flatten([c]*3 for c in cpds)):
+        if data[data['Compound'] == compound]['Value'].max() > 1e6:
+            ax.yaxis.set_major_locator(plticker.MultipleLocator(1e6))
+        elif data[data['Compound'] == compound]['Value'].max() > 1e5:
+            ax.yaxis.set_major_locator(plticker.MultipleLocator(1e5))
+        elif data[data['Compound'] == compound]['Value'].max() > 1e4:
+            ax.yaxis.set_major_locator(plticker.MultipleLocator(1e4))
+        else:
+            ax.yaxis.set_major_locator(plticker.MultipleLocator(2e3))
+        ax.yaxis.set_major_formatter(EngFormatter(unit="", places=0, sep="\N{THIN SPACE}"))
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+        ax.tick_params(axis='x', labelsize=14.)
+        ax.tick_params(axis='y', labelsize=16.)
+        #https://cduvallet.github.io/posts/2018/11/facetgrid-ylabel-access
+    for i in range(len(cpds)):
+        plt.gcf().get_axes()[i*3].set_ylabel(cpds[i], fontsize='xx-large')
+    for ax,name in zip(plt.gcf().get_axes(),chain.from_iterable((tissues,['']*3*(len(cpds)-1)))):
+        ax.set_title(name, fontsize='xx-large')
 
+fix_catplot(compounds)
 
-#stop
 plt.savefig(args.output)
+
+# make smaller plots for tiling
+if args.output_dir_extra is not None:
+    compounds = [
+      ['ascorbic acid','dehydroascorbic acid'],
+      ['glutathione','alpha-ketoglutarate'],
+      ['nicotinamide','orotic acid'],
+      ]
+    for k,cpds in enumerate(compounds,start=1):
+        #print(data)
+        d = data[data['Compound'].isin(cpds)]
+        print(d)
+        catplot('Condition', 'Value', data=d, kind='point', row='Compound',row_order=cpds,hue='Population',col='Tissue',sharey='row',palette=['firebrick','goldenrod','dodgerblue'],capsize=0.1,height=4.,legend=None)
+
+        fix_catplot(cpds)
+
+        plt.savefig(os.path.join(args.output_dir_extra,f'metabolites-of-interest{k}.pdf'))

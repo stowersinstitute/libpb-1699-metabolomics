@@ -66,7 +66,7 @@ main = shakeArgs shakeOptions $ do
     -- metabolites of interest
     "out/fig/no-outliers/metabolites-of-interest.pdf" %> \out -> do
       need ["src/python/metabolites-of-interest.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/metabolites-of-interest.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet /opt/src/stowers/pipelines/jenna-metabolomics/data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --output ./out/fig/no-outliers/metabolites-of-interest.pdf"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/metabolites-of-interest.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet /opt/src/stowers/pipelines/jenna-metabolomics/data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --output ./out/fig/no-outliers/metabolites-of-interest.pdf --output-dir-extra ./out/fig/no-outliers/"
 
     -- OPLS primary cross-pop
     "out/work/primary/opls/no-outliers/Nucleotides/Muscle/Ref/PvT.csv" %> \out -> do
