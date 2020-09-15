@@ -15,12 +15,6 @@ from sklearn.preprocessing import StandardScaler, Normalizer
 from numpy import log10, mean, isnan, quantile, nan, array
 import matplotlib.patches as patches
 import json
-#plt.style.use('seaborn')
-#plt.style.use('Solarize_Light2')
-#plt.style.use('fivethirtyeight')
-#matplotlib.rc('image', cmap='Pastel2')
-#plt.set_cmap('jet')
-#plt.set_cmap('Pastel2')
 #https://colorhunt.co/palette/192017
 #matplotlib.rcParams['axes.prop_cycle'] = matplotlib.cycler(color=["#99b898", "#feceab", "#ff847c","#e84a5f"])
 #https://colorhunt.co/palette/191947
@@ -63,7 +57,6 @@ weights_series.index = [' '.join(u) for u in ame.treatment_descriptors]
 astyanax_data = astyanax_data.loc[:,['pools' not in c for c in astyanax_data.columns]]
 weights_series = weights_series.loc[['pools' not in c for c in weights_series.index]]
 kegg_to_category = {kegg:cat for cat,keggs in ame.compounds_by_category_from_dataset.items() for kegg in keggs}
-#print(astyanax_data)
 astyanax_data['Category'] = astyanax_data.apply(lambda u: kegg_to_category[u.name],axis=1)
 print(astyanax_data)
 
@@ -81,7 +74,6 @@ def process_outlier(subset):
     return subset
 
 catdata = []
-#classs = []
 sum_by_category = astyanax_data.groupby('Category').sum()
 
 for tissue in tissues:
@@ -90,24 +82,17 @@ for tissue in tissues:
             subset = sum_by_category.loc[:,sum_by_category.columns.str.contains(tissue) & sum_by_category.columns.str.contains(condition) & sum_by_category.columns.str.contains(pop)]
 
             def process_df(d):
-                #d.index.name = 'Category'
                 d = d.reset_index()
                 d.columns = ['Category'] + ['Intensity']*(len(d.columns)-1)
                 d.insert(0,'Tissue',[tissue]*len(d.index))
                 d.insert(1,'Population',[pop]*len(d.index))
                 d.insert(2,'Condition',[condition]*len(d.index))
-                #d['Category'] = d['Category'].apply(lambda u: u.split('[')[0].strip())
-                #print(d)
                 return d
 
             catdata.append(process_df(subset))
 
 catdata = concat(catdata,axis=0)
-#classs = concat(classs,axis=0)
 catdata = catdata.groupby(['Tissue','Category','Population','Condition']).sum().reset_index()
-#print(catdata)
-#print(cats)
-#print(classs)
 
 with open(args.lipidmaps_fa) as f:
   lmfa = json.load(f)
@@ -118,7 +103,6 @@ ali = AstyanaxLi(
   )
 
 def get_lipidmap_id(inchikey):
-    #return inchikey
     if inchikey in ali.lipidmaps_inchikey:
         return ali.lipidmaps_inchikey[inchikey]
     elif '-'.join(inchikey.split('-')[:2]) in ali.lipidmaps_inchikey2:
@@ -131,11 +115,9 @@ def fix_cols(df,tissue):
     d = df.copy()
     def j(c):
         return ' '.join(c)
-    #print(d.columns)
     d.columns = (f'{c[0]} {tissue} {j(c[1:])} {n}' for c,n in zip((cc.split() for cc in d.columns),list(range(1,7))*27))
     d = process_outlier(d)
     d = d.reindex(sorted(d.columns), axis=1)
-    #print(d.columns)
     return d
 
 outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
@@ -155,12 +137,10 @@ for tissue in tissues:
             if isinstance(u[0],str):
                 lmid = u[0]
                 mc = ali.lipidmaps[lmid]['MAIN_CLASS']
-                #print(mc)
                 if mc != "Fatty Acids and Conjugates [FA01]":
                     return mc
                 else:
                     fa = lmfa[lmid]
-                    #print(fa)
                     if 'unsat' in fa:
                         if fa['unsat'] > 1:
                             return 'Polyunsaturated Fatty Acids'
@@ -172,13 +152,10 @@ for tissue in tissues:
             else:
                 return nan
         lmd['MAIN_CLASS'] = lmd.apply(lambda u: ali.lipidmaps[u[0]]['MAIN_CLASS'] if isinstance(u[0],str) else nan,axis=1)
-        #lmd['MAIN_CLASS'] = lmd.apply(assignfa,axis=1)
         d = ali.normalized[tissue,polarity]
         d = fix_cols(d,tissue)
         d['CATEGORY'] = lmd['CATEGORY']
         sum_by_category = d.groupby('CATEGORY').sum()
-        #print(sum_by_category)
-        #stop
 
         d = ali.normalized[tissue,polarity]
         d['MAIN_CLASS'] = lmd['MAIN_CLASS']
@@ -187,8 +164,6 @@ for tissue in tissues:
         for i,condition in zip(range(3),conditions):
             for j,pop in zip(range(1,4),pops):
                 category_subset = sum_by_category.loc[:,sum_by_category.columns.str.contains(condition) & sum_by_category.columns.str.contains(pop)]
-                #print(sum_by_category)
-                #pathlib.Path('/tmp/classes/pie').mkdir(parents=True, exist_ok=True)
                 classes_subset = sum_by_class.loc[:,sum_by_class.columns.str.contains(condition) & sum_by_class.columns.str.contains(pop)]
 
                 def process_df(d):
@@ -212,17 +187,12 @@ cats = concat(cats,axis=0)
 classs = concat(classs,axis=0)
 cats = cats.groupby(['Tissue','Category','Population','Condition']).sum().reset_index()
 classs = classs.groupby(['Tissue','Category','Population','Condition']).sum().reset_index()
-#print(cats)
-#print(classs)
 
 cattypes = ['Categories','Classes']
 
 cattypes = ['Categories','Classes']
 
 
-#class_subsets = ['Saturated Fatty Acids', 'Monounsaturated Fatty Acids', 'Polyunsaturated Fatty Acids']
-#class_subsets = ['Ceramides','Fatty Acids and Conjugates','Glycerophosphocholines','Glycerophosphoethanolamines','Neutral glycosphingolipids','Sphingoid bases','Triradylglycerols']
-#class_subsets = ['Ceramides','Fatty Acids and Conjugates','Glycerophosphocholines','Glycerophosphoethanolamines','Sphingoid bases','Triradylglycerols']
 lipid_subsets = ['Ceramides','Fatty Acids and Conjugates','Glycerophosphocholines','Glycerophosphoethanolamines','Triradylglycerols']
 primary_subsets = list(ame.compounds_by_category_from_dataset.keys())
 primary_renamer = {'Fatty\nacids': 'Primary fatty acids'}
@@ -294,7 +264,6 @@ for tissue in tissues:
         df.insert(1, 'Condition', condition)
         df.insert(2, 'Tissue', tissue)
 
-        #print(tissue,condition)
         data[tissue,condition] = df
 
 data = concat((data[tissue,condition] for tissue in tissues for condition in conditions),axis=0)
@@ -304,15 +273,12 @@ bar_width = 0.35
 width = 0.35
 
 def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, name):
-    #print(class_subsets)
     gridspec_kw = {"height_ratios":[1.]*3, "width_ratios" : [1.,3.,3.,3.]}
     fig,ax = plt.subplots(nrows=3,ncols=len(tissues)+1,sharex=False,sharey=False,gridspec_kw=gridspec_kw,figsize=(12.,12.))
-    #fig.suptitle(f'Lipid Composition')
     c = {}
     lc = {}
     for i,tissue in zip(range(3),tissues):
         # plot by categories
-        #ax[k*4,2].text(0.5,0.5,tissue,size=12,ha='center',va='center',transform=ax[k*4,2].transAxes)
         ax[i,0].text(0.5,0.5,tissue,size=12,rotation=90.,ha='center',va='center',transform=ax[i,0].transAxes)
         # hide graphics
         ax[i,0].set_yticks([], minor=[])
@@ -323,15 +289,8 @@ def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, nam
         for j,pop in zip(range(1,4),pops):
             d = data.loc[(data['Tissue'] == tissue) & (data['Population'] == pop)]
             d = d.groupby('Condition').mean()
-            #print(d)
-            #print(class_subsets)
-            #condition_totals = d[class_subsets].sum(axis=1)
             condition_totals = d.sum(axis=1)
-            #print(condition_totals)
-            #stop
             d = d.rename(primary_renamer,axis=1)
-            #print(d)
-            #print(condition_totals)
 
             # lipids
             l = lipid_data.loc[(data['Tissue'] == tissue) & (data['Population'] == pop)]
@@ -341,16 +300,10 @@ def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, nam
             for cls in primary_subsets:
                 if cls in primary_renamer:
                     cls = primary_renamer[cls]
-                #print(cls)
                 c[tissue,pop,cls] = d[cls]/condition_totals
-                #d = d[class_subsets].mean()
-                #print(tissue,pop,cls)
                 if not all(isfinite(c[tissue,pop,cls].values)):
                     c[tissue,pop,cls] = [0.]*len(c)
-                    #print(tissue,condition,pop,'Non finite values')
-                    #continue
                 #https://python-graph-gallery.com/12-stacked-barplot-with-matplotlib/
-                #print(c)
             for cls in lipid_subsets:
                 if cls in lipid_renamer:
                     cls = lipid_renamer[cls]
@@ -376,9 +329,6 @@ def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, nam
                     primary_last_bar += array(list(vals.values()))
                 else:
                     primary_last_bar = array(list(vals.values()))
-                #for _,cv in zip(range(3),c):
-                #print(list(vals.keys()))
-                #print(list(vals.values()))
                 #https://matplotlib.org/3.3.1/gallery/lines_bars_and_markers/barchart.html#sphx-glr-gallery-lines-bars-and-markers-barchart-py
                 ax[i,j].bar(array(range(3)) - width/2., list(vals.values()), bar_width, tick_label=pops, **kwds) #
                 if i == 0:
@@ -404,17 +354,14 @@ def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, nam
             ax[i,j].bar(array(range(3)) + width/2., array([1.]*3)-lipids_last_bar, bar_width, tick_label=pops, bottom=lipids_last_bar, label='Other lipids' if i==0 and j==1 else "") #
             # hide graphics
             ax[i,j].set_yticks([], minor=[])
-            #ax[i,j].set_xticks([], minor=[])
             ax[i,j].patch.set_visible(False)
             for s in ["top", "bottom", "left", "right"]:
                 ax[i,j].spines[s].set_visible(False)
 
     fig.legend()
 
-    #pathlib.Path('/tmp/classes/bar').mkdir(parents=True, exist_ok=True)
     plt.savefig(args.output,bbox_inches='tight',transparent=True,pad_inches=0)
 
-#make_fig(list(data.columns)[3:], {}, 'all')
 matplotlib.rcParams['axes.prop_cycle'] = matplotlib.cycler(color=[
   "#363062", "#4d4c7d", "#827397","#d8b9c3","#ffb6b6",
   #"#726a95",
