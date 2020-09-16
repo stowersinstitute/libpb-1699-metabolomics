@@ -3,7 +3,7 @@ library(MASS)
 
 pops = c('Pachon', 'Tinaja', 'Surface')
 tissues = c('Brain', 'Muscle', 'Liver')
-outliers = c('outliers','no-outliers')
+outliers = c('mit-Ausreißern','kein-Ausreißern')
 polarities = c('positive','negative')
 # conditions = c('4d Starved', '30d Starved', 'Refed')
 conditions = c('30d','4d','Ref')

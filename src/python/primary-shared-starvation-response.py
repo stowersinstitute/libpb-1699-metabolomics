@@ -16,6 +16,7 @@ from cavefinomics import AstyanaxMe
 
 parser = ArgumentParser(description="Heatmap of conserved metabolites.")
 parser.add_argument("--output-dir", type=str, help="Output directory.")
+parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
 args = parser.parse_args()
 
 conditions = {'4d':'4d Starved', '30d':'30d Starved', 'Ref':'Refed'}
@@ -23,14 +24,17 @@ pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']
 comparisons = {'30vR':('30d Starved','Refed'),'4vR':('4d Starved','Refed'),'30v4':('30d Starved','4d Starved')}
 categories = {"Aminoacids":'Amino acids',"Carbohydrates_-CCM": 'Carbohydrates / CCM',"Fattyacids":'Fatty acids',"Misc._-_sec.metabolites":'Misc',"Nucleotides":'Nucleotides'}
-outlier = 'no-outliers'
+if args.exclude_outlier:
+    outlier_text = 'kein-Ausreißern'
+else:
+    outlier_text = 'mit-Ausreißern'
 
 metabolites = {}
 for tissue in tissues:
     for comp,groups in comparisons.items():
         sig = []
         for cat,category in categories.items():
-            data = read_csv(f"out/work/primary/glm/singlefactor/{outlier}/{cat}/{tissue}/CvS/{comp}.csv").rename({'Pr(>|z|)':'p'},axis=1)
+            data = read_csv(f"out/work/primary/glm/singlefactor/{outlier_text}/{cat}/{tissue}/CvS/{comp}.csv").rename({'Pr(>|z|)':'p'},axis=1)
             cols = list(data.columns)
             cols[0] = 'Name'
             data.columns = cols
@@ -63,7 +67,7 @@ for comp,groups in comparisons.items():
         ax[j].set_xticks([], minor=[])
         ax[j].set_title(tissue,fontsize='xx-large',fontweight='bold')
 
-    filename=f'{args.output_dir}/{outlier}/primary-shared-starvation-response-{comp}.pdf'
+    filename=f'{args.output_dir}/{outlier_text}/primary-shared-starvation-response-{comp}.pdf'
     plt.savefig(filename,bbox_inches='tight',transparent=True,pad_inches=0)
 
 fig,ax = plt.subplots(figsize=(3, 12))
@@ -85,5 +89,5 @@ ax.set_xticks([], minor=[])
 ax.patch.set_visible(False)
 for s in ["top", "bottom", "left", "right"]:
     ax.spines[s].set_visible(False)
-filename=f'{args.output_dir}/{outlier}/primary-shared-starvation-response-colorbar.pdf'
+filename=f'{args.output_dir}/{outlier_text}/primary-shared-starvation-response-colorbar.pdf'
 plt.savefig(filename)

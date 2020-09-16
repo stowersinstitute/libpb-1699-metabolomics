@@ -19,6 +19,7 @@ from cavefinomics import AstyanaxMe
 parser = ArgumentParser(description="PCA for primary.")
 parser.add_argument("--astyanax", type=str, help="Astyanax metabolomics csv file.")
 parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
+parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
 parser.add_argument("--groups", type=str, help="Groups to compare (30d Starved, 4d Starved, Refed).")
 parser.add_argument("--exclude-outlier", type=bool, help="Exclude the single Tinaja outlier?")
@@ -34,6 +35,7 @@ long_groups = ['30d Starved', 'Refed']
 ame = AstyanaxMe(
     data_csv=args.astyanax,
     kegg_compounds_file=args.compounds,
+    sample_sheet_path=args.sample_sheet,
     hmdb_file=args.hmdb,
     )
 

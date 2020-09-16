@@ -2,3 +2,5 @@
 /data
 /out
 /.venv
+/renv
+/out.old
