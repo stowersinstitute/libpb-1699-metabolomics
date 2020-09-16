@@ -154,9 +154,11 @@ def fix_catplot(cpds):
         ax.tick_params(axis='y', labelsize=16.)
         #https://cduvallet.github.io/posts/2018/11/facetgrid-ylabel-access
     for i in range(len(cpds)):
-        plt.gcf().get_axes()[i*3].set_ylabel(cpds[i], fontsize='xx-large')
+        plt.gcf().get_axes()[i*3].set_ylabel(cpds[i], fontsize=20, fontweight='bold')
     for ax,name in zip(plt.gcf().get_axes(),chain.from_iterable((tissues,['']*3*(len(cpds)-1)))):
-        ax.set_title(name, fontsize='xx-large')
+        ax.set_title(name, fontsize=24, fontweight='bold')
+    for ax in plt.gcf().get_axes():
+        ax.set_xticklabels(ax.get_xticklabels(),fontsize=18,fontweight='bold')
     for i,cpd in enumerate(cpds):
         for j,tissue in enumerate(tissues):
             for x,cond in enumerate(condmap.values()):
