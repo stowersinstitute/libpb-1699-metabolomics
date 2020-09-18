@@ -1,5 +1,12 @@
 library(shiny)
 library(shinyWidgets)
+library(readr)
+
+primary <- read_csv("out/work/primary/merged-mtic.csv")
+print(primary)
+print(unique(primary[c("Name","KEGG")]))
+
+# https://rdrr.io/cran/shinyWidgets/man/updateCheckboxGroupButtons.html
 
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
@@ -8,14 +15,22 @@ ui <- fluidPage(
     "Header A",
     tabPanel("Selections",
 #       https://stackoverflow.com/questions/27607566/allowing-one-tick-only-in-checkboxgroupinput
-      checkboxGroupButtons(
-        inputId = "somevalue",
+      radioButtons(
+        inputId = "selections",
         label = "Select by:",
         choices = c("Metabolites", "Categories"),
-        justified = TRUE,
-        individual = TRUE,
-        status = "primary",
         selected = "Metabolites",
+      ),
+      pickerInput(
+        inputId = "myPicker",
+        label = "Select/deselect all + format selected",
+        choices = LETTERS,
+        options = list(
+          `actions-box` = TRUE,
+          size = 10,
+          `selected-text-format` = "count > 3"
+        ),
+        multiple = TRUE
       )
     ),
     tabPanel("Component 2"),
