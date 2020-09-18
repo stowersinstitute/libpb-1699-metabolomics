@@ -70,14 +70,11 @@ for cat in categories:
                 glm = read_sig_dataset(f'out/work/primary/glm/singlefactor/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
                 opls = read_sig_dataset(f'out/work/primary/opls/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
                 zscore = read_sig_dataset(f'out/work/primary/zscore/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
-                cross_pop_significance.append(glm)
-                print(glm)
-                glm.apply(lambda u: print(u),axis=1)
                 glm['HMDB'] = glm.apply(lambda u: ','.join(kegg_to_hmdb[u['KEGG']]) if u['KEGG'] in kegg_to_hmdb and len(kegg_to_hmdb[u['KEGG']]) > 0 else None,axis=1)
+                cross_pop_significance.append(glm)
 cross_pop_significance = concat(cross_pop_significance,axis=0).dropna()
 cross_pop_significance = cross_pop_significance.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'},axis=1)
 cross_pop_significance.index.name = 'Name'
-print(cross_pop_significance)
 if args.out_cross_pop:
     cross_pop_significance.to_csv(args.out_cross_pop)
 
@@ -89,6 +86,7 @@ for cat in categories:
         for cond in condmap:
             for comp in group_comparisons:
                 glm = read_sig_dataset(f'out/work/primary/glm/singlefactor/{outlier}/{cat}/{tissue}/CvS/{comp}.csv',cat,tissue,cond,comp)
+                glm['HMDB'] = glm.apply(lambda u: ','.join(kegg_to_hmdb[u['KEGG']]) if u['KEGG'] in kegg_to_hmdb and len(kegg_to_hmdb[u['KEGG']]) > 0 else None,axis=1)
                 conserved_strv_resp_significance.append(glm)
 conserved_strv_resp_significance = concat(conserved_strv_resp_significance,axis=0).dropna()
 conserved_strv_resp_significance = conserved_strv_resp_significance.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'})
