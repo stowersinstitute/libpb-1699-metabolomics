@@ -62,6 +62,7 @@ def read_sig_dataset(filepath,cat,tissue,cond,comp):
     d['Comparison'] = comp
     return d
 
+# cross population comparison
 for cat in categories:
     for tissue in tissues:
         for cond in condmap:
@@ -73,10 +74,10 @@ for cat in categories:
 cross_pop_significance = concat(cross_pop_significance,axis=0).dropna()
 cross_pop_significance = cross_pop_significance.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'},axis=1)
 cross_pop_significance.index.name = 'Name'
-#print(cross_pop_significance)
 if args.out_cross_pop:
     cross_pop_significance.to_csv(args.out_cross_pop)
 
+# conserved starvation response
 group_comparisons = ['30vR','4vR','30v4']
 conserved_strv_resp_significance = []
 for cat in categories:
@@ -90,8 +91,6 @@ conserved_strv_resp_significance = conserved_strv_resp_significance.rename({'Pr(
 conserved_strv_resp_significance.index.name = 'Name'
 conserved_strv_resp_significance = conserved_strv_resp_significance.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'},axis=1)
 conserved_strv_resp_significance.index.name = 'Name'
-print(conserved_strv_resp_significance)
-#stop
 if args.out_starvation_resp:
     conserved_strv_resp_significance.to_csv(args.out_starvation_resp)
 
@@ -99,31 +98,19 @@ astyanax_data = ame.get_data_by_kegg_id().set_index('KEGG')
 astyanax_data.columns = [' '.join(u) for u in ame.treatment_descriptors]
 astyanax_data = astyanax_data.loc[:,['pools' not in c for c in astyanax_data.columns]]
 astyanax_data.columns = (' '.join((c,str(n))) for c,n in zip(astyanax_data.columns,chain.from_iterable(repeat(range(1,6+1),9*3))))
-#astyanax_data = astyanax_data.rename(ame.get_kegg_to_name_map(), axis=0)
 
 outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
 
-#def process_outlier(exclude,subset):
-    #for outlier in outliers:
-        #if exclude and outlier in subset.columns:
-            #subset = subset.loc[:,~subset.columns.str.contains(outlier)]
-    #return subset
-
+# raw mtic data
 mtic_data = []
 kegg_to_name_map = ame.get_kegg_to_name_map()
 for pop in pops:
     for tissue in tissues:
         for condition in conditions:
-                #sig_subset = cross_pop_significance.loc[
-                  #(cross_pop_significance['Tissue'] == tissue) & (cross_pop_significance['Condition'] == condition)]
                 subset = astyanax_data.loc[:,
                   astyanax_data.columns.str.contains(pop) & astyanax_data.columns.str.contains(tissue) & astyanax_data.columns.str.contains(condition)]
-                #print(subset)
                 for compound,row in subset.iterrows():
-                    #print(str(compound),row)
-                    #print(compound)
                     for observation,val in row.iteritems():
-                        #print(observation)
                         is_outlier = observation in outliers
                         rep = observation.split(' ')[-1]
                         mtic_data.append({
@@ -138,8 +125,6 @@ for pop in pops:
                           'Raw_mTIC': val,
                         })
 
-#mtic_data = concat(mtic_data,axis=0)
 mtic_data = DataFrame(mtic_data).set_index('Name')
-#print(mtic_data)
 if args.out_mtic:
     conserved_strv_resp_significance.to_csv(args.out_mtic)
