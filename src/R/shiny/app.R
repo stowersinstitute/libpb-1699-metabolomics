@@ -55,22 +55,23 @@ server <- function(input, output) {
 #   output$nrows <- reactive({
 #     compounds[getSelection()]
 #   })
-output$selector <- renderUI({
-  pickerInput(
-      inputId = "selector",
-      label = "Select/deselect all + format selected",
-      choices = compounds[getSelectionType()],
-      options = list(
-        `actions-box` = TRUE,
-        size = 10,
-        `selected-text-format` = "count > 3",
-        `live-search`=TRUE
-      ),
-      multiple = TRUE,
-#              https://stackoverflow.com/questions/53609546/how-can-i-have-the-search-option-based-on-typing-letters-in-pickerinput-using-sh
-      options = list(`live-search`=TRUE)
-    )
-})
+  output$selector <- renderUI({
+#     print(input$selector)
+    pickerInput(
+        inputId = "selector",
+        label = "Select/deselect all + format selected",
+        choices = compounds[getSelectionType()],
+#         selected = input$selector,
+        options = list(
+  #              https://stackoverflow.com/questions/53609546/how-can-i-have-the-search-option-based-on-typing-letters-in-pickerinput-using-sh
+          `actions-box` = TRUE,
+          size = 10,
+          `selected-text-format` = "count > 3",
+          `live-search`=TRUE
+        ),
+        multiple = TRUE,
+      )
+  })
 
 }
 
