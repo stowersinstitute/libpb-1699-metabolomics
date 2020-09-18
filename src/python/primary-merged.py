@@ -129,4 +129,4 @@ for pop in pops:
 
 mtic_data = DataFrame(mtic_data).set_index('Name')
 if args.out_mtic:
-    conserved_strv_resp_significance.to_csv(args.out_mtic)
+    mtic_data.to_csv(args.out_mtic)
