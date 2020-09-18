@@ -71,7 +71,9 @@ for cat in categories:
                 opls = read_sig_dataset(f'out/work/primary/opls/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
                 zscore = read_sig_dataset(f'out/work/primary/zscore/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
                 cross_pop_significance.append(glm)
-                glm['HMDB'] = glm.apply(lambuda u: ','.join(kegg_to_hmdb[u['KEGG']]) if u['KEGG'] in kegg_to_hmdb and len(kegg_to_hmdb[u['KEGG']]) > 0 else None)
+                print(glm)
+                glm.apply(lambda u: print(u),axis=1)
+                glm['HMDB'] = glm.apply(lambda u: ','.join(kegg_to_hmdb[u['KEGG']]) if u['KEGG'] in kegg_to_hmdb and len(kegg_to_hmdb[u['KEGG']]) > 0 else None,axis=1)
 cross_pop_significance = concat(cross_pop_significance,axis=0).dropna()
 cross_pop_significance = cross_pop_significance.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'},axis=1)
 cross_pop_significance.index.name = 'Name'
