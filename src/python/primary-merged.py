@@ -17,6 +17,7 @@ parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
 parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
 parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
+parser.add_argument("--kegg-to-chebi", type=str, help="The KEGG to ChEBI map")
 parser.add_argument("--out-mtic", type=str, help="Output for mTIC")
 parser.add_argument("--out-cross-pop", type=str, help="Output for cross-pop comparison")
 parser.add_argument("--out-starvation-resp", type=str, help="Output for starvation response")
@@ -32,6 +33,8 @@ ame = AstyanaxMe(
 kegg_to_hmdb = defaultdict(list)
 with open(args.hmdb) as f:
     hmdb = json.load(f)
+with open(args.kegg_to_chebi) as f:
+    kegg_to_chebi = json.load(f)
 for metabolite in hmdb:
     #print(metabolite)
     if 'kegg_id' in metabolite:
@@ -70,7 +73,8 @@ for cat in categories:
                 glm = read_sig_dataset(f'out/work/primary/glm/singlefactor/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
                 opls = read_sig_dataset(f'out/work/primary/opls/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
                 zscore = read_sig_dataset(f'out/work/primary/zscore/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
-                glm['HMDB'] = glm.apply(lambda u: ','.join(kegg_to_hmdb[u['KEGG']]) if u['KEGG'] in kegg_to_hmdb and len(kegg_to_hmdb[u['KEGG']]) > 0 else None,axis=1)
+                glm['HMDB'] = glm.apply(lambda u: ';'.join(kegg_to_hmdb[u['KEGG']]) if u['KEGG'] in kegg_to_hmdb and len(kegg_to_hmdb[u['KEGG']]) > 0 else None,axis=1)
+                glm['ChEBI'] = glm.apply(lambda u: ';'.join(kegg_to_chebi[u['KEGG']]) if u['KEGG'] in kegg_to_chebi and len(kegg_to_chebi[u['KEGG']]) > 0 else None,axis=1)
                 cross_pop_significance.append(glm)
 cross_pop_significance = concat(cross_pop_significance,axis=0).dropna()
 cross_pop_significance = cross_pop_significance.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'},axis=1)
@@ -87,6 +91,7 @@ for cat in categories:
             for comp in group_comparisons:
                 glm = read_sig_dataset(f'out/work/primary/glm/singlefactor/{outlier}/{cat}/{tissue}/CvS/{comp}.csv',cat,tissue,cond,comp)
                 glm['HMDB'] = glm.apply(lambda u: ','.join(kegg_to_hmdb[u['KEGG']]) if u['KEGG'] in kegg_to_hmdb and len(kegg_to_hmdb[u['KEGG']]) > 0 else None,axis=1)
+                glm['ChEBI'] = glm.apply(lambda u: ','.join(kegg_to_chebi[u['KEGG']]) if u['KEGG'] in kegg_to_chebi and len(kegg_to_chebi[u['KEGG']]) > 0 else None,axis=1)
                 conserved_strv_resp_significance.append(glm)
 conserved_strv_resp_significance = concat(conserved_strv_resp_significance,axis=0).dropna()
 conserved_strv_resp_significance = conserved_strv_resp_significance.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'})
@@ -118,7 +123,8 @@ for pop in pops:
                         mtic_data.append({
                           'Name': kegg_to_name_map[compound],
                           'KEGG': compound,
-                          'HMDB': ','.join(kegg_to_hmdb[compound]) if compound in kegg_to_hmdb and len(kegg_to_hmdb[compound]) > 0 else None,
+                          'HMDB': ';'.join(kegg_to_hmdb[compound]) if compound in kegg_to_hmdb and len(kegg_to_hmdb[compound]) > 0 else None,
+                          'ChEBI': ';'.join(kegg_to_chebi[compound]) if compound in kegg_to_chebi and len(kegg_to_chebi[compound]) > 0 else None,
                           'Population': pop,
                           'Tissue': tissue,
                           'Condition': condition,

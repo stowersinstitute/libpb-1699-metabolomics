@@ -104,7 +104,7 @@ main = shakeArgs shakeOptions $ do
 
     "out/work/primary/merged-mtic.csv" %> \out -> do
       need ["out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/CvS/30vR.csv", "src/python/primary-merged.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-merged.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet ./data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --out-mtic ./out/work/primary/merged-mtic.csv --out-cross-pop ./out/work/primary/merged-cross-pop.csv --out-starvation-resp ./out/work/primary/merged-starvation-resp.csv"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-merged.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet ./data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --kegg-to-chebi out/work/ids/kegg-to-chebi.json --out-mtic ./out/work/primary/merged-mtic.csv --out-cross-pop ./out/work/primary/merged-cross-pop.csv --out-starvation-resp ./out/work/primary/merged-starvation-resp.csv"
 
     -- conserved metabolites in starvation resistance
     "out/fig/kein-Ausreißern/primary-shared-starvation-response-30vR.pdf" %> \out -> do
