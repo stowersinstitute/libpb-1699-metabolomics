@@ -1,33 +1,29 @@
 library(shiny)
+library(shinyWidgets)
 
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
-
-  # App title ----
-  titlePanel("Hello Shiny!"),
-
-  # Sidebar layout with input and output definitions ----
-  sidebarLayout(
-
-    # Sidebar panel for inputs ----
-    sidebarPanel(
-
-      # Input: Slider for the number of bins ----
-      sliderInput(inputId = "bins",
-                  label = "Number of bins:",
-                  min = 1,
-                  max = 50,
-                  value = 30)
-
+  titlePanel("Astyanax Metabolomics Study"),
+  navlistPanel(
+    "Header A",
+    tabPanel("Selections",
+#       https://stackoverflow.com/questions/27607566/allowing-one-tick-only-in-checkboxgroupinput
+      checkboxGroupButtons(
+        inputId = "somevalue",
+        label = "Select by:",
+        choices = c("Metabolites", "Categories"),
+        justified = TRUE,
+        individual = TRUE,
+        status = "primary",
+        selected = "Metabolites",
+      )
     ),
-
-    # Main panel for displaying outputs ----
-    mainPanel(
-
-      # Output: Histogram ----
-      plotOutput(outputId = "distPlot")
-
-    )
+    tabPanel("Component 2"),
+    "Header B",
+    tabPanel("Component 3"),
+    tabPanel("Component 4"),
+    "-----",
+    tabPanel("Component 5")
   )
 )
 
