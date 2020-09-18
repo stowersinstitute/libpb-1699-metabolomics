@@ -17,6 +17,9 @@ parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
 parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
 parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
+parser.add_argument("--out-mtic", type=bool, help="Output for mTIC")
+parser.add_argument("--out-cross-pop", type=bool, help="Output for cross-pop comparison")
+parser.add_argument("--out-starvation-resp", type=bool, help="Output for starvation response")
 args = parser.parse_args()
 
 ame = AstyanaxMe(
@@ -48,9 +51,9 @@ condmap = {'30d':'30d Starved', '4d':'4d Starved', 'Ref': 'Refed'}
 categories = {"Aminoacids":'Amino acids',"Carbohydrates_-CCM": 'Carbohydrates / CCM',"Fattyacids":'FattRy acids',"Misc._-_sec.metabolites":'Misc',"Nucleotides":'Nucleotides'}
 
 #datasets = []
-sig = {}
-up = {}
-significance_data = []
+#sig = {}
+#up = {}
+cross_pop_significance = []
 def read_sig_dataset(filepath,cat,tissue,cond,comp):
     d = read_csv(filepath,index_col=0)
     d['Category'] = cat
@@ -66,21 +69,31 @@ for cat in categories:
                 glm = read_sig_dataset(f'out/work/primary/glm/singlefactor/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
                 opls = read_sig_dataset(f'out/work/primary/opls/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
                 zscore = read_sig_dataset(f'out/work/primary/zscore/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
-                for m in glm.index:
-                    if glm.loc[m,'Pr(>|z|)'] < 0.05:
-                        sig[m,tissue,cond,comp] = True
-                    else:
-                        sig[m,tissue,cond,comp] = False
-                    if glm.loc[m,'Estimate'] > 0.:
-                        up[m,tissue,cond,comp] = True
-                    else:
-                        up[m,tissue,cond,comp] = False
-                significance_data.append(glm)
-significance_data = concat(significance_data,axis=0).dropna()
-significance_data = significance_data.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'})
-significance_data.index.name = 'Name'
-#significance_data = significance_data.reset_index()
-print(significance_data)
+                cross_pop_significance.append(glm)
+cross_pop_significance = concat(cross_pop_significance,axis=0).dropna()
+cross_pop_significance = cross_pop_significance.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'},axis=1)
+cross_pop_significance.index.name = 'Name'
+#print(cross_pop_significance)
+if args.out_cross_pop:
+    cross_pop_significance.to_csv(args.out_cross_pop)
+
+group_comparisons = ['30vR','4vR','30v4']
+conserved_strv_resp_significance = []
+for cat in categories:
+    for tissue in tissues:
+        for cond in condmap:
+            for comp in group_comparisons:
+                glm = read_sig_dataset(f'out/work/primary/glm/singlefactor/{outlier}/{cat}/{tissue}/CvS/{comp}.csv',cat,tissue,cond,comp)
+                conserved_strv_resp_significance.append(glm)
+conserved_strv_resp_significance = concat(conserved_strv_resp_significance,axis=0).dropna()
+conserved_strv_resp_significance = conserved_strv_resp_significance.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'})
+conserved_strv_resp_significance.index.name = 'Name'
+conserved_strv_resp_significance = conserved_strv_resp_significance.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'},axis=1)
+conserved_strv_resp_significance.index.name = 'Name'
+print(conserved_strv_resp_significance)
+#stop
+if args.out_starvation_resp:
+    conserved_strv_resp_significance.to_csv(args.out_starvation_resp)
 
 astyanax_data = ame.get_data_by_kegg_id().set_index('KEGG')
 astyanax_data.columns = [' '.join(u) for u in ame.treatment_descriptors]
@@ -90,27 +103,19 @@ astyanax_data.columns = (' '.join((c,str(n))) for c,n in zip(astyanax_data.colum
 
 outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
 
-def process_outlier(exclude,subset):
-    for outlier in outliers:
-        if exclude and outlier in subset.columns:
-            subset = subset.loc[:,~subset.columns.str.contains(outlier)]
-    return subset
-
-astyanax_data = process_outlier(args.exclude_outlier,astyanax_data)
-
-pops = ['Pachon', 'Tinaja', 'Surface']
-tissues = ['Brain', 'Muscle', 'Liver']
-conditions = ['30d Starved', '4d Starved', 'Refed']
-condmap = {v:k for k,v in {'30d':'30d Starved', '4d':'4d Starved', 'Ref': 'Refed'}.items()}
-comparisons = ['PvS','TvS','PvT']
+#def process_outlier(exclude,subset):
+    #for outlier in outliers:
+        #if exclude and outlier in subset.columns:
+            #subset = subset.loc[:,~subset.columns.str.contains(outlier)]
+    #return subset
 
 mtic_data = []
 kegg_to_name_map = ame.get_kegg_to_name_map()
 for pop in pops:
     for tissue in tissues:
         for condition in conditions:
-                #sig_subset = significance_data.loc[
-                  #(significance_data['Tissue'] == tissue) & (significance_data['Condition'] == condition)]
+                #sig_subset = cross_pop_significance.loc[
+                  #(cross_pop_significance['Tissue'] == tissue) & (cross_pop_significance['Condition'] == condition)]
                 subset = astyanax_data.loc[:,
                   astyanax_data.columns.str.contains(pop) & astyanax_data.columns.str.contains(tissue) & astyanax_data.columns.str.contains(condition)]
                 #print(subset)
@@ -135,4 +140,6 @@ for pop in pops:
 
 #mtic_data = concat(mtic_data,axis=0)
 mtic_data = DataFrame(mtic_data).set_index('Name')
-print(mtic_data)
+#print(mtic_data)
+if args.out_mtic:
+    conserved_strv_resp_significance.to_csv(args.out_mtic)
