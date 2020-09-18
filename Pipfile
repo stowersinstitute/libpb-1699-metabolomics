@@ -19,6 +19,7 @@ attrs = "*"
 pyopls = "*"
 statsmodels = "*"
 openpyxl = "*"
+swagger-codegen = "*"
 
 [requires]
 python_version = "3.8"

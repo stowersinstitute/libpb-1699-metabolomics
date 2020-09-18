@@ -10,8 +10,12 @@ import Development.Shake hiding ((*>))
 import Development.Shake.FilePath
 
 main = shakeArgs shakeOptions $ do
-    want [ -- Figs
-           "out/fig/kein-Ausreißern/pca-categorized-primary.pdf"
+    want [-- Web API
+           "out/generated/cts/client.py"
+          -- ID mapping
+         , "out/work/ids/kegg-to-chebi.json"
+          -- Figs
+         , "out/fig/kein-Ausreißern/pca-categorized-primary.pdf"
          , "out/fig/kein-Ausreißern/pca-categorized-lipids.pdf"
          , "out/fig/kein-Ausreißern/pca-categorized-legend.pdf"
 --          , "out/fig/kein-Ausreißern/orotic-acid-plot.pdf"
@@ -32,6 +36,15 @@ main = shakeArgs shakeOptions $ do
          , "out/work/lipidcats/opls/kein-Ausreißern/Liver/Ref/Classes/PvT.csv" -- Lipid cats/classes OPLS
          , "out/work/lipidcats/glm/kein-Ausreißern/Muscle/Ref/Categories/PvT.csv" -- Lipid cats/classes GLM
          ]
+
+    -- Web API for CTS
+    "out/generated/cts/client.py" %> \out -> do
+      need ["src/yaml/cts.yaml"]
+      cmd_ "pipenv run swagger_codegen generate src/yaml/cts.yaml out/generated/cts"
+
+    -- Get mapping to ChEBI ids
+    "out/work/ids/kegg-to-chebi.json" %> \out -> do
+      cmd_ (AddEnv "PYTHONPATH" "./out/generated") "pipenv run python3 ./src/python/kegg-to-chebi.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --out out/work/ids/kegg-to-chebi.json"
 
     -- categorized pca for primary
     "out/fig/kein-Ausreißern/pca-categorized-primary.pdf" %> \out -> do
