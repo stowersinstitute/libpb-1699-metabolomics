@@ -17,9 +17,9 @@ parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
 parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
 parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
-parser.add_argument("--out-mtic", type=bool, help="Output for mTIC")
-parser.add_argument("--out-cross-pop", type=bool, help="Output for cross-pop comparison")
-parser.add_argument("--out-starvation-resp", type=bool, help="Output for starvation response")
+parser.add_argument("--out-mtic", type=str, help="Output for mTIC")
+parser.add_argument("--out-cross-pop", type=str, help="Output for cross-pop comparison")
+parser.add_argument("--out-starvation-resp", type=str, help="Output for starvation response")
 args = parser.parse_args()
 
 ame = AstyanaxMe(
@@ -71,9 +71,11 @@ for cat in categories:
                 opls = read_sig_dataset(f'out/work/primary/opls/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
                 zscore = read_sig_dataset(f'out/work/primary/zscore/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
                 cross_pop_significance.append(glm)
+                glm['HMDB'] = glm.apply(lambuda u: ','.join(kegg_to_hmdb[u['KEGG']]) if u['KEGG'] in kegg_to_hmdb and len(kegg_to_hmdb[u['KEGG']]) > 0 else None)
 cross_pop_significance = concat(cross_pop_significance,axis=0).dropna()
 cross_pop_significance = cross_pop_significance.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'},axis=1)
 cross_pop_significance.index.name = 'Name'
+print(cross_pop_significance)
 if args.out_cross_pop:
     cross_pop_significance.to_csv(args.out_cross_pop)
 
