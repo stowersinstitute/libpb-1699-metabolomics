@@ -26,17 +26,6 @@ ame = AstyanaxMe(
     hmdb_file=args.hmdb,
     )
 
-compounds = [
-    'ascorbic acid',
-    'dehydroascorbic acid',
-    'glutathione',
-    'alpha-ketoglutarate',
-    'nicotinamide',
-    #'nicotinic acid',
-    'orotic acid',
-    #'phosphoethanolamine',
-  ]
-
 kegg_to_hmdb = defaultdict(list)
 with open(args.hmdb) as f:
     hmdb = json.load(f)
@@ -56,39 +45,48 @@ conditions = ['4d Starved', '30d Starved', 'Refed']
 conditions_really_short = ['4', r'30', 'R']
 comparisons = {'PvS':('Pachon','Surface'), 'TvS':('Tinaja','Surface'), 'PvT':('Pachon','Tinaja')}
 condmap = {'30d':'30d Starved', '4d':'4d Starved', 'Ref': 'Refed'}
-categories = {"Aminoacids":'Amino acids',"Carbohydrates_-CCM": 'Carbohydrates / CCM',"Fattyacids":'Fatty acids',"Misc._-_sec.metabolites":'Misc',"Nucleotides":'Nucleotides'}
+categories = {"Aminoacids":'Amino acids',"Carbohydrates_-CCM": 'Carbohydrates / CCM',"Fattyacids":'FattRy acids',"Misc._-_sec.metabolites":'Misc',"Nucleotides":'Nucleotides'}
 
-datasets = []
+#datasets = []
 sig = {}
 up = {}
+significance_data = []
+def read_sig_dataset(filepath,cat,tissue,cond,comp):
+    d = read_csv(filepath,index_col=0)
+    d['Category'] = cat
+    d['Tissue'] = tissue
+    d['Condition'] = cond
+    d['Comparison'] = comp
+    return d
+
 for cat in categories:
     for tissue in tissues:
         for cond in condmap:
             for comp in comparisons:
-                d = read_csv(f'out/work/primary/glm/singlefactor/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',index_col=0)
-                d['Category'] = cat
-                d['Tissue'] = tissue
-                d['Condition'] = cond
-                d['Comparison'] = comp
-                for m in d.index:
-                    if d.loc[m,'Pr(>|z|)'] < 0.05:
+                glm = read_sig_dataset(f'out/work/primary/glm/singlefactor/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
+                opls = read_sig_dataset(f'out/work/primary/opls/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
+                zscore = read_sig_dataset(f'out/work/primary/zscore/{outlier}/{cat}/{tissue}/{cond}/{comp}.csv',cat,tissue,cond,comp)
+                for m in glm.index:
+                    if glm.loc[m,'Pr(>|z|)'] < 0.05:
                         sig[m,tissue,cond,comp] = True
                     else:
                         sig[m,tissue,cond,comp] = False
-                    if d.loc[m,'Estimate'] > 0.:
+                    if glm.loc[m,'Estimate'] > 0.:
                         up[m,tissue,cond,comp] = True
                     else:
                         up[m,tissue,cond,comp] = False
-                datasets.append(d)
-significance_data = concat(datasets,axis=0).dropna()
+                significance_data.append(glm)
+significance_data = concat(significance_data,axis=0).dropna()
+significance_data = significance_data.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'})
+significance_data.index.name = 'Name'
+#significance_data = significance_data.reset_index()
 print(significance_data)
 
 astyanax_data = ame.get_data_by_kegg_id().set_index('KEGG')
 astyanax_data.columns = [' '.join(u) for u in ame.treatment_descriptors]
 astyanax_data = astyanax_data.loc[:,['pools' not in c for c in astyanax_data.columns]]
 astyanax_data.columns = (' '.join((c,str(n))) for c,n in zip(astyanax_data.columns,chain.from_iterable(repeat(range(1,6+1),9*3))))
-astyanax_data = astyanax_data.rename(ame.get_kegg_to_name_map(), axis=0)
-#astyanax_data = astyanax_data.loc[compounds]
+#astyanax_data = astyanax_data.rename(ame.get_kegg_to_name_map(), axis=0)
 
 outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
 
@@ -107,11 +105,34 @@ condmap = {v:k for k,v in {'30d':'30d Starved', '4d':'4d Starved', 'Ref': 'Refed
 comparisons = ['PvS','TvS','PvT']
 
 mtic_data = []
+kegg_to_name_map = ame.get_kegg_to_name_map()
 for pop in pops:
     for tissue in tissues:
         for condition in conditions:
+                #sig_subset = significance_data.loc[
+                  #(significance_data['Tissue'] == tissue) & (significance_data['Condition'] == condition)]
                 subset = astyanax_data.loc[:,
                   astyanax_data.columns.str.contains(pop) & astyanax_data.columns.str.contains(tissue) & astyanax_data.columns.str.contains(condition)]
                 #print(subset)
+                for compound,row in subset.iterrows():
+                    #print(str(compound),row)
+                    #print(compound)
+                    for observation,val in row.iteritems():
+                        #print(observation)
+                        is_outlier = observation in outliers
+                        rep = observation.split(' ')[-1]
+                        mtic_data.append({
+                          'Name': kegg_to_name_map[compound],
+                          'KEGG': compound,
+                          'HMDB': ','.join(kegg_to_hmdb[compound]) if compound in kegg_to_hmdb and len(kegg_to_hmdb[compound]) > 0 else None,
+                          'Population': pop,
+                          'Tissue': tissue,
+                          'Condition': condition,
+                          'Replicate': rep,
+                          'Outlier': is_outlier,
+                          'Raw_mTIC': val,
+                        })
+
 #mtic_data = concat(mtic_data,axis=0)
-#print(mtic_data)
+mtic_data = DataFrame(mtic_data).set_index('Name')
+print(mtic_data)
