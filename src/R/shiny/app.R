@@ -26,7 +26,25 @@ ui <- fluidPage(
         selected = "Name",
 #         selected = "Metabolites",
       ),
-      uiOutput("selector")
+#       https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
+      lapply(c("Name","KEGG","HMDB","ChEBI","Category"), function(t) {
+        conditionalPanel(
+          condition = sprintf("input.selection_type == '%s'",t),
+          pickerInput(
+            inputId = sprintf("selector_%s",t),
+            label = "Select/deselect all + format selected",
+            choices = compounds[t],
+            options = list(
+      #              https://stackoverflow.com/questions/53609546/how-can-i-have-the-search-option-based-on-typing-letters-in-pickerinput-using-sh
+              `actions-box` = TRUE,
+              size = 10,
+              `selected-text-format` = "count > 3",
+              `live-search`=TRUE
+            ),
+            multiple = TRUE,
+          )
+        )
+      })
     ),
     tabPanel("Component 2"),
     "Header B",
@@ -48,30 +66,6 @@ server <- function(input, output) {
   # 1. It is "reactive" and therefore should be automatically
   #    re-executed when inputs (input$bins) change
   # 2. Its output type is a plot
-  getSelectionType <- reactive({
-   input$selection_type
-  })
-#
-#   output$nrows <- reactive({
-#     compounds[getSelection()]
-#   })
-  output$selector <- renderUI({
-#     print(input$selector)
-    pickerInput(
-        inputId = "selector",
-        label = "Select/deselect all + format selected",
-        choices = compounds[getSelectionType()],
-#         selected = input$selector,
-        options = list(
-  #              https://stackoverflow.com/questions/53609546/how-can-i-have-the-search-option-based-on-typing-letters-in-pickerinput-using-sh
-          `actions-box` = TRUE,
-          size = 10,
-          `selected-text-format` = "count > 3",
-          `live-search`=TRUE
-        ),
-        multiple = TRUE,
-      )
-  })
 
 }
 
