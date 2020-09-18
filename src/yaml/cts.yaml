@@ -1,0 +1,91 @@
+#https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/examples/v3.0/petstore.yaml
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: CTS
+#http://cts.fiehnlab.ucdavis.edu/services
+servers:
+  - url: https://cts.fiehnlab.ucdavis.edu/rest
+paths:
+  /convert/{from}/{to}/{query}:
+    get:
+      summary: Convert from one ID to another
+      operationId: convert
+      tags:
+        - ids
+      parameters:
+        - name: from
+          in: path
+          description: The source ID type
+          required: true
+          schema:
+            type: string
+        - name: to
+          in: path
+          description: The target ID type
+          required: true
+          schema:
+            type: string
+        - name: query
+          in: path
+          description: The source ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of target ids
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConvertResponse"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    QueryResponse:
+      type: object
+      required:
+        - fromIdentifier
+        - toIdentifier
+        - searchTerm
+        - results
+      properties:
+        fromIdentifier:
+          type: string
+        toIdentifier:
+          type: string
+        searchTerm:
+          type: string
+        results:
+          type: array
+          items: {type: string}
+    ConvertResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/QueryResponse"
+    Error:
+      type: object
+      required:
+        - error
+        - message
+        - path
+        - status
+        - timestamp
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        status:
+          type: integer
+          format: int32
+        timestamp:
+          type: integer
+          format: int64
