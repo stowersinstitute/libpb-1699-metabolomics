@@ -39,7 +39,7 @@ ui <- fluidPage(
           pickerInput(
             inputId = sprintf("selector_%s",t),
             label = "Select/deselect all + format selected",
-            choices = compounds[t],
+            choices = unique(compounds[t]),
             options = list(
       #              https://stackoverflow.com/questions/53609546/how-can-i-have-the-search-option-based-on-typing-letters-in-pickerinput-using-sh
               `actions-box` = TRUE,
@@ -75,7 +75,7 @@ server <- function(input, output) {
   #    re-executed when inputs (input$bins) change
   # 2. Its output type is a plot
 
-  output$summary <- renderDataTable(filter(compounds, compounds$Name %in% input$selector_Name | compounds$KEGG %in% input$selector_KEGG))
+  output$summary <- renderDataTable(filter(compounds, compounds$Name %in% input$selector_Name | compounds$KEGG %in% input$selector_KEGG | compounds$HMDB %in% input$selector_HMDB | compounds$ChEBI %in% input$selector_ChEBI |  compounds$Category %in% input$selector_Category))
 
 }
 
