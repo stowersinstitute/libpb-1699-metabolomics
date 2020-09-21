@@ -75,7 +75,7 @@ server <- function(input, output) {
   #    re-executed when inputs (input$bins) change
   # 2. Its output type is a plot
 
-  output$summary <- renderDataTable(filter(compounds, compounds$Name %in% input$selector_Name))
+  output$summary <- renderDataTable(filter(compounds, compounds$Name %in% input$selector_Name | compounds$KEGG %in% input$selector_KEGG))
 
 }
 
