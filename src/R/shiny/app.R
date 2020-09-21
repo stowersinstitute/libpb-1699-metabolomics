@@ -1,14 +1,20 @@
 library(shiny)
 library(shinyWidgets)
 library(readr)
+library(dplyr)
+
+options(shiny.port = 8080)
 
 # https://shiny.rstudio.com/articles/dynamic-ui.html
 # https://stackoverflow.com/questions/21465411/r-shiny-passing-reactive-to-selectinput-choices/21467399#21467399
 # https://stackoverflow.com/questions/33973300/issue-in-dynamic-renderui-in-shiny
 
 primary <- read_csv("out/work/primary/merged-mtic.csv")
+primary <- arrange(primary,KEGG)
 compounds <- unique(primary[c("Name","KEGG","HMDB","ChEBI","Category")])
-print(compounds)
+# print(compounds)
+# print()
+# print(as.data.frame(primary))
 
 # https://rdrr.io/cran/shinyWidgets/man/updateCheckboxGroupButtons.html
 
@@ -16,8 +22,8 @@ print(compounds)
 ui <- fluidPage(
   titlePanel("Astyanax Metabolomics Study"),
   navlistPanel(
-    "Header A",
-    tabPanel("Selections",
+    "Selections",
+    tabPanel("Chooser",
 #       https://stackoverflow.com/questions/27607566/allowing-one-tick-only-in-checkboxgroupinput
       radioButtons(
         inputId = "selection_type",
@@ -46,7 +52,9 @@ ui <- fluidPage(
         )
       })
     ),
-    tabPanel("Component 2"),
+    tabPanel("Summary",
+      dataTableOutput("summary")
+    ),
     "Header B",
     tabPanel("Component 3"),
     tabPanel("Component 4"),
@@ -66,6 +74,8 @@ server <- function(input, output) {
   # 1. It is "reactive" and therefore should be automatically
   #    re-executed when inputs (input$bins) change
   # 2. Its output type is a plot
+
+  output$summary <- renderDataTable(filter(compounds, compounds$Name %in% input$selector_Name))
 
 }
 
