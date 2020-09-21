@@ -1,7 +1,11 @@
-library(shiny)
-library(shinyWidgets)
-library(readr)
-library(dplyr)
+suppressMessages({
+  library(shiny)
+  library(shinyWidgets)
+  library(readr)
+  library(dplyr)
+  library(plotly)
+  library(heatmaply)
+})
 
 options(shiny.port = 8080)
 
@@ -20,11 +24,12 @@ compounds <- unique(primary[c("Name","KEGG","HMDB","ChEBI","Category")])
 
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
-  titlePanel("Astyanax Metabolomics Study"),
+  titlePanel("Rohner Lab Astyanax Metabolomics Study"),
   navlistPanel(
     "Subset",
     tabPanel("Selections",
 #       https://stackoverflow.com/questions/27607566/allowing-one-tick-only-in-checkboxgroupinput
+      p("Select which metabolites you want to include in the analysis. You can select via compound name, category, or a number of identifier systems. You can also select from different identifier types and the app will remember your selection for each heading and combine them on the summary page. Aftering making your selection, you can view the \"Summary\" tab to see the metabolites you select or proceed to any of the \"Visualization\" tabs.\""),
       radioButtons(
         inputId = "selection_type",
         label = "Select by:",
@@ -38,7 +43,7 @@ ui <- fluidPage(
           condition = sprintf("input.selection_type == '%s'",t),
           pickerInput(
             inputId = sprintf("selector_%s",t),
-            label = "Select/deselect all + format selected",
+            label = "Make selections:",
             choices = unique(compounds[t]),
             options = list(
       #              https://stackoverflow.com/questions/53609546/how-can-i-have-the-search-option-based-on-typing-letters-in-pickerinput-using-sh
@@ -55,7 +60,7 @@ ui <- fluidPage(
     tabPanel("Summary",
       dataTableOutput("summary")
     ),
-    "Header B",
+    "Visualization",
     tabPanel("Component 3"),
     tabPanel("Component 4"),
     "-----",
