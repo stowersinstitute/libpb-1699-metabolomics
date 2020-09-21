@@ -22,8 +22,8 @@ compounds <- unique(primary[c("Name","KEGG","HMDB","ChEBI","Category")])
 ui <- fluidPage(
   titlePanel("Astyanax Metabolomics Study"),
   navlistPanel(
-    "Selections",
-    tabPanel("Chooser",
+    "Subset",
+    tabPanel("Selections",
 #       https://stackoverflow.com/questions/27607566/allowing-one-tick-only-in-checkboxgroupinput
       radioButtons(
         inputId = "selection_type",
