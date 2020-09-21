@@ -5,6 +5,9 @@ suppressMessages({
   library(dplyr)
   library(plotly)
   library(heatmaply)
+  library(shinycssloaders)
+  library(corrr)
+  library(tidyr)
 })
 
 options(shiny.port = 8080)
@@ -12,6 +15,7 @@ options(shiny.port = 8080)
 # https://shiny.rstudio.com/articles/dynamic-ui.html
 # https://stackoverflow.com/questions/21465411/r-shiny-passing-reactive-to-selectinput-choices/21467399#21467399
 # https://stackoverflow.com/questions/33973300/issue-in-dynamic-renderui-in-shiny
+# https://drsimonj.svbtle.com/exploring-correlations-in-r-with-corrr
 
 primary <- read_csv("out/work/primary/merged-mtic.csv")
 primary <- arrange(primary,KEGG)
@@ -19,6 +23,7 @@ compounds <- unique(primary[c("Name","KEGG","HMDB","ChEBI","Category")])
 # print(compounds)
 # print()
 # print(as.data.frame(primary))
+# print(mtcars)
 
 # https://rdrr.io/cran/shinyWidgets/man/updateCheckboxGroupButtons.html
 
@@ -61,7 +66,18 @@ ui <- fluidPage(
       dataTableOutput("summary")
     ),
     "Visualization",
-    tabPanel("Component 3"),
+    tabPanel("Heatmap",
+      tabsetPanel(type="tabs", id="corrPlotTab", selected="featureCorr",
+        tabPanel(title = "By Metabolite",
+          value = "featureCorr",
+          plotlyOutput("featureCorrPlt", height = 600) %>%
+            withSpinner(type = 8, color = "#0088cf", size = 1)),
+        tabPanel(title = "By Sample",
+          value = "sampleCorr",
+          plotlyOutput("sampleCorrPlt", height = 600) %>%
+            withSpinner(type = 8, color = "#0088cf", size = 1))
+      )
+    ),
     tabPanel("Component 4"),
     "-----",
     tabPanel("Component 5")
@@ -80,7 +96,40 @@ server <- function(input, output) {
   #    re-executed when inputs (input$bins) change
   # 2. Its output type is a plot
 
-  output$summary <- renderDataTable(filter(compounds, compounds$Name %in% input$selector_Name | compounds$KEGG %in% input$selector_KEGG | compounds$HMDB %in% input$selector_HMDB | compounds$ChEBI %in% input$selector_ChEBI |  compounds$Category %in% input$selector_Category))
+  selected_cpds <- reactive(filter(compounds, compounds$Name %in% input$selector_Name | compounds$KEGG %in% input$selector_KEGG | compounds$HMDB %in% input$selector_HMDB | compounds$ChEBI %in% input$selector_ChEBI |  compounds$Category %in% input$selector_Category))
+
+  output$summary <- renderDataTable(selected_cpds)
+
+  ###################################################################
+  #           Correlation Plot Tab 1: Sample Correlations           #
+  ###################################################################
+  output$featureCorrPlt <- renderPlotly({
+#     callModule(module = savePlotlyPDF,
+#                 id = "download_geneGenePlot",
+#                 prefix = "GeneCorrelation_Plot_",
+#                 plotlyToSave = reactive({featureCorrPlt[[2]]}))
+
+#     https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html
+    cpd_data <- filter(primary, primary$Name %in% selected_cpds()$Name)
+#     print(cpd_data)
+    features <- cpd_data %>% select(Name,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean)
+#     print(features)
+    features <- as.data.frame(features)
+#     features$Name <- as.factor(features$Name)
+    rownames(features) <- features$Name
+    features <- features[,-1]
+    print(head(features))
+    print(head(cor(features, use="pairwise.complete.obs")))
+#     print("here")
+#     stop
+#     heatmaply_cor(
+#       correlate(features),
+#       xlab = "Features",
+#       ylab = "Features",
+#       k_col = 2,
+#       k_row = 2
+#     )
+  })
 
 }
 
