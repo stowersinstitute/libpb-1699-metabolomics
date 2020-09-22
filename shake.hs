@@ -28,6 +28,7 @@ main = shakeArgs shakeOptions $ do
          , "out/work/primary/opls/kein-Ausreißern/Nucleotides/Muscle/Pachon/30vR.csv" -- OPLS primary starvation response
          , "out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/CvS/30vR.csv" -- GLM primary cross-pop
          , "out/work/primary/merged-mtic.csv" -- Merged primary mTIC values
+         , "out/work/lipids/merged-lipids.csv" -- Merged primary mTIC values
          , "out/supp/kein-Ausreißern/primary-pop-compare-significance.xlsx"
          , "out/supp/mit-Ausreißern/primary-pop-compare-significance.xlsx"
          , "out/fig/kein-Ausreißern/ratios-combined.pdf"
@@ -108,9 +109,9 @@ main = shakeArgs shakeOptions $ do
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-merged.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet ./data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --kegg-to-chebi out/work/ids/kegg-to-chebi.json --out-mtic ./out/work/primary/merged-mtic.csv --out-cross-pop ./out/work/primary/merged-cross-pop.csv --out-starvation-resp ./out/work/primary/merged-starvation-resp.csv"
 
     -- Table of tidy data for lipid mTIC values
-    "out/work/primary/merged-lipids.csv" %> \out -> do
+    "out/work/lipids/merged-lipids.csv" %> \out -> do
       need ["src/python/lipids-merged.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/lipids-merged.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --out ./out/work/primary/merged-lipids.csv"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/lipids-merged.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --lipidmaps-fa ./data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json --out ./out/work/lipids/merged-lipids.csv"
 
     -- conserved metabolites in starvation resistance
     "out/fig/kein-Ausreißern/primary-shared-starvation-response-30vR.pdf" %> \out -> do

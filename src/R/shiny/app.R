@@ -111,24 +111,19 @@ server <- function(input, output) {
 
 #     https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html
     cpd_data <- filter(primary, primary$Name %in% selected_cpds()$Name)
-#     print(cpd_data)
     features <- cpd_data %>% select(Name,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean)
-#     print(features)
     features <- as.data.frame(features)
-#     features$Name <- as.factor(features$Name)
     rownames(features) <- features$Name
     features <- features[,-1]
-    print(head(features))
-    print(head(cor(features, use="pairwise.complete.obs")))
-#     print("here")
-#     stop
-#     heatmaply_cor(
-#       correlate(features),
+#     print(head(features))
+#     print(head(cor(features, use="pairwise.complete.obs")))
+    heatmaply_cor(
+      cor(features),
 #       xlab = "Features",
 #       ylab = "Features",
-#       k_col = 2,
-#       k_row = 2
-#     )
+      k_col = 3,
+      k_row = 3
+    )
   })
 
 }

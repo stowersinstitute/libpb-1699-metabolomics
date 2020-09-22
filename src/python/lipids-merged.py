@@ -96,23 +96,12 @@ def get_lipidmap_name(lmid):
 mtic_data= []
 for tissue in tissues:
     for polarity in polarities:
-        #lmd = DataFrame(ali.normalized[tissue,polarity].apply(lambda u: get_lipidmap_id(u.name),axis=1), columns=['LMID'])
-        #lmd['Category'] = lmd.apply(lambda u: ali.lipidmaps[u[0]]['CATEGORY'] if isinstance(u[0],str) else nan,axis=1)
-        #lmd['MainClass'] = lmd.apply(lambda u: ali.lipidmaps[u[0]]['MAIN_CLASS'] if isinstance(u[0],str) else nan,axis=1)
-        #lmd['Saturation'] = lmd.apply(lambda u: ali.lipidmaps[u[0]]['MAIN_CLASS'] if isinstance(u[0],str) else nan,axis=1)
-        #print(lmd)
-        #stop
         d = ali.normalized[tissue,polarity]
         d = fix_cols(d,tissue)
-        #d['Category'] = lmd['Category']
-        #d['MainClass'] = lmd['MainClass']
-        #d['Saturation'] = lmd['Saturation']
-        #print(d)
         for pop in pops:
             for condition in conditions:
                 subset = d.loc[:,
                   d.columns.str.contains(pop) & d.columns.str.contains(condition)]
-                #print(subset)
                 for inchikey,row in subset.iterrows():
                     for observation,val in row.iteritems():
                         is_outlier = observation in outliers
@@ -137,6 +126,5 @@ for tissue in tissues:
                             })
 
 mtic_data = DataFrame(mtic_data).set_index('LMID')
-print(mtic_data)
 if args.out:
     mtic_data.to_csv(args.out)
