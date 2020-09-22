@@ -102,9 +102,15 @@ main = shakeArgs shakeOptions $ do
       need ["src/R/glm/primary-starvation-response.R", "out/work/primary/opls/kein-Ausreißern/Nucleotides/Muscle/Pachon/30vR.csv"]
       cmd_ "Rscript ./src/R/glm/primary-starvation-response.R"
 
+    -- Table of tidy data for primary mTIC values
     "out/work/primary/merged-mtic.csv" %> \out -> do
       need ["out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/CvS/30vR.csv", "src/python/primary-merged.py"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-merged.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet ./data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier True --kegg-to-chebi out/work/ids/kegg-to-chebi.json --out-mtic ./out/work/primary/merged-mtic.csv --out-cross-pop ./out/work/primary/merged-cross-pop.csv --out-starvation-resp ./out/work/primary/merged-starvation-resp.csv"
+
+    -- Table of tidy data for lipid mTIC values
+    "out/work/primary/merged-lipids.csv" %> \out -> do
+      need ["src/python/lipids-merged.py"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/lipids-merged.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --out ./out/work/primary/merged-lipids.csv"
 
     -- conserved metabolites in starvation resistance
     "out/fig/kein-Ausreißern/primary-shared-starvation-response-30vR.pdf" %> \out -> do
