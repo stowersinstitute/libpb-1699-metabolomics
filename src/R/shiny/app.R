@@ -135,7 +135,7 @@ ui <- fluidPage(
     tabPanel("Summary",
       dataTableOutput("primary_summary")
     ),
-    tabPanel("Heatmap",
+    tabPanel("Correlation",
       tabsetPanel(type="tabs", id="primaryCorrPlotTab", selected="sampleCorr",
         tabPanel(title = "By Sample",
           value = "sampleCorr",
@@ -146,10 +146,11 @@ ui <- fluidPage(
           solidHeader = TRUE,
           status = "primary",
           splitLayout(cellWidths = c("25%","25%","25%","25%"),
-            fluidRow(
-              numericInput(inputId = "primaryCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50px", step = 1),
+            column(3,
+              numericInput(inputId = "primaryCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
               checkboxInput(inputId = "primaryCorrPlotSampleNormalize", label = "Normalize?", value = TRUE),
-                    ),
+              checkboxInput(inputId = "primaryCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
+              ),
             checkboxGroupInput("primaryCorrPlotSampleSelectPops", "Populations:", pops, selected = pops),
             checkboxGroupInput("primaryCorrPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
             checkboxGroupInput("primaryCorrPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
@@ -219,6 +220,9 @@ server <- function(input, output) {
 
 #     https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html
     cpd_data <- primary %>% filter(primary$Name %in% selected_cpds()$Name) %>% filter(Population %in% input$primaryCorrPlotSampleSelectPops) %>% filter(Tissue %in% input$primaryCorrPlotSampleSelectTissues) %>% filter(Condition %in% input$primaryCorrPlotSampleSelectConditions)
+    if (!input$primaryCorrPlotSampleIncludeOutliers) {
+      cpd_data <- cpd_data %>% filter(Outlier == FALSE)
+    }
     features <- cpd_data %>% select(Name,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean)
     features <- as.data.frame(features)
     rownames(features) <- features$Name
