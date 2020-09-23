@@ -32,8 +32,8 @@ lipids <- read_csv("out/work/lipids/merged-lipids.csv", col_types = cols(Saturat
 lipid_ids <- unique(lipids[c("LMID","Name","InChIKey","Category","MainClass","Saturation")])
 
 pops = c("Pachon","Tinaja","Surface")
-tissues = c("Muscle","Brain","Liver")
-conditions = c("4d Starved", "30d Starved", "Refed")
+tissues = c("Brain","Muscle","Liver")
+conditions = c("30d Starved", "4d Starved", "Refed")
 
 # https://rdrr.io/cran/shinyWidgets/man/updateCheckboxGroupButtons.html
 
@@ -467,13 +467,18 @@ server <- function(input, output) {
     subplot(lapply(selected_cpds()$Name,
       function(name) {
         subplot(lapply(tissues, function(tissue) {
-          cpd_data <- primary %>% filter(primary$Name == name) %>% filter(Tissue %in% input$primaryCorrPlotCategorySelectTissues) %>% group_by(Population,Condition) %>% summarize(Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC))
+          cpd_data <- primary %>% filter(primary$Name == name) %>% filter(Tissue == tissue) %>% group_by(Population,Condition) %>% summarize(Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC)) %>% arrange(factor(Population, levels = pops)) %>% arrange(factor(Condition, levels = conditions))
+          cpd_data$Condition <- factor(cpd_data$Condition, levels = conditions)
           print(cpd_data)
+          print(recode(cpd_data$Population,Pachon="#b22222",Tinaja="#daa520",Surface="#1e90ff"))
+#           cpd_data$Condition
+#           cpd_data$Color <- recode(cpd_data$Population,Pachon="#b22222",Tinaja="#daa520",Surface="#1e90ff")
 #           https://stackoverflow.com/questions/37285729/how-to-give-subtitles-for-subplot-in-plot-ly-using-r
-          plt <- plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(array=Std), color=~Population) %>% plotly::layout(annotations = list(title = "The  title"))
-#           if (tissue == "Brain") {
-#             plt <- plt %>% layout(yaxis = list(title = name))
-#           }
+          plt <- plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(array=Std), color= ~Population, colors=c("#b22222","#daa520","#1e90ff")) %>% add_annotations(text = tissue, x = 0.5, y = 1.0, xref = "paper", yref = "paper", xanchor = "middle", yanchor = "top", showarrow = FALSE, font=list(size=15,weight="bold"))
+#            %>% plotly::layout(margin = list("l"=30,"r"=30,"t"=30,"b"=30))
+          if (tissue == "Brain") {
+            plt <- plt %>% add_annotations(text = name, x = -0.1, y = 0.5, xref = "paper", yref = "paper", xanchor = "right", yanchor = "middle", showarrow = FALSE, textangle=-90, font=list(size=15,weight="bold"))
+          }
           plt
         }))
       }), nrows = length(selected_cpds()$Name)
