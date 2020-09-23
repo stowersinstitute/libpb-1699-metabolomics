@@ -460,11 +460,15 @@ server <- function(input, output) {
 #     if (!input$primaryCorrPlotCategoryIncludeOutliers) {
 #       cpd_data <- cpd_data %>% filter(Outlier == FALSE)
 #     }
-    subplot(lapply(tissues, function(tissue) {
-      cpd_data <- primary %>% filter(primary$Name %in% selected_cpds()$Name) %>% filter(Tissue %in% input$primaryCorrPlotCategorySelectTissues) %>% group_by(Population,Condition) %>% summarize(Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC))
-      print(cpd_data)
-      plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(array=Std), color=~Population)
-    }))
+    subplot(lapply(selected_cpds()$Name,
+      function(name) {
+        subplot(lapply(tissues, function(tissue) {
+          cpd_data <- primary %>% filter(primary$Name == name) %>% filter(Tissue %in% input$primaryCorrPlotCategorySelectTissues) %>% group_by(Population,Condition) %>% summarize(Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC))
+          print(cpd_data)
+          plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(array=Std), color=~Population)
+        }))
+      }), nrows = length(selected_cpds()$Name)
+    )
   })
 
   ###################################################################
