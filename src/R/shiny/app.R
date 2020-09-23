@@ -35,6 +35,8 @@ pops = c("Pachon","Tinaja","Surface")
 tissues = c("Brain","Muscle","Liver")
 conditions = c("30d Starved", "4d Starved", "Refed")
 
+popcolors = c("#b22222","#daa520","#1e90ff")
+
 # https://rdrr.io/cran/shinyWidgets/man/updateCheckboxGroupButtons.html
 
 savePlotlyPDFUI <- function(id, label = "Download PDF File"){
@@ -469,13 +471,11 @@ server <- function(input, output) {
         subplot(lapply(tissues, function(tissue) {
           cpd_data <- primary %>% filter(primary$Name == name) %>% filter(Tissue == tissue) %>% group_by(Population,Condition) %>% summarize(Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC)) %>% arrange(factor(Population, levels = pops)) %>% arrange(factor(Condition, levels = conditions))
           cpd_data$Condition <- factor(cpd_data$Condition, levels = conditions)
-          print(cpd_data)
-          print(recode(cpd_data$Population,Pachon="#b22222",Tinaja="#daa520",Surface="#1e90ff"))
-#           cpd_data$Condition
-#           cpd_data$Color <- recode(cpd_data$Population,Pachon="#b22222",Tinaja="#daa520",Surface="#1e90ff")
+          cpd_data$Population <- factor(cpd_data$Population, levels=pops)
 #           https://stackoverflow.com/questions/37285729/how-to-give-subtitles-for-subplot-in-plot-ly-using-r
-          plt <- plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(array=Std), color= ~Population, colors=c("#b22222","#daa520","#1e90ff")) %>% add_annotations(text = tissue, x = 0.5, y = 1.0, xref = "paper", yref = "paper", xanchor = "middle", yanchor = "top", showarrow = FALSE, font=list(size=15,weight="bold"))
+          plt <- plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(array=Std), color= ~Population, colors=popcolors, legendgroup=~Population, showlegend=(tissue == "Brain" && name == selected_cpds()$Name[1])) %>% add_annotations(text = tissue, x = 0.5, y = 1.0, xref = "paper", yref = "paper", xanchor = "middle", yanchor = "top", showarrow = FALSE, font=list(size=15,weight="bold"))
 #            %>% plotly::layout(margin = list("l"=30,"r"=30,"t"=30,"b"=30))
+#           https://stackoverflow.com/questions/57253488/how-to-remove-duplicate-legend-entries-w-plotly-subplots/57312776
           if (tissue == "Brain") {
             plt <- plt %>% add_annotations(text = name, x = -0.1, y = 0.5, xref = "paper", yref = "paper", xanchor = "right", yanchor = "middle", showarrow = FALSE, textangle=-90, font=list(size=15,weight="bold"))
           }
