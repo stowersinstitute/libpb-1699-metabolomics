@@ -84,7 +84,7 @@ def assignfa(lmid):
                     return 'Monounsaturated Fatty Acids'
             elif 'sat' in fa:
                 return 'Saturated Fatty Acids'
-            return mc
+            return nan
 
 def get_lipidmap_name(lmid):
     if 'NAME' in lm[lmid]:

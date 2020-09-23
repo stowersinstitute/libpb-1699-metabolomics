@@ -8,6 +8,9 @@ suppressMessages({
   library(shinycssloaders)
   library(corrr)
   library(tidyr)
+  library(htmlwidgets)
+  library(webshot)
+  library(shinydashboard)
 })
 
 options(shiny.port = 8080)
@@ -16,22 +19,88 @@ options(shiny.port = 8080)
 # https://stackoverflow.com/questions/21465411/r-shiny-passing-reactive-to-selectinput-choices/21467399#21467399
 # https://stackoverflow.com/questions/33973300/issue-in-dynamic-renderui-in-shiny
 # https://drsimonj.svbtle.com/exploring-correlations-in-r-with-corrr
+# https://hssgenomics.shinyapps.io/RNAseq_DRaMA/
+# https://stackoverflow.com/questions/28829682/r-shiny-checkboxgroupinput-select-all-checkboxes-by-click
 
-primary <- read_csv("out/work/primary/merged-mtic.csv")
-primary <- arrange(primary,KEGG)
+primary <- read_csv("out/work/primary/merged-mtic.csv") %>% arrange(KEGG)
 compounds <- unique(primary[c("Name","KEGG","HMDB","ChEBI","Category")])
-# print(compounds)
-# print()
-# print(as.data.frame(primary))
-# print(mtcars)
+lipids <- read_csv("out/work/lipids/merged-lipids.csv", col_types = cols(Saturation = "c", Polarity = "f")) %>% arrange(LMID)
+lipid_ids <- unique(lipids[c("LMID","Name","InChIKey","Category","MainClass","Saturation")])
+# print(lipids)
+
+pops = c("Pachon","Tinaja","Surface")
+tissues = c("Muscle","Brain","Liver")
 
 # https://rdrr.io/cran/shinyWidgets/man/updateCheckboxGroupButtons.html
+
+savePlotlyPDFUI <- function(id, label = "Download PDF File"){
+    ns <- NS(id)
+    tagList(
+        downloadButton(outputId = ns("downloadPDF"), label = label)
+    )
+}
+
+# From RNADrama, doesn't work
+savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
+                          delay = 10, ...){ # these are the default values vwidth = 992, vheight = 744
+
+    namepdf = paste0('Plot_', prefix, Sys.Date(), ".pdf")
+    namehtml = paste0('Plot_', prefix, Sys.Date(), ".html")
+
+    output$downloadPDF <- downloadHandler(
+        filename = namepdf,
+        content =  function(file){
+            withProgress(message = 'Saving PDF', style = "notification", value = 0, {
+                for (i in 1:5) {
+                    incProgress(0.1)
+                    Sys.sleep(0.01)
+                }
+                # check what object is being saved, use webshot fror plotly, ggsave for ggplot
+                if(class(plotlyToSave())[1] == "plotly"){
+                    filename = namehtml
+                    saveWidget(plotlyToSave(), namehtml, selfcontained = TRUE)
+                    # vwidth = vwidth, vheight = vheight
+                    webshot::webshot(url = namehtml, file = namepdf, delay = delay, ...)
+                    file.copy(namepdf, file, overwrite = TRUE)
+                    file.remove(namehtml)
+                } else if(class(plotlyToSave())[1] == "gg"){
+                    ggsave(namepdf, plotlyToSave(), ...)
+                    file.copy(namepdf, file, overwrite = TRUE)
+                } else if(class(plotlyToSave())[1] == "upset") {
+                    filename = namepdf
+                    pdf(file = namepdf, ...)
+                    print(plotlyToSave())
+                    dev.off()
+                    file.copy(namepdf, file, overwrite = TRUE)
+                } else if(class(plotlyToSave())[1] == "visNetwork") {
+                    filename = namehtml
+                    saveWidget(plotlyToSave(), namehtml, selfcontained = TRUE)
+                    # visSave(plotlyToSave(), namehtml, selfcontained = TRUE)
+                    # vwidth = vwidth, vheight = vheight
+                    webshot::webshot(url = namehtml, file = namepdf, delay = delay, ...)
+                    file.copy(namepdf, file, overwrite = TRUE)
+                    file.remove(namehtml)
+                } else{ # supposed to be for base plots, but doesn't work at the moment
+                    filename = namepdf
+                    pdf(file = namepdf, ...)
+                    plotlyToSave()
+                    dev.off()
+                    file.copy(namepdf, file, overwrite = TRUE)
+                }
+                for (i in 1:5) {
+                    incProgress(0.1)
+                    Sys.sleep(0.01)
+                }
+            })
+        }
+    )
+}
 
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
   titlePanel("Rohner Lab Astyanax Metabolomics Study"),
   navlistPanel(
-    "Subset",
+    "Primary",
     tabPanel("Selections",
 #       https://stackoverflow.com/questions/27607566/allowing-one-tick-only-in-checkboxgroupinput
       p("Select which metabolites you want to include in the analysis. You can select via compound name, category, or a number of identifier systems. You can also select from different identifier types and the app will remember your selection for each heading and combine them on the summary page. Aftering making your selection, you can view the \"Summary\" tab to see the metabolites you select or proceed to any of the \"Visualization\" tabs.\""),
@@ -63,68 +132,110 @@ ui <- fluidPage(
       })
     ),
     tabPanel("Summary",
-      dataTableOutput("summary")
+      dataTableOutput("primary_summary")
     ),
-    "Visualization",
     tabPanel("Heatmap",
-      tabsetPanel(type="tabs", id="corrPlotTab", selected="featureCorr",
+      tabsetPanel(type="tabs", id="primaryCorrPlotTab", selected="sampleCorr",
+        tabPanel(title = "By Sample",
+          value = "sampleCorr",
+          plotlyOutput("primarySampleCorrPlt", height = 600) %>%
+            withSpinner(type = 8, color = "#0088cf", size = 1),
+        box(title = "Controls",
+          width = NULL,
+          solidHeader = TRUE,
+          status = "primary",
+          splitLayout(cellWidths = c("33%","33%","33%"),
+            checkboxGroupInput("primaryCorrPlotSampleSelectPops", "Populations:", pops, selected = pops),
+            checkboxGroupInput("primaryCorrPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
+            checkboxGroupInput("primaryCorrPlotSampleSelectPops2", "Populations:", c("Pachon","Tinaja","Surface"))
+          )
+        )),
         tabPanel(title = "By Metabolite",
           value = "featureCorr",
           plotlyOutput("featureCorrPlt", height = 600) %>%
-            withSpinner(type = 8, color = "#0088cf", size = 1)),
-        tabPanel(title = "By Sample",
-          value = "sampleCorr",
-          plotlyOutput("sampleCorrPlt", height = 600) %>%
             withSpinner(type = 8, color = "#0088cf", size = 1))
-      )
+      ),
+#       p(class = 'text-center',
+#         savePlotlyPDFUI(id = "download_primarySampleCorrPlot",
+#                         label = "Download Plot (PDF)")
+#       )
     ),
     tabPanel("Component 4"),
     "-----",
-    tabPanel("Component 5")
+    "Lipids",
+    tabPanel("Selections",
+      p("Select which lipids you want to include in the analysis."),
+      radioButtons(
+        inputId = "lipid_selection_type",
+        label = "Select by:",
+        choices = c("LMID","Name","InChIKey","Category","MainClass","Saturation"),
+        selected = "Name",
+      ),
+#       https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
+      lapply(c("LMID","Name","InChIKey","Category","MainClass","Saturation"), function(t) {
+        conditionalPanel(
+          condition = sprintf("input.lipid_selection_type == '%s'",t),
+          pickerInput(
+            inputId = sprintf("lipid_selector_%s",t),
+            label = "Make selections:",
+            choices = unique(lipid_ids[t]),
+            options = list(
+              `actions-box` = TRUE,
+              size = 10,
+              `selected-text-format` = "count > 3",
+              `live-search`=TRUE
+            ),
+            multiple = TRUE,
+          )
+        )
+      })
+    ),
+    tabPanel("Summary",
+      dataTableOutput("lipids_summary")
+    )
   )
 )
 
-# Define server logic required to draw a histogram ----
+
 server <- function(input, output) {
 
-  # Histogram of the Old Faithful Geyser Data ----
-  # with requested number of bins
-  # This expression that generates a histogram is wrapped in a call
-  # to renderPlot to indicate that:
-  #
-  # 1. It is "reactive" and therefore should be automatically
-  #    re-executed when inputs (input$bins) change
-  # 2. Its output type is a plot
+  ###################################################################
+  #                            Primary                              #
+  ###################################################################
 
   selected_cpds <- reactive(filter(compounds, compounds$Name %in% input$selector_Name | compounds$KEGG %in% input$selector_KEGG | compounds$HMDB %in% input$selector_HMDB | compounds$ChEBI %in% input$selector_ChEBI |  compounds$Category %in% input$selector_Category))
 
-  output$summary <- renderDataTable(selected_cpds)
+  output$primary_summary <- renderDataTable(selected_cpds())
 
   ###################################################################
   #           Correlation Plot Tab 1: Sample Correlations           #
   ###################################################################
-  output$featureCorrPlt <- renderPlotly({
-#     callModule(module = savePlotlyPDF,
-#                 id = "download_geneGenePlot",
-#                 prefix = "GeneCorrelation_Plot_",
-#                 plotlyToSave = reactive({featureCorrPlt[[2]]}))
+  output$primarySampleCorrPlt <- renderPlotly({
 
 #     https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html
-    cpd_data <- filter(primary, primary$Name %in% selected_cpds()$Name)
+    cpd_data <- primary %>% filter(primary$Name %in% selected_cpds()$Name) %>% filter(Population %in% input$primaryCorrPlotSampleSelectPops) %>% filter(Tissue %in% input$primaryCorrPlotSampleSelectTissues)
     features <- cpd_data %>% select(Name,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean)
     features <- as.data.frame(features)
     rownames(features) <- features$Name
     features <- features[,-1]
-#     print(head(features))
-#     print(head(cor(features, use="pairwise.complete.obs")))
-    heatmaply_cor(
+    theplt <- heatmaply_cor(
       cor(features),
-#       xlab = "Features",
-#       ylab = "Features",
       k_col = 3,
       k_row = 3
     )
+    callModule(module = savePlotlyPDF,
+                id = "download_primarySampleCorrPlot",
+                prefix = "PrimarySampleCorrPlot_",
+                plotlyToSave = reactive(theplt))
+    theplt
   })
+  ###################################################################
+  #                            Lipids                               #
+  ###################################################################
+
+  selected_lipids <- reactive(filter(lipid_ids, lipid_ids$LMID %in% input$lipid_selector_LMID| lipid_ids$Name %in% input$lipid_selector_Name | lipid_ids$InChIKey %in% input$lipid_selector_InChIKey | lipid_ids$Category %in% input$lipid_selector_Category |  lipid_ids$MainClass %in% input$lipid_selector_MainClass |  lipid_ids$Saturation %in% input$lipid_selector_Saturation))
+
+  output$lipids_summary <- renderDataTable(selected_lipids())
 
 }
 
