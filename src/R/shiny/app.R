@@ -199,7 +199,10 @@ ui <- fluidPage(
 #                         label = "Download Plot (PDF)")
 #       )
     ),
-    tabPanel("Component 4"),
+    tabPanel("Quant.",
+      plotlyOutput("primaryLinePlt", height = 600) %>%
+        withSpinner(type = 8, color = "#0088cf", size = 1)
+    ),
     "-----",
     "Lipids",
     tabPanel("Selections",
@@ -420,6 +423,51 @@ server <- function(input, output) {
   })
 
   ###################################################################
+  #          Primary Category Correlation Plot                      #
+  ###################################################################
+  output$primaryCategoryCorrPlt <- renderPlotly({
+#     https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html
+    cpd_data <- primary %>% filter(primary$Name %in% selected_cpds()$Name) %>% filter(Population %in% input$primaryCorrPlotCategorySelectPops) %>% filter(Tissue %in% input$primaryCorrPlotCategorySelectTissues) %>% filter(Condition %in% input$primaryCorrPlotCategorySelectConditions)
+    if (!input$primaryCorrPlotCategoryIncludeOutliers) {
+      cpd_data <- cpd_data %>% filter(Outlier == FALSE)
+    }
+    features <- cpd_data %>% select(Category,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean)
+    features <- as.data.frame(features)
+    rownames(features) <- features$Category
+    features <- features[,-1]
+    features <- t(features)
+    if (input$primaryCorrPlotCategoryNormalize) {
+      thecor <- normalize(cor(features))
+    } else {
+      thecor <- cor(features)
+    }
+    theplt <- heatmaply_cor(
+      thecor,
+      k_col = input$primaryCorrPlotCategoryNumClusters,
+      k_row = input$primaryCorrPlotCategoryNumClusters
+    )
+    callModule(module = savePlotlyPDF,
+                id = "download_primaryCategoryCorrPlot",
+                prefix = "PrimaryCategoryCorrPlot_",
+                plotlyToSave = reactive(theplt))
+    theplt
+  })
+
+  ###################################################################
+  #          Primary Line Plot               t                      #
+  ###################################################################
+  output$primaryLinePlt <- renderPlotly({
+#     if (!input$primaryCorrPlotCategoryIncludeOutliers) {
+#       cpd_data <- cpd_data %>% filter(Outlier == FALSE)
+#     }
+    subplot(lapply(tissues, function(tissue) {
+      cpd_data <- primary %>% filter(primary$Name %in% selected_cpds()$Name) %>% filter(Tissue %in% input$primaryCorrPlotCategorySelectTissues) %>% group_by(Population,Condition) %>% summarize(Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC))
+      print(cpd_data)
+      plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(array=Std), color=~Population)
+    }))
+  })
+
+  ###################################################################
   #                            Lipids                               #
   ###################################################################
 
@@ -440,7 +488,7 @@ server <- function(input, output) {
     features <- as.data.frame(features)
     rownames(features) <- features$LMID
     features <- features[,-1]
-    print(features)
+#     print(features)
     if (input$lipidsCorrPlotSampleNormalize) {
       thecor <- normalize(cor(features))
     } else {
