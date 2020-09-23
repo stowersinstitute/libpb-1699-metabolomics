@@ -158,8 +158,23 @@ ui <- fluidPage(
         )),
         tabPanel(title = "By Metabolite",
           value = "featureCorr",
-          plotlyOutput("featureCorrPlt", height = 600) %>%
-            withSpinner(type = 8, color = "#0088cf", size = 1))
+          plotlyOutput("primaryFeatureCorrPlt", height = 600) %>%
+            withSpinner(type = 8, color = "#0088cf", size = 1),
+          box(title = "Controls",
+            width = NULL,
+            solidHeader = TRUE,
+            status = "primary",
+            splitLayout(cellWidths = c("25%","25%","25%","25%"),
+              column(3,
+                numericInput(inputId = "primaryCorrPlotFeatureNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                checkboxInput(inputId = "primaryCorrPlotFeatureNormalize", label = "Normalize?", value = TRUE),
+                checkboxInput(inputId = "primaryCorrPlotFeatureIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                ),
+            checkboxGroupInput("primaryCorrPlotFeatureSelectPops", "Populations:", pops, selected = pops),
+            checkboxGroupInput("primaryCorrPlotFeatureSelectTissues", "Tissues:", tissues, selected = tissues),
+            checkboxGroupInput("primaryCorrPlotFeatureSelectConditions", "Conditions:", conditions, selected = conditions)
+          )
+        ))
       ),
 #       p(class = 'text-center',
 #         savePlotlyPDFUI(id = "download_primarySampleCorrPlot",
@@ -217,7 +232,6 @@ server <- function(input, output) {
   #           Correlation Plot Tab 1: Sample Correlations           #
   ###################################################################
   output$primarySampleCorrPlt <- renderPlotly({
-
 #     https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html
     cpd_data <- primary %>% filter(primary$Name %in% selected_cpds()$Name) %>% filter(Population %in% input$primaryCorrPlotSampleSelectPops) %>% filter(Tissue %in% input$primaryCorrPlotSampleSelectTissues) %>% filter(Condition %in% input$primaryCorrPlotSampleSelectConditions)
     if (!input$primaryCorrPlotSampleIncludeOutliers) {
@@ -243,6 +257,40 @@ server <- function(input, output) {
                 plotlyToSave = reactive(theplt))
     theplt
   })
+
+  ###################################################################
+  #                   Feature Correlation Plot                      #
+  ###################################################################
+  output$primaryFeatureCorrPlt <- renderPlotly({
+#     https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html
+#     print(primary)
+    cpd_data <- primary %>% filter(primary$Name %in% selected_cpds()$Name) %>% filter(Population %in% input$primaryCorrPlotFeatureSelectPops) %>% filter(Tissue %in% input$primaryCorrPlotFeatureSelectTissues) %>% filter(Condition %in% input$primaryCorrPlotFeatureSelectConditions)
+    if (!input$primaryCorrPlotFeatureIncludeOutliers) {
+      cpd_data <- cpd_data %>% filter(Outlier == FALSE)
+    }
+    features <- cpd_data %>% select(Name,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean)
+    features <- as.data.frame(features)
+    rownames(features) <- features$Name
+    features <- features[,-1]
+    features <- t(features)
+    print(head(features))
+    if (input$primaryCorrPlotFeatureNormalize) {
+      thecor <- normalize(cor(features))
+    } else {
+      thecor <- cor(features)
+    }
+    theplt <- heatmaply_cor(
+      thecor,
+      k_col = input$primaryCorrPlotFeatureNumClusters,
+      k_row = input$primaryCorrPlotFeatureNumClusters
+    )
+    callModule(module = savePlotlyPDF,
+                id = "download_primaryFeatureCorrPlot",
+                prefix = "PrimaryFeatureCorrPlot_",
+                plotlyToSave = reactive(theplt))
+    theplt
+  })
+
   ###################################################################
   #                            Lipids                               #
   ###################################################################
