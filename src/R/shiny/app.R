@@ -148,7 +148,7 @@ ui <- fluidPage(
           splitLayout(cellWidths = c("25%","25%","25%","25%"),
             column(3,
               numericInput(inputId = "primaryCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
-              checkboxInput(inputId = "primaryCorrPlotSampleNormalize", label = "Normalize?", value = TRUE),
+              checkboxInput(inputId = "primaryCorrPlotSampleNormalize", label = "Normalize?", value = FALSE),
               checkboxInput(inputId = "primaryCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
               ),
             checkboxGroupInput("primaryCorrPlotSampleSelectPops", "Populations:", pops, selected = pops),
@@ -167,12 +167,31 @@ ui <- fluidPage(
             splitLayout(cellWidths = c("25%","25%","25%","25%"),
               column(3,
                 numericInput(inputId = "primaryCorrPlotFeatureNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
-                checkboxInput(inputId = "primaryCorrPlotFeatureNormalize", label = "Normalize?", value = TRUE),
+                checkboxInput(inputId = "primaryCorrPlotFeatureNormalize", label = "Normalize?", value = FALSE),
                 checkboxInput(inputId = "primaryCorrPlotFeatureIncludeOutliers", label = "Include Outliers?", value = FALSE),
                 ),
             checkboxGroupInput("primaryCorrPlotFeatureSelectPops", "Populations:", pops, selected = pops),
             checkboxGroupInput("primaryCorrPlotFeatureSelectTissues", "Tissues:", tissues, selected = tissues),
             checkboxGroupInput("primaryCorrPlotFeatureSelectConditions", "Conditions:", conditions, selected = conditions)
+          )
+        )),
+        tabPanel(title = "By Category",
+          value = "categoryCorr",
+          plotlyOutput("primaryCategoryCorrPlt", height = 600) %>%
+            withSpinner(type = 8, color = "#0088cf", size = 1),
+          box(title = "Controls",
+            width = NULL,
+            solidHeader = TRUE,
+            status = "primary",
+            splitLayout(cellWidths = c("25%","25%","25%","25%"),
+              column(3,
+                numericInput(inputId = "primaryCorrPlotCategoryNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                checkboxInput(inputId = "primaryCorrPlotCategoryNormalize", label = "Normalize?", value = FALSE),
+                checkboxInput(inputId = "primaryCorrPlotCategoryIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                ),
+            checkboxGroupInput("primaryCorrPlotCategorySelectPops", "Populations:", pops, selected = pops),
+            checkboxGroupInput("primaryCorrPlotCategorySelectTissues", "Tissues:", tissues, selected = tissues),
+            checkboxGroupInput("primaryCorrPlotCategorySelectConditions", "Conditions:", conditions, selected = conditions)
           )
         ))
       ),
@@ -263,7 +282,6 @@ server <- function(input, output) {
   ###################################################################
   output$primaryFeatureCorrPlt <- renderPlotly({
 #     https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html
-#     print(primary)
     cpd_data <- primary %>% filter(primary$Name %in% selected_cpds()$Name) %>% filter(Population %in% input$primaryCorrPlotFeatureSelectPops) %>% filter(Tissue %in% input$primaryCorrPlotFeatureSelectTissues) %>% filter(Condition %in% input$primaryCorrPlotFeatureSelectConditions)
     if (!input$primaryCorrPlotFeatureIncludeOutliers) {
       cpd_data <- cpd_data %>% filter(Outlier == FALSE)
@@ -273,7 +291,6 @@ server <- function(input, output) {
     rownames(features) <- features$Name
     features <- features[,-1]
     features <- t(features)
-    print(head(features))
     if (input$primaryCorrPlotFeatureNormalize) {
       thecor <- normalize(cor(features))
     } else {
@@ -287,6 +304,38 @@ server <- function(input, output) {
     callModule(module = savePlotlyPDF,
                 id = "download_primaryFeatureCorrPlot",
                 prefix = "PrimaryFeatureCorrPlot_",
+                plotlyToSave = reactive(theplt))
+    theplt
+  })
+
+  ###################################################################
+  #                  Category Correlation Plot                      #
+  ###################################################################
+  output$primaryCategoryCorrPlt <- renderPlotly({
+#     https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html
+    cpd_data <- primary %>% filter(primary$Name %in% selected_cpds()$Name) %>% filter(Population %in% input$primaryCorrPlotCategorySelectPops) %>% filter(Tissue %in% input$primaryCorrPlotCategorySelectTissues) %>% filter(Condition %in% input$primaryCorrPlotCategorySelectConditions)
+    if (!input$primaryCorrPlotCategoryIncludeOutliers) {
+      cpd_data <- cpd_data %>% filter(Outlier == FALSE)
+    }
+    features <- cpd_data %>% select(Category,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean)
+    features <- as.data.frame(features)
+    rownames(features) <- features$Category
+    features <- features[,-1]
+    features <- t(features)
+    print(head(features))
+    if (input$primaryCorrPlotCategoryNormalize) {
+      thecor <- normalize(cor(features))
+    } else {
+      thecor <- cor(features)
+    }
+    theplt <- heatmaply_cor(
+      thecor,
+      k_col = input$primaryCorrPlotCategoryNumClusters,
+      k_row = input$primaryCorrPlotCategoryNumClusters
+    )
+    callModule(module = savePlotlyPDF,
+                id = "download_primaryCategoryCorrPlot",
+                prefix = "PrimaryCategoryCorrPlot_",
                 plotlyToSave = reactive(theplt))
     theplt
   })
