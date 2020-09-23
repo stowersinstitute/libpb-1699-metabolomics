@@ -1,4 +1,5 @@
 suppressMessages({
+  library(conflicted)
   library(shiny)
   library(shinyWidgets)
   library(readr)
@@ -12,6 +13,9 @@ suppressMessages({
   library(webshot)
   library(shinydashboard)
 })
+
+conflict_prefer("box", "shinydashboard")
+conflict_prefer("filter", "dplyr")
 
 options(shiny.port = 8080)
 
@@ -465,7 +469,12 @@ server <- function(input, output) {
         subplot(lapply(tissues, function(tissue) {
           cpd_data <- primary %>% filter(primary$Name == name) %>% filter(Tissue %in% input$primaryCorrPlotCategorySelectTissues) %>% group_by(Population,Condition) %>% summarize(Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC))
           print(cpd_data)
-          plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(array=Std), color=~Population)
+#           https://stackoverflow.com/questions/37285729/how-to-give-subtitles-for-subplot-in-plot-ly-using-r
+          plt <- plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(array=Std), color=~Population) %>% plotly::layout(annotations = list(title = "The  title"))
+#           if (tissue == "Brain") {
+#             plt <- plt %>% layout(yaxis = list(title = name))
+#           }
+          plt
         }))
       }), nrows = length(selected_cpds()$Name)
     )
