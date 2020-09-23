@@ -291,6 +291,25 @@ ui <- fluidPage(
             checkboxGroupInput("lipidsCorrPlotCategorySelectTissues", "Tissues:", tissues, selected = tissues),
             checkboxGroupInput("lipidsCorrPlotCategorySelectConditions", "Conditions:", conditions, selected = conditions)
           )
+        )),
+        tabPanel(title = "By Class",
+          value = "classCorr",
+          plotlyOutput("lipidsClassCorrPlt", height = 600) %>%
+            withSpinner(type = 8, color = "#0088cf", size = 1),
+          box(title = "Controls",
+            width = NULL,
+            solidHeader = TRUE,
+            status = "primary",
+            splitLayout(cellWidths = c("25%","25%","25%","25%"),
+              column(3,
+                numericInput(inputId = "lipidsCorrPlotClassNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                checkboxInput(inputId = "lipidsCorrPlotClassNormalize", label = "Normalize?", value = FALSE),
+                checkboxInput(inputId = "lipidsCorrPlotClassIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                ),
+            checkboxGroupInput("lipidsCorrPlotClassSelectPops", "Populations:", pops, selected = pops),
+            checkboxGroupInput("lipidsCorrPlotClassSelectTissues", "Tissues:", tissues, selected = tissues),
+            checkboxGroupInput("lipidsCorrPlotClassSelectConditions", "Conditions:", conditions, selected = conditions)
+          )
         ))
       )
     )
@@ -417,12 +436,11 @@ server <- function(input, output) {
     if (!input$lipidsCorrPlotSampleIncludeOutliers) {
       cpd_data <- cpd_data %>% filter(Outlier == FALSE)
     }
-    features <- cpd_data %>% select(LMID,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean)
-    features <- features %>% drop_na()
-    print(features)
+    features <- cpd_data %>% select(LMID,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean) %>% drop_na()
     features <- as.data.frame(features)
     rownames(features) <- features$LMID
     features <- features[,-1]
+    print(features)
     if (input$lipidsCorrPlotSampleNormalize) {
       thecor <- normalize(cor(features))
     } else {
@@ -449,7 +467,7 @@ server <- function(input, output) {
     if (!input$lipidsCorrPlotFeatureIncludeOutliers) {
       cpd_data <- cpd_data %>% filter(Outlier == FALSE)
     }
-    features <- cpd_data %>% select(LMID,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean)
+    features <- cpd_data %>% select(LMID,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean) %>% drop_na()
     features <- as.data.frame(features)
     rownames(features) <- features$LMID
     features <- features[,-1]
@@ -480,7 +498,7 @@ server <- function(input, output) {
     if (!input$lipidsCorrPlotCategoryIncludeOutliers) {
       cpd_data <- cpd_data %>% filter(Outlier == FALSE)
     }
-    features <- cpd_data %>% select(Category,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean)
+    features <- cpd_data %>% select(Category,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean) %>% drop_na()
     features <- as.data.frame(features)
     rownames(features) <- features$Category
     features <- features[,-1]
@@ -498,6 +516,37 @@ server <- function(input, output) {
     callModule(module = savePlotlyPDF,
                 id = "download_lipidsCategoryCorrPlot",
                 prefix = "LipidsCategoryCorrPlot_",
+                plotlyToSave = reactive(theplt))
+    theplt
+  })
+
+  ###################################################################
+  #           Lipids Class Correlation Plot                      #
+  ###################################################################
+  output$lipidsClassCorrPlt <- renderPlotly({
+#     https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html
+    cpd_data <- lipids %>% filter(lipids$LMID %in% selected_lipids()$LMID) %>% filter(Population %in% input$lipidsCorrPlotClassSelectPops) %>% filter(Tissue %in% input$lipidsCorrPlotClassSelectTissues) %>% filter(Condition %in% input$lipidsCorrPlotClassSelectConditions)
+    if (!input$lipidsCorrPlotClassIncludeOutliers) {
+      cpd_data <- cpd_data %>% filter(Outlier == FALSE)
+    }
+    features <- cpd_data %>% select(MainClass,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean) %>% drop_na()
+    features <- as.data.frame(features)
+    rownames(features) <- features$MainClass
+    features <- features[,-1]
+    features <- t(features)
+    if (input$lipidsCorrPlotClassNormalize) {
+      thecor <- normalize(cor(features))
+    } else {
+      thecor <- cor(features)
+    }
+    theplt <- heatmaply_cor(
+      thecor,
+      k_col = input$lipidsCorrPlotClassNumClusters,
+      k_row = input$lipidsCorrPlotClassNumClusters
+    )
+    callModule(module = savePlotlyPDF,
+                id = "download_lipidsClassCorrPlot",
+                prefix = "LipidsClassCorrPlot_",
                 plotlyToSave = reactive(theplt))
     theplt
   })
