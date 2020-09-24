@@ -215,7 +215,7 @@ ui <- dashboardPage(
               checkboxGroupInput("primaryCorrPlotCategorySelectConditions", "Conditions:", conditions, selected = conditions)
             )
           ))
-        ),
+        )
 #       p(class = 'text-center',
 #         savePlotlyPDFUI(id = "download_primarySampleCorrPlot",
 #                         label = "Download Plot (PDF)")
@@ -335,7 +335,7 @@ ui <- dashboardPage(
             )
           ))
         )
-      ),
+      )
     )
   )
     tabPanel("",
