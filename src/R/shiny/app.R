@@ -107,6 +107,7 @@ savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
 ui <- dashboardPage(
   dashboardHeader(title = "Astyanax Metabolomics"),
   dashboardSidebar(
+#     https://community.rstudio.com/t/how-to-remove-numeric-inputs-spin-button-in-r-shiny/13769/3
     tags$head(tags$style(HTML("
         input[type=number] {
               -moz-appearance:textfield;
@@ -121,7 +122,7 @@ ui <- dashboardPage(
         }
     "))),
     sidebarMenu(
-      menuItem("Primary",
+      menuItem("Primary", selected = TRUE, startExpanded = TRUE,
                menuSubItem("Selections", tabName = "primarySelections"),
                menuSubItem("Summary", tabName = "primarySummary"),
                menuSubItem("Correlation", tabName = "primaryCorrelation"),
@@ -200,8 +201,8 @@ ui <- dashboardPage(
               solidHeader = TRUE,
               status = "primary",
               splitLayout(cellWidths = c("25%","25%","25%","25%"),
-                column(3,
-                  numericInput(inputId = "primaryCorrPlotFeatureNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                column(6,
+                  numericInput(inputId = "primaryCorrPlotFeatureNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
                   checkboxInput(inputId = "primaryCorrPlotFeatureNormalize", label = "Normalize?", value = FALSE),
                   checkboxInput(inputId = "primaryCorrPlotFeatureIncludeOutliers", label = "Include Outliers?", value = FALSE),
                   ),
@@ -219,8 +220,8 @@ ui <- dashboardPage(
               solidHeader = TRUE,
               status = "primary",
               splitLayout(cellWidths = c("25%","25%","25%","25%"),
-                column(3,
-                  numericInput(inputId = "primaryCorrPlotCategoryNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                column(6,
+                  numericInput(inputId = "primaryCorrPlotCategoryNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
                   checkboxInput(inputId = "primaryCorrPlotCategoryNormalize", label = "Normalize?", value = FALSE),
                   checkboxInput(inputId = "primaryCorrPlotCategoryIncludeOutliers", label = "Include Outliers?", value = FALSE),
                   ),
@@ -236,10 +237,16 @@ ui <- dashboardPage(
 #       )
       ),
       tabItem(tabName = "primaryQuantitative",
-        plotlyOutput("primaryLinePlt") %>%
-        withSpinner(type = 8, color = "#0088cf", size = 1)
+#         https://stackoverflow.com/questions/21609436/r-shiny-conditionalpanel-output-value
+        conditionalPanel(condition = "output.num_compounds <= 10",
+          plotlyOutput("primaryLinePlt") %>%
+          withSpinner(type = 8, color = "#0088cf", size = 1)
+        ),
+        conditionalPanel(condition = "output.num_compounds > 10",
+          box(title = "Too many compounds", status = "danger", p("Too many compounds selected (max 10)"))
+        )
       ),
-      tabItem(tabName = "lipidSelections",
+      tabItem(tabName = "lipidsSelections",
         p("Select which lipids you want to include in the analysis."),
         radioButtons(
           inputId = "lipid_selection_type",
@@ -267,10 +274,10 @@ ui <- dashboardPage(
           )
         })
       ),
-      tabItem(tabName = "lipidSummary",
+      tabItem(tabName = "lipidsSummary",
         dataTableOutput("lipids_summary")
       ),
-      tabItem(tabName = "lipidCorrelation",
+      tabItem(tabName = "lipidsCorrelation",
         tabsetPanel(type="tabs", id="lipidsCorrPlotTab", selected="sampleCorr",
           tabPanel(title = "By Sample",
             value = "sampleCorr",
@@ -281,8 +288,8 @@ ui <- dashboardPage(
             solidHeader = TRUE,
             status = "primary",
             splitLayout(cellWidths = c("25%","25%","25%","25%"),
-              column(3,
-                numericInput(inputId = "lipidsCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+              column(6,
+                numericInput(inputId = "lipidsCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
                 checkboxInput(inputId = "lipidsCorrPlotSampleNormalize", label = "Normalize?", value = FALSE),
                 checkboxInput(inputId = "lipidsCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
                 ),
@@ -300,8 +307,8 @@ ui <- dashboardPage(
               solidHeader = TRUE,
               status = "primary",
               splitLayout(cellWidths = c("25%","25%","25%","25%"),
-                column(3,
-                  numericInput(inputId = "lipidsCorrPlotFeatureNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                column(6,
+                  numericInput(inputId = "lipidsCorrPlotFeatureNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
                   checkboxInput(inputId = "lipidsCorrPlotFeatureNormalize", label = "Normalize?", value = FALSE),
                   checkboxInput(inputId = "lipidsCorrPlotFeatureIncludeOutliers", label = "Include Outliers?", value = FALSE),
                   ),
@@ -319,8 +326,8 @@ ui <- dashboardPage(
               solidHeader = TRUE,
               status = "primary",
               splitLayout(cellWidths = c("25%","25%","25%","25%"),
-                column(3,
-                  numericInput(inputId = "lipidsCorrPlotCategoryNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                column(6,
+                  numericInput(inputId = "lipidsCorrPlotCategoryNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
                   checkboxInput(inputId = "lipidsCorrPlotCategoryNormalize", label = "Normalize?", value = FALSE),
                   checkboxInput(inputId = "lipidsCorrPlotCategoryIncludeOutliers", label = "Include Outliers?", value = FALSE),
                   ),
@@ -350,6 +357,9 @@ ui <- dashboardPage(
           ))
         )
       )
+    ),
+    conditionalPanel(condition = "0",
+      verbatimTextOutput("num_compounds")
     )
   )
 )
@@ -362,6 +372,10 @@ server <- function(input, output) {
   ###################################################################
 
   selected_cpds <- reactive(filter(compounds, compounds$Name %in% input$selector_Name | compounds$KEGG %in% input$selector_KEGG | compounds$HMDB %in% input$selector_HMDB | compounds$ChEBI %in% input$selector_ChEBI |  compounds$Category %in% input$selector_Category))
+
+  output$num_compounds <- reactive(nrow(selected_cpds()))
+#   https://stackoverflow.com/questions/21609436/r-shiny-conditionalpanel-output-value
+  outputOptions(output, "num_compounds", suspendWhenHidden = FALSE)
 
   output$primary_summary <- renderDataTable(selected_cpds())
 
@@ -382,10 +396,7 @@ server <- function(input, output) {
       thecor <- cor(features)
       a <- max(thecor)
       b <- min(thecor)
-      print(a)
-      print(b)
       thecor <- (thecor - b) / (a-b)
-      print(thecor)
     } else {
       thecor <- cor(features)
     }
@@ -501,7 +512,7 @@ server <- function(input, output) {
     subplot(lapply(selected_cpds()$Name,
       function(name) {
         subplot(lapply(tissues, function(tissue) {
-          cpd_data <- primary %>% filter(primary$Name == name) %>% filter(Tissue == tissue) %>% group_by(Population,Condition) %>% summarize(Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC)) %>% arrange(factor(Population, levels = pops)) %>% arrange(factor(Condition, levels = conditions))
+          cpd_data <- primary %>% filter(primary$Name == name) %>% filter(Tissue == tissue) %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC)) %>% arrange(factor(Population, levels = pops)) %>% arrange(factor(Condition, levels = conditions))
           cpd_data$Condition <- factor(cpd_data$Condition, levels = conditions)
           cpd_data$Population <- factor(cpd_data$Population, levels=pops)
 #           https://stackoverflow.com/questions/37285729/how-to-give-subtitles-for-subplot-in-plot-ly-using-r
@@ -539,7 +550,10 @@ server <- function(input, output) {
     features <- features[,-1]
 #     print(features)
     if (input$lipidsCorrPlotSampleNormalize) {
-      thecor <- normalize(cor(features))
+      thecor <- cor(features)
+      a <- max(thecor)
+      b <- min(thecor)
+      thecor <- (thecor - b) / (a-b)
     } else {
       thecor <- cor(features)
     }
