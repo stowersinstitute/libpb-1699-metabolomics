@@ -206,7 +206,7 @@ ui <- fluidPage(
 #       )
     ),
     tabPanel("Quant.",
-      plotlyOutput("primaryLinePlt", height = 600) %>%
+      plotlyOutput("primaryLinePlt") %>%
         withSpinner(type = 8, color = "#0088cf", size = 1)
     ),
     "-----",
@@ -473,7 +473,7 @@ server <- function(input, output) {
           cpd_data$Condition <- factor(cpd_data$Condition, levels = conditions)
           cpd_data$Population <- factor(cpd_data$Population, levels=pops)
 #           https://stackoverflow.com/questions/37285729/how-to-give-subtitles-for-subplot-in-plot-ly-using-r
-          plt <- plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(array=Std), color= ~Population, colors=popcolors, legendgroup=~Population, showlegend=(tissue == "Brain" && name == selected_cpds()$Name[1])) %>% add_annotations(text = tissue, x = 0.5, y = 1.0, xref = "paper", yref = "paper", xanchor = "middle", yanchor = "top", showarrow = FALSE, font=list(size=15,weight="bold"))
+          plt <- plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(array=Std), color= ~Population, colors=popcolors, legendgroup=~Population, height=300*length(selected_cpds()$Name), showlegend=(tissue == "Brain" && name == selected_cpds()$Name[1])) %>% add_annotations(text = tissue, x = 0.5, y = 1.0, xref = "paper", yref = "paper", xanchor = "middle", yanchor = "top", showarrow = FALSE, font=list(size=15,weight="bold"))
 #            %>% plotly::layout(margin = list("l"=30,"r"=30,"t"=30,"b"=30))
 #           https://stackoverflow.com/questions/57253488/how-to-remove-duplicate-legend-entries-w-plotly-subplots/57312776
           if (tissue == "Brain") {
