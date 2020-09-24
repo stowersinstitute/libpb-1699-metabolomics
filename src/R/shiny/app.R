@@ -25,6 +25,7 @@ options(shiny.port = 8080)
 # https://drsimonj.svbtle.com/exploring-correlations-in-r-with-corrr
 # https://hssgenomics.shinyapps.io/RNAseq_DRaMA/
 # https://stackoverflow.com/questions/28829682/r-shiny-checkboxgroupinput-select-all-checkboxes-by-click
+# https://stackoverflow.com/questions/20637248/shiny-4-small-textinput-boxes-side-by-side
 
 primary <- read_csv("out/work/primary/merged-mtic.csv") %>% arrange(KEGG)
 compounds <- unique(primary[c("Name","KEGG","HMDB","ChEBI","Category")])
@@ -104,8 +105,21 @@ savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
 
 # Define UI for app that draws a histogram ----
 ui <- dashboardPage(
-  dashboardHeader(title = "Rohner Lab Astyanax Metabolomics Study"),
+  dashboardHeader(title = "Astyanax Metabolomics"),
   dashboardSidebar(
+    tags$head(tags$style(HTML("
+        input[type=number] {
+              -moz-appearance:textfield;
+        }
+        input[type=number]::{
+              -moz-appearance:textfield;
+        }
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+              -webkit-appearance: none;
+              margin: 0;
+        }
+    "))),
     sidebarMenu(
       menuItem("Primary",
                menuSubItem("Selections", tabName = "primarySelections"),
@@ -167,8 +181,8 @@ ui <- dashboardPage(
             solidHeader = TRUE,
             status = "primary",
             splitLayout(cellWidths = c("25%","25%","25%","25%"),
-              column(3,
-                numericInput(inputId = "primaryCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+              column(6,
+                numericInput(inputId = "primaryCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
                 checkboxInput(inputId = "primaryCorrPlotSampleNormalize", label = "Normalize?", value = FALSE),
                 checkboxInput(inputId = "primaryCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
                 ),
@@ -365,7 +379,13 @@ server <- function(input, output) {
     rownames(features) <- features$Name
     features <- features[,-1]
     if (input$primaryCorrPlotSampleNormalize) {
-      thecor <- normalize(cor(features))
+      thecor <- cor(features)
+      a <- max(thecor)
+      b <- min(thecor)
+      print(a)
+      print(b)
+      thecor <- (thecor - b) / (a-b)
+      print(thecor)
     } else {
       thecor <- cor(features)
     }
