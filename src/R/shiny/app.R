@@ -104,7 +104,7 @@ savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
 
 # Define UI for app that draws a histogram ----
 ui <- dashboardPage(
-  dashboardHeader("Rohner Lab Astyanax Metabolomics Study"),
+  dashboardHeader(title = "Rohner Lab Astyanax Metabolomics Study"),
   dashboardSidebar(
     sidebarMenu(
       menuItem("Primary",
@@ -336,9 +336,6 @@ ui <- dashboardPage(
           ))
         )
       )
-    )
-  )
-    tabPanel("",
     )
   )
 )
