@@ -103,224 +103,242 @@ savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
 }
 
 # Define UI for app that draws a histogram ----
-ui <- fluidPage(
-  titlePanel("Rohner Lab Astyanax Metabolomics Study"),
-  navlistPanel(
-    "Primary",
-    tabPanel("Selections",
-#       https://stackoverflow.com/questions/27607566/allowing-one-tick-only-in-checkboxgroupinput
-      p("Select which metabolites you want to include in the analysis. You can select via compound name, category, or a number of identifier systems. You can also select from different identifier types and the app will remember your selection for each heading and combine them on the summary page. Aftering making your selection, you can view the \"Summary\" tab to see the metabolites you select or proceed to any of the \"Visualization\" tabs.\""),
-      radioButtons(
-        inputId = "selection_type",
-        label = "Select by:",
-        choices = c("Name","KEGG","HMDB","ChEBI","Category"),
-        selected = "Name",
-#         selected = "Metabolites",
-      ),
-#       https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
-      lapply(c("Name","KEGG","HMDB","ChEBI","Category"), function(t) {
-        conditionalPanel(
-          condition = sprintf("input.selection_type == '%s'",t),
-          pickerInput(
-            inputId = sprintf("selector_%s",t),
-            label = "Make selections:",
-            choices = unique(compounds[t]),
-            options = list(
-      #              https://stackoverflow.com/questions/53609546/how-can-i-have-the-search-option-based-on-typing-letters-in-pickerinput-using-sh
-              `actions-box` = TRUE,
-              size = 10,
-              `selected-text-format` = "count > 3",
-              `live-search`=TRUE
-            ),
-            multiple = TRUE,
-          )
-        )
-      })
-    ),
-    tabPanel("Summary",
-      dataTableOutput("primary_summary")
-    ),
-    tabPanel("Correlation",
-      tabsetPanel(type="tabs", id="primaryCorrPlotTab", selected="sampleCorr",
-        tabPanel(title = "By Sample",
-          value = "sampleCorr",
-          plotlyOutput("primarySampleCorrPlt", height = 600) %>%
-            withSpinner(type = 8, color = "#0088cf", size = 1),
-        box(title = "Controls",
-          width = NULL,
-          solidHeader = TRUE,
-          status = "primary",
-          splitLayout(cellWidths = c("25%","25%","25%","25%"),
-            column(3,
-              numericInput(inputId = "primaryCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
-              checkboxInput(inputId = "primaryCorrPlotSampleNormalize", label = "Normalize?", value = FALSE),
-              checkboxInput(inputId = "primaryCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
+ui <- dashboardPage(
+  dashboardHeader("Rohner Lab Astyanax Metabolomics Study"),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Primary",
+               menuSubItem("Selections", tabName = "primarySelections"),
+               menuSubItem("Summary", tabName = "primarySummary"),
+               menuSubItem("Correlation", tabName = "primaryCorrelation"),
+               menuSubItem("Quantitative", tabName = "primaryQuantitative")
               ),
-            checkboxGroupInput("primaryCorrPlotSampleSelectPops", "Populations:", pops, selected = pops),
-            checkboxGroupInput("primaryCorrPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
-            checkboxGroupInput("primaryCorrPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
+      menuItem("Lipids",
+               menuSubItem("Selections", tabName = "lipidsSelections"),
+               menuSubItem("Summary", tabName = "lipidsSummary"),
+               menuSubItem("Correlation", tabName = "lipidsCorrelation")
+#                menuSubItem("Quantitative", tabName = "lipidsQuantitative"),
+              )
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      tabItem(tabName = "primarySelections",
+  #       https://stackoverflow.com/questions/27607566/allowing-one-tick-only-in-checkboxgroupinput
+        p("Select which metabolites you want to include in the analysis. You can select via compound name, category, or a number of identifier systems. You can also select from different identifier types and the app will remember your selection for each heading and combine them on the summary page. Aftering making your selection, you can view the \"Summary\" tab to see the metabolites you select or proceed to any of the \"Visualization\" tabs.\""),
+        radioButtons(
+          inputId = "selection_type",
+          label = "Select by:",
+          choices = c("Name","KEGG","HMDB","ChEBI","Category"),
+          selected = "Name",
+  #         selected = "Metabolites",
+        ),
+  #       https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
+        lapply(c("Name","KEGG","HMDB","ChEBI","Category"), function(t) {
+          conditionalPanel(
+            condition = sprintf("input.selection_type == '%s'",t),
+            pickerInput(
+              inputId = sprintf("selector_%s",t),
+              label = "Make selections:",
+              choices = unique(compounds[t]),
+              options = list(
+        #              https://stackoverflow.com/questions/53609546/how-can-i-have-the-search-option-based-on-typing-letters-in-pickerinput-using-sh
+                `actions-box` = TRUE,
+                size = 10,
+                `selected-text-format` = "count > 3",
+                `live-search`=TRUE
+              ),
+              multiple = TRUE,
+            )
           )
-        )),
-        tabPanel(title = "By Metabolite",
-          value = "featureCorr",
-          plotlyOutput("primaryFeatureCorrPlt", height = 600) %>%
-            withSpinner(type = 8, color = "#0088cf", size = 1),
-          box(title = "Controls",
-            width = NULL,
-            solidHeader = TRUE,
-            status = "primary",
-            splitLayout(cellWidths = c("25%","25%","25%","25%"),
-              column(3,
-                numericInput(inputId = "primaryCorrPlotFeatureNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
-                checkboxInput(inputId = "primaryCorrPlotFeatureNormalize", label = "Normalize?", value = FALSE),
-                checkboxInput(inputId = "primaryCorrPlotFeatureIncludeOutliers", label = "Include Outliers?", value = FALSE),
-                ),
-            checkboxGroupInput("primaryCorrPlotFeatureSelectPops", "Populations:", pops, selected = pops),
-            checkboxGroupInput("primaryCorrPlotFeatureSelectTissues", "Tissues:", tissues, selected = tissues),
-            checkboxGroupInput("primaryCorrPlotFeatureSelectConditions", "Conditions:", conditions, selected = conditions)
-          )
-        )),
-        tabPanel(title = "By Category",
-          value = "categoryCorr",
-          plotlyOutput("primaryCategoryCorrPlt", height = 600) %>%
-            withSpinner(type = 8, color = "#0088cf", size = 1),
-          box(title = "Controls",
-            width = NULL,
-            solidHeader = TRUE,
-            status = "primary",
-            splitLayout(cellWidths = c("25%","25%","25%","25%"),
-              column(3,
-                numericInput(inputId = "primaryCorrPlotCategoryNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
-                checkboxInput(inputId = "primaryCorrPlotCategoryNormalize", label = "Normalize?", value = FALSE),
-                checkboxInput(inputId = "primaryCorrPlotCategoryIncludeOutliers", label = "Include Outliers?", value = FALSE),
-                ),
-            checkboxGroupInput("primaryCorrPlotCategorySelectPops", "Populations:", pops, selected = pops),
-            checkboxGroupInput("primaryCorrPlotCategorySelectTissues", "Tissues:", tissues, selected = tissues),
-            checkboxGroupInput("primaryCorrPlotCategorySelectConditions", "Conditions:", conditions, selected = conditions)
-          )
-        ))
+        })
       ),
+      tabItem(tabName = "primarySummary",
+        dataTableOutput("primary_summary")
+      ),
+      tabItem(tabName = "primaryCorrelation",
+        tabsetPanel(type="tabs", id="primaryCorrPlotTab", selected="sampleCorr",
+          tabPanel(title = "By Sample",
+            value = "sampleCorr",
+            plotlyOutput("primarySampleCorrPlt", height = 600) %>%
+              withSpinner(type = 8, color = "#0088cf", size = 1),
+          box(title = "Controls",
+            width = NULL,
+            solidHeader = TRUE,
+            status = "primary",
+            splitLayout(cellWidths = c("25%","25%","25%","25%"),
+              column(3,
+                numericInput(inputId = "primaryCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                checkboxInput(inputId = "primaryCorrPlotSampleNormalize", label = "Normalize?", value = FALSE),
+                checkboxInput(inputId = "primaryCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                ),
+              checkboxGroupInput("primaryCorrPlotSampleSelectPops", "Populations:", pops, selected = pops),
+              checkboxGroupInput("primaryCorrPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
+              checkboxGroupInput("primaryCorrPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
+            )
+          )),
+          tabPanel(title = "By Metabolite",
+            value = "featureCorr",
+            plotlyOutput("primaryFeatureCorrPlt", height = 600) %>%
+              withSpinner(type = 8, color = "#0088cf", size = 1),
+            box(title = "Controls",
+              width = NULL,
+              solidHeader = TRUE,
+              status = "primary",
+              splitLayout(cellWidths = c("25%","25%","25%","25%"),
+                column(3,
+                  numericInput(inputId = "primaryCorrPlotFeatureNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                  checkboxInput(inputId = "primaryCorrPlotFeatureNormalize", label = "Normalize?", value = FALSE),
+                  checkboxInput(inputId = "primaryCorrPlotFeatureIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  ),
+              checkboxGroupInput("primaryCorrPlotFeatureSelectPops", "Populations:", pops, selected = pops),
+              checkboxGroupInput("primaryCorrPlotFeatureSelectTissues", "Tissues:", tissues, selected = tissues),
+              checkboxGroupInput("primaryCorrPlotFeatureSelectConditions", "Conditions:", conditions, selected = conditions)
+            )
+          )),
+          tabPanel(title = "By Category",
+            value = "categoryCorr",
+            plotlyOutput("primaryCategoryCorrPlt", height = 600) %>%
+              withSpinner(type = 8, color = "#0088cf", size = 1),
+            box(title = "Controls",
+              width = NULL,
+              solidHeader = TRUE,
+              status = "primary",
+              splitLayout(cellWidths = c("25%","25%","25%","25%"),
+                column(3,
+                  numericInput(inputId = "primaryCorrPlotCategoryNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                  checkboxInput(inputId = "primaryCorrPlotCategoryNormalize", label = "Normalize?", value = FALSE),
+                  checkboxInput(inputId = "primaryCorrPlotCategoryIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  ),
+              checkboxGroupInput("primaryCorrPlotCategorySelectPops", "Populations:", pops, selected = pops),
+              checkboxGroupInput("primaryCorrPlotCategorySelectTissues", "Tissues:", tissues, selected = tissues),
+              checkboxGroupInput("primaryCorrPlotCategorySelectConditions", "Conditions:", conditions, selected = conditions)
+            )
+          ))
+        ),
 #       p(class = 'text-center',
 #         savePlotlyPDFUI(id = "download_primarySampleCorrPlot",
 #                         label = "Download Plot (PDF)")
 #       )
-    ),
-    tabPanel("Quant.",
-      plotlyOutput("primaryLinePlt") %>%
-        withSpinner(type = 8, color = "#0088cf", size = 1)
-    ),
-    "-----",
-    "Lipids",
-    tabPanel("Selections",
-      p("Select which lipids you want to include in the analysis."),
-      radioButtons(
-        inputId = "lipid_selection_type",
-        label = "Select by:",
-        choices = c("LMID","Name","InChIKey","Category","MainClass","Saturation"),
-        selected = "LMID",
-#         selected = "Name",
       ),
-#       https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
-      lapply(c("LMID","Name","InChIKey","Category","MainClass","Saturation"), function(t) {
-        conditionalPanel(
-          condition = sprintf("input.lipid_selection_type == '%s'",t),
-          pickerInput(
-            inputId = sprintf("lipid_selector_%s",t),
-            label = "Make selections:",
-            choices = unique(lipid_ids[t]),
-            options = list(
-              `actions-box` = TRUE,
-              size = 10,
-              `selected-text-format` = "count > 3",
-              `live-search`=TRUE
-            ),
-            multiple = TRUE,
-          )
-        )
-      })
-    ),
-    tabPanel("Summary",
-      dataTableOutput("lipids_summary")
-    ),
-    tabPanel("Correlation",
-      tabsetPanel(type="tabs", id="lipidsCorrPlotTab", selected="sampleCorr",
-        tabPanel(title = "By Sample",
-          value = "sampleCorr",
-          plotlyOutput("lipidsSampleCorrPlt", height = 600) %>%
-            withSpinner(type = 8, color = "#0088cf", size = 1),
-        box(title = "Controls",
-          width = NULL,
-          solidHeader = TRUE,
-          status = "primary",
-          splitLayout(cellWidths = c("25%","25%","25%","25%"),
-            column(3,
-              numericInput(inputId = "lipidsCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
-              checkboxInput(inputId = "lipidsCorrPlotSampleNormalize", label = "Normalize?", value = FALSE),
-              checkboxInput(inputId = "lipidsCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
+      tabItem(tabName = "primaryQuantitative",
+        plotlyOutput("primaryLinePlt") %>%
+        withSpinner(type = 8, color = "#0088cf", size = 1)
+      ),
+      tabItem(tabName = "lipidSelections",
+        p("Select which lipids you want to include in the analysis."),
+        radioButtons(
+          inputId = "lipid_selection_type",
+          label = "Select by:",
+          choices = c("LMID","Name","InChIKey","Category","MainClass","Saturation"),
+          selected = "LMID",
+  #         selected = "Name",
+        ),
+  #       https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
+        lapply(c("LMID","Name","InChIKey","Category","MainClass","Saturation"), function(t) {
+          conditionalPanel(
+            condition = sprintf("input.lipid_selection_type == '%s'",t),
+            pickerInput(
+              inputId = sprintf("lipid_selector_%s",t),
+              label = "Make selections:",
+              choices = unique(lipid_ids[t]),
+              options = list(
+                `actions-box` = TRUE,
+                size = 10,
+                `selected-text-format` = "count > 3",
+                `live-search`=TRUE
               ),
-            checkboxGroupInput("lipidsCorrPlotSampleSelectPops", "Populations:", pops, selected = pops),
-            checkboxGroupInput("lipidsCorrPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
-            checkboxGroupInput("lipidsCorrPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
+              multiple = TRUE,
+            )
           )
-        )),
-        tabPanel(title = "By Metabolite",
-          value = "featureCorr",
-          plotlyOutput("lipidsFeatureCorrPlt", height = 600) %>%
-            withSpinner(type = 8, color = "#0088cf", size = 1),
+        })
+      ),
+      tabItem(tabName = "lipidSummary",
+        dataTableOutput("lipids_summary")
+      ),
+      tabItem(tabName = "lipidCorrelation",
+        tabsetPanel(type="tabs", id="lipidsCorrPlotTab", selected="sampleCorr",
+          tabPanel(title = "By Sample",
+            value = "sampleCorr",
+            plotlyOutput("lipidsSampleCorrPlt", height = 600) %>%
+              withSpinner(type = 8, color = "#0088cf", size = 1),
           box(title = "Controls",
             width = NULL,
             solidHeader = TRUE,
             status = "primary",
             splitLayout(cellWidths = c("25%","25%","25%","25%"),
               column(3,
-                numericInput(inputId = "lipidsCorrPlotFeatureNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
-                checkboxInput(inputId = "lipidsCorrPlotFeatureNormalize", label = "Normalize?", value = FALSE),
-                checkboxInput(inputId = "lipidsCorrPlotFeatureIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                numericInput(inputId = "lipidsCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                checkboxInput(inputId = "lipidsCorrPlotSampleNormalize", label = "Normalize?", value = FALSE),
+                checkboxInput(inputId = "lipidsCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
                 ),
-            checkboxGroupInput("lipidsCorrPlotFeatureSelectPops", "Populations:", pops, selected = pops),
-            checkboxGroupInput("lipidsCorrPlotFeatureSelectTissues", "Tissues:", tissues, selected = tissues),
-            checkboxGroupInput("lipidsCorrPlotFeatureSelectConditions", "Conditions:", conditions, selected = conditions)
-          )
-        )),
-        tabPanel(title = "By Category",
-          value = "categoryCorr",
-          plotlyOutput("lipidsCategoryCorrPlt", height = 600) %>%
-            withSpinner(type = 8, color = "#0088cf", size = 1),
-          box(title = "Controls",
-            width = NULL,
-            solidHeader = TRUE,
-            status = "primary",
-            splitLayout(cellWidths = c("25%","25%","25%","25%"),
-              column(3,
-                numericInput(inputId = "lipidsCorrPlotCategoryNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
-                checkboxInput(inputId = "lipidsCorrPlotCategoryNormalize", label = "Normalize?", value = FALSE),
-                checkboxInput(inputId = "lipidsCorrPlotCategoryIncludeOutliers", label = "Include Outliers?", value = FALSE),
-                ),
-            checkboxGroupInput("lipidsCorrPlotCategorySelectPops", "Populations:", pops, selected = pops),
-            checkboxGroupInput("lipidsCorrPlotCategorySelectTissues", "Tissues:", tissues, selected = tissues),
-            checkboxGroupInput("lipidsCorrPlotCategorySelectConditions", "Conditions:", conditions, selected = conditions)
-          )
-        )),
-        tabPanel(title = "By Class",
-          value = "classCorr",
-          plotlyOutput("lipidsClassCorrPlt", height = 600) %>%
-            withSpinner(type = 8, color = "#0088cf", size = 1),
-          box(title = "Controls",
-            width = NULL,
-            solidHeader = TRUE,
-            status = "primary",
-            splitLayout(cellWidths = c("25%","25%","25%","25%"),
-              column(3,
-                numericInput(inputId = "lipidsCorrPlotClassNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
-                checkboxInput(inputId = "lipidsCorrPlotClassNormalize", label = "Normalize?", value = FALSE),
-                checkboxInput(inputId = "lipidsCorrPlotClassIncludeOutliers", label = "Include Outliers?", value = FALSE),
-                ),
-            checkboxGroupInput("lipidsCorrPlotClassSelectPops", "Populations:", pops, selected = pops),
-            checkboxGroupInput("lipidsCorrPlotClassSelectTissues", "Tissues:", tissues, selected = tissues),
-            checkboxGroupInput("lipidsCorrPlotClassSelectConditions", "Conditions:", conditions, selected = conditions)
-          )
-        ))
-      )
+              checkboxGroupInput("lipidsCorrPlotSampleSelectPops", "Populations:", pops, selected = pops),
+              checkboxGroupInput("lipidsCorrPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
+              checkboxGroupInput("lipidsCorrPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
+            )
+          )),
+          tabPanel(title = "By Metabolite",
+            value = "featureCorr",
+            plotlyOutput("lipidsFeatureCorrPlt", height = 600) %>%
+              withSpinner(type = 8, color = "#0088cf", size = 1),
+            box(title = "Controls",
+              width = NULL,
+              solidHeader = TRUE,
+              status = "primary",
+              splitLayout(cellWidths = c("25%","25%","25%","25%"),
+                column(3,
+                  numericInput(inputId = "lipidsCorrPlotFeatureNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                  checkboxInput(inputId = "lipidsCorrPlotFeatureNormalize", label = "Normalize?", value = FALSE),
+                  checkboxInput(inputId = "lipidsCorrPlotFeatureIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  ),
+              checkboxGroupInput("lipidsCorrPlotFeatureSelectPops", "Populations:", pops, selected = pops),
+              checkboxGroupInput("lipidsCorrPlotFeatureSelectTissues", "Tissues:", tissues, selected = tissues),
+              checkboxGroupInput("lipidsCorrPlotFeatureSelectConditions", "Conditions:", conditions, selected = conditions)
+            )
+          )),
+          tabPanel(title = "By Category",
+            value = "categoryCorr",
+            plotlyOutput("lipidsCategoryCorrPlt", height = 600) %>%
+              withSpinner(type = 8, color = "#0088cf", size = 1),
+            box(title = "Controls",
+              width = NULL,
+              solidHeader = TRUE,
+              status = "primary",
+              splitLayout(cellWidths = c("25%","25%","25%","25%"),
+                column(3,
+                  numericInput(inputId = "lipidsCorrPlotCategoryNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                  checkboxInput(inputId = "lipidsCorrPlotCategoryNormalize", label = "Normalize?", value = FALSE),
+                  checkboxInput(inputId = "lipidsCorrPlotCategoryIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  ),
+              checkboxGroupInput("lipidsCorrPlotCategorySelectPops", "Populations:", pops, selected = pops),
+              checkboxGroupInput("lipidsCorrPlotCategorySelectTissues", "Tissues:", tissues, selected = tissues),
+              checkboxGroupInput("lipidsCorrPlotCategorySelectConditions", "Conditions:", conditions, selected = conditions)
+            )
+          )),
+          tabPanel(title = "By Class",
+            value = "classCorr",
+            plotlyOutput("lipidsClassCorrPlt", height = 600) %>%
+              withSpinner(type = 8, color = "#0088cf", size = 1),
+            box(title = "Controls",
+              width = NULL,
+              solidHeader = TRUE,
+              status = "primary",
+              splitLayout(cellWidths = c("25%","25%","25%","25%"),
+                column(3,
+                  numericInput(inputId = "lipidsCorrPlotClassNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
+                  checkboxInput(inputId = "lipidsCorrPlotClassNormalize", label = "Normalize?", value = FALSE),
+                  checkboxInput(inputId = "lipidsCorrPlotClassIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  ),
+              checkboxGroupInput("lipidsCorrPlotClassSelectPops", "Populations:", pops, selected = pops),
+              checkboxGroupInput("lipidsCorrPlotClassSelectTissues", "Tissues:", tissues, selected = tissues),
+              checkboxGroupInput("lipidsCorrPlotClassSelectConditions", "Conditions:", conditions, selected = conditions)
+            )
+          ))
+        )
+      ),
+    )
+  )
+    tabPanel("",
     )
   )
 )
