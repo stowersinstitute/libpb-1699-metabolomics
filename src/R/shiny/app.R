@@ -425,11 +425,12 @@ server <- function(input, output) {
   ###################################################################
   output$primarySamplePCAPlot <- renderPlotly({
     cpd_data <- primary %>% filter(primary$Name %in% selected_cpds()$Name) %>% filter(Population %in% input$primaryPCAPlotSampleSelectPops) %>% filter(Tissue %in% input$primaryPCAPlotSampleSelectTissues) %>% filter(Condition %in% input$primaryPCAPlotSampleSelectConditions)
+    print(cpd_data)
     if (!input$primaryPCAPlotSampleIncludeOutliers) {
       cpd_data <- cpd_data %>% filter(Outlier == FALSE)
     }
-    features <- cpd_data %>% select(Name,Population,Tissue,Condition,Raw_mTIC)
-    spec <- features %>% build_wider_spec(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC")
+    features <- cpd_data %>% select(Name,Population,Tissue,Condition,Replicate,Raw_mTIC)
+    spec <- features %>% build_wider_spec(names_from=c("Population","Tissue","Condition","Replicate"),values_from="Raw_mTIC")
 #     print(spec)
     features <- features %>%  pivot_wider_spec(spec, values_fn = mean)
     features <- as.data.frame(features)
@@ -442,8 +443,9 @@ server <- function(input, output) {
     pca$Tissue = spec$Tissue
     pca$Population = spec$Population
     pca$Condition = spec$Condition
+#     pca$Color = "#9b59b6"
     print(pca)
-    plot_ly(data = as.data.frame(cpd_data), x = ~PC1, y = ~PC2, type = "scatter", mode="markers", color= ~Population, colors=popcolors, legendgroup=~Population, height=250*length(selected_cpds()$Name), showlegend=(tissue == "Brain" && name == selected_cpds()$Name[1]))
+    plot_ly(data = as.data.frame(pca), x = ~PC1, y = ~PC2, type = "scatter", mode="markers", color= ~Tissue, height=600)
   })
 
   ###################################################################
