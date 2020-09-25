@@ -137,7 +137,7 @@ ui <- dashboardPage(
                menuSubItem("Selections", tabName = "lipidsSelections"),
                menuSubItem("Summary", tabName = "lipidsSummary"),
                menuItem("Correlation", tabName = "lipidsCorrelation"),
-               menuSubItem("Quantitative", menuSubItem("Plot", tabName = "lipidsQuantitative"), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
+               menuItem("Quantitative", menuSubItem("Plot", tabName = "lipidsQuantitative"), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               )
     )
   ),
@@ -535,11 +535,16 @@ server <- function(input, output) {
           if (!input$primaryQuantIncludeOutliers){
             cpd_data <- cpd_data %>% filter(Outlier == FALSE)
           }
-          cpd_data <- cpd_data %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC)) %>% arrange(factor(Population, levels = pops)) %>% arrange(factor(Condition, levels = conditions))
+          cpd_data <- cpd_data %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC),Lower=min(Raw_mTIC),Upper=quantile(Raw_mTIC,0.975,type=4)-mean(Raw_mTIC)) %>% arrange(factor(Population, levels = pops)) %>% arrange(factor(Condition, levels = conditions))
+          print("before")
+          print(cpd_data)
           cpd_data$Condition <- factor(cpd_data$Condition, levels = conditions)
           cpd_data$Population <- factor(cpd_data$Population, levels=pops)
+          cpd_data$Lower <- cpd_data$Intensity - cpd_data$Lower
+          print("after")
+          print(cpd_data)
 #           https://stackoverflow.com/questions/37285729/how-to-give-subtitles-for-subplot-in-plot-ly-using-r
-          plt <- plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(array=Std), color= ~Population, colors=popcolors, legendgroup=~Population, height=250*length(selected_cpds()$Name), showlegend=(tissue == "Brain" && name == selected_cpds()$Name[1])) %>% add_annotations(text = tissue, x = 0.5, y = 1.0, xref = "paper", yref = "paper", xanchor = "middle", yanchor = "top", showarrow = FALSE, font=list(size=15,weight="bold"))
+          plt <- plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(symmetric=FALSE,type="data",array=0,arrayminus=Lower), color= ~Population, colors=popcolors, legendgroup=~Population, height=250*length(selected_cpds()$Name), showlegend=(tissue == "Brain" && name == selected_cpds()$Name[1])) %>% add_annotations(text = tissue, x = 0.5, y = 1.0, xref = "paper", yref = "paper", xanchor = "middle", yanchor = "top", showarrow = FALSE, font=list(size=15,weight="bold"))
 #           https://stackoverflow.com/questions/57253488/how-to-remove-duplicate-legend-entries-w-plotly-subplots/57312776
           if (tissue == "Brain") {
             plt <- plt %>% add_annotations(text = name, x = -0.1, y = 0.5, xref = "paper", yref = "paper", xanchor = "right", yanchor = "middle", showarrow = FALSE, textangle=-90, font=list(size=15,weight="bold"))
@@ -695,12 +700,13 @@ server <- function(input, output) {
   output$lipidsLinePlt <- renderPlotly({
     subplot(lapply(selected_lipids()$Name,
       function(name) {
+        sharey <- input$lipidsQuantShareY
         subplot(lapply(tissues, function(tissue) {
           cpd_data <- lipids %>% filter(lipids$Name == name) %>% filter(Tissue == tissue)
           if (!input$primaryQuantIncludeOutliers){
             cpd_data <- cpd_data %>% filter(Outlier == FALSE)
           }
-          cpd_data <- cpd_data %>% filter(Outlier == FALSE) %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC)) %>% arrange(factor(Population, levels = pops)) %>% arrange(factor(Condition, levels = conditions))
+          cpd_data <- cpd_data %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC)) %>% arrange(factor(Population, levels = pops)) %>% arrange(factor(Condition, levels = conditions))
           cpd_data$Condition <- factor(cpd_data$Condition, levels = conditions)
           cpd_data$Population <- factor(cpd_data$Population, levels=pops)
 #           https://stackoverflow.com/questions/37285729/how-to-give-subtitles-for-subplot-in-plot-ly-using-r
@@ -710,7 +716,7 @@ server <- function(input, output) {
             plt <- plt %>% add_annotations(text = name, x = -0.2, y = 0.5, xref = "paper", yref = "paper", xanchor = "right", yanchor = "middle", showarrow = FALSE, textangle=-90, font=list(size=15,weight="bold"))
           }
           plt
-        }))
+        }), shareY=sharey)
       }), nrows = length(selected_lipids()$Name)
     )
   })
