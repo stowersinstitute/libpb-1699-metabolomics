@@ -131,13 +131,13 @@ ui <- dashboardPage(
                menuSubItem("Selections", tabName = "primarySelections"),
                menuSubItem("Summary", tabName = "primarySummary"),
                menuSubItem("Correlation", tabName = "primaryCorrelation"),
-               menuItem("Quantitative", menuSubItem("Plot", tabName = "primaryQuantitative"), checkboxInput(inputId = "primaryQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "primaryQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
+               menuItem("Quantitative", menuSubItem("Plot", tabName = "primaryQuantitative"), numericInput(inputId = "primaryQuantPercentileRange", label = "Pct. range:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "primaryQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "primaryQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               ),
       menuItem("Lipids",
                menuSubItem("Selections", tabName = "lipidsSelections"),
                menuSubItem("Summary", tabName = "lipidsSummary"),
                menuItem("Correlation", tabName = "lipidsCorrelation"),
-               menuItem("Quantitative", menuSubItem("Plot", tabName = "lipidsQuantitative"), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
+               menuItem("Quantitative", menuSubItem("Plot", tabName = "lipidsQuantitative"), numericInput(inputId = "lipidsQuantPercentileRange", label = "Pct. range:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               )
     )
   ),
@@ -535,7 +535,9 @@ server <- function(input, output) {
           if (!input$primaryQuantIncludeOutliers){
             cpd_data <- cpd_data %>% filter(Outlier == FALSE)
           }
-          cpd_data <- cpd_data %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC),Lower=mean(Raw_mTIC)-quantile(Raw_mTIC,0.025,type=4),Upper=quantile(Raw_mTIC,0.975,type=4)-mean(Raw_mTIC)) %>% arrange(factor(Condition, levels = conditions)) %>% arrange(factor(Population, levels = pops))
+          lower_qt <- (50-input$lipidsQuantPercentileRange/2)/100
+          upper_qt <- (50+input$lipidsQuantPercentileRange/2)/100
+          cpd_data <- cpd_data %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC),Lower=mean(Raw_mTIC)-quantile(Raw_mTIC,lower_qt,type=4),Upper=quantile(Raw_mTIC,upper_qt,type=4)-mean(Raw_mTIC)) %>% arrange(factor(Condition, levels = conditions)) %>% arrange(factor(Population, levels = pops))
           cpd_data$Condition <- factor(cpd_data$Condition, levels = conditions)
           cpd_data$Population <- factor(cpd_data$Population, levels=pops)
 #           https://stackoverflow.com/questions/37285729/how-to-give-subtitles-for-subplot-in-plot-ly-using-r
@@ -701,7 +703,9 @@ server <- function(input, output) {
           if (!input$primaryQuantIncludeOutliers){
             cpd_data <- cpd_data %>% filter(Outlier == FALSE)
           }
-          cpd_data <- cpd_data %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC),Lower=mean(Raw_mTIC)-quantile(Raw_mTIC,0.025,type=4),Upper=quantile(Raw_mTIC,0.975,type=4)-mean(Raw_mTIC)) %>% arrange(factor(Condition, levels = conditions)) %>% arrange(factor(Population, levels = pops))
+          lower_qt <- (50-input$primaryQuantPercentileRange/2)/100
+          upper_qt <- (50+input$primaryQuantPercentileRange/2)/100
+          cpd_data <- cpd_data %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC),Lower=mean(Raw_mTIC)-quantile(Raw_mTIC,lower_qt,type=4),Upper=quantile(Raw_mTIC,upper_qt,type=4)-mean(Raw_mTIC)) %>% arrange(factor(Condition, levels = conditions)) %>% arrange(factor(Population, levels = pops))
           cpd_data$Condition <- factor(cpd_data$Condition, levels = conditions)
           cpd_data$Population <- factor(cpd_data$Population, levels=pops)
 #           https://stackoverflow.com/questions/37285729/how-to-give-subtitles-for-subplot-in-plot-ly-using-r
