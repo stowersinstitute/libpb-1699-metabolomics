@@ -110,7 +110,7 @@ savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
 
 # Define UI for app that draws a histogram ----
 ui <- dashboardPage(
-  dashboardHeader(title = "Interactive Astyanax Metabolome", titleWidth = 450),
+  dashboardHeader(title = "Interactive Astyanax Metabolome Project", titleWidth = 500),
   dashboardSidebar(
 #     https://community.rstudio.com/t/how-to-remove-numeric-inputs-spin-button-in-r-shiny/13769/3
     tags$head(tags$style(HTML("
@@ -133,13 +133,13 @@ ui <- dashboardPage(
                menuSubItem("Summary", tabName = "primarySummary"),
                menuSubItem("PCA", tabName = "primaryPCA"),
                menuSubItem("Correlation", tabName = "primaryCorrelation"),
-               menuItem("Quantitative", menuSubItem("Plot", tabName = "primaryQuantitative"), numericInput(inputId = "primaryQuantPercentileRange", label = "Pct. range:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "primaryQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "primaryQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
+               menuItem("Quantitative", menuSubItem("Plot", tabName = "primaryQuantitative"), numericInput(inputId = "primaryQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "primaryQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "primaryQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               ),
       menuItem("Lipids",
                menuSubItem("Selections", tabName = "lipidsSelections"),
                menuSubItem("Summary", tabName = "lipidsSummary"),
                menuItem("Correlation", tabName = "lipidsCorrelation"),
-               menuItem("Quantitative", menuSubItem("Plot", tabName = "lipidsQuantitative"), numericInput(inputId = "lipidsQuantPercentileRange", label = "Pct. range:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
+               menuItem("Quantitative", menuSubItem("Plot", tabName = "lipidsQuantitative"), numericInput(inputId = "lipidsQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               )
     )
   ),
@@ -180,8 +180,6 @@ ui <- dashboardPage(
       ),
       tabItem(tabName = "primaryPCA",
         tabsetPanel(type="tabs", id="primaryPCAPlotTab", selected="sampleCorr",
-          tabPanel(title = "By Sample",
-            value = "sampleCorr",
             plotlyOutput("primarySamplePCAPlot", height = 600) %>%
               withSpinner(type = 8, color = "#0088cf", size = 1),
             box(title = "Controls",
@@ -197,7 +195,7 @@ ui <- dashboardPage(
               checkboxGroupInput("primaryPCAPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
               checkboxGroupInput("primaryPCAPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
             )
-          ))
+          )
         )
       ),
       tabItem(tabName = "primaryCorrelation",
