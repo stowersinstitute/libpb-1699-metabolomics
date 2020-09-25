@@ -190,7 +190,8 @@ ui <- dashboardPage(
               status = "primary",
               splitLayout(cellWidths = c("25%","25%","25%","25%"),
                 column(6,
-                  checkboxInput(inputId = "primaryPCAPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  radioButtons("primaryPCAPlotSampleColorBy", label="Color by:", choices=c("Tissue","Population","Condition")),
+                  checkboxInput(inputId = "primaryPCAPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE)
                   ),
               checkboxGroupInput("primaryPCAPlotSampleSelectPops", "Populations:", pops, selected = pops),
               checkboxGroupInput("primaryPCAPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
@@ -425,27 +426,23 @@ server <- function(input, output) {
   ###################################################################
   output$primarySamplePCAPlot <- renderPlotly({
     cpd_data <- primary %>% filter(primary$Name %in% selected_cpds()$Name) %>% filter(Population %in% input$primaryPCAPlotSampleSelectPops) %>% filter(Tissue %in% input$primaryPCAPlotSampleSelectTissues) %>% filter(Condition %in% input$primaryPCAPlotSampleSelectConditions)
-    print(cpd_data)
     if (!input$primaryPCAPlotSampleIncludeOutliers) {
       cpd_data <- cpd_data %>% filter(Outlier == FALSE)
     }
     features <- cpd_data %>% select(Name,Population,Tissue,Condition,Replicate,Raw_mTIC)
     spec <- features %>% build_wider_spec(names_from=c("Population","Tissue","Condition","Replicate"),values_from="Raw_mTIC")
-#     print(spec)
     features <- features %>%  pivot_wider_spec(spec, values_fn = mean)
     features <- as.data.frame(features)
     rownames(features) <- features$Name
     features <- features[,-1]
     features <- t(as.matrix(features))
-#     print(head(features))
     pca <- prcomp(features,center=TRUE,scale.=TRUE,rank=2)
     pca <- as.data.frame(pca$x)
     pca$Tissue = spec$Tissue
     pca$Population = spec$Population
     pca$Condition = spec$Condition
-#     pca$Color = "#9b59b6"
-    print(pca)
-    plot_ly(data = as.data.frame(pca), x = ~PC1, y = ~PC2, type = "scatter", mode="markers", color= ~Tissue, height=600)
+    colorby <- input$primaryPCAPlotSampleColorBy
+    plot_ly(data = as.data.frame(pca), x = ~PC1, y = ~PC2, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), height=600)
   })
 
   ###################################################################
