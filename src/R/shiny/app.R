@@ -26,6 +26,10 @@ options(shiny.port = 8080)
 # https://hssgenomics.shinyapps.io/RNAseq_DRaMA/
 # https://stackoverflow.com/questions/28829682/r-shiny-checkboxgroupinput-select-all-checkboxes-by-click
 # https://stackoverflow.com/questions/20637248/shiny-4-small-textinput-boxes-side-by-side
+# https://rstudio.github.io/shinydashboard/structure.html
+# https://rstudio.github.io/shinydashboard/appearance.html
+# https://stats.idre.ucla.edu/other/mult-pkg/faq/general/faqhow-are-the-likelihood-ratio-wald-and-lagrange-multiplier-score-tests-different-andor-similar/
+# https://stackoverflow.com/questions/37597136/shinydashboard-is-it-not-possible-to-have-nested-menu-sub-items-cant-make-it
 
 primary <- read_csv("out/work/primary/merged-mtic.csv") %>% arrange(KEGG)
 compounds <- unique(primary[c("Name","KEGG","HMDB","ChEBI","Category")])
@@ -105,7 +109,7 @@ savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
 
 # Define UI for app that draws a histogram ----
 ui <- dashboardPage(
-  dashboardHeader(title = "Astyanax Metabolomics"),
+  dashboardHeader(title = "Astyanax Metabolomics", titleWidth = 450),
   dashboardSidebar(
 #     https://community.rstudio.com/t/how-to-remove-numeric-inputs-spin-button-in-r-shiny/13769/3
     tags$head(tags$style(HTML("
@@ -122,17 +126,18 @@ ui <- dashboardPage(
         }
     "))),
     sidebarMenu(
+      id = "theSidebar",
       menuItem("Primary", selected = TRUE, startExpanded = TRUE,
                menuSubItem("Selections", tabName = "primarySelections"),
                menuSubItem("Summary", tabName = "primarySummary"),
                menuSubItem("Correlation", tabName = "primaryCorrelation"),
-               menuSubItem("Quantitative", tabName = "primaryQuantitative")
+               menuItem("Quantitative", menuSubItem("Plot", tabName = "primaryQuantitative"), checkboxInput(inputId = "primaryQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "primaryQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               ),
       menuItem("Lipids",
                menuSubItem("Selections", tabName = "lipidsSelections"),
                menuSubItem("Summary", tabName = "lipidsSummary"),
-               menuSubItem("Correlation", tabName = "lipidsCorrelation"),
-               menuSubItem("Quantitative", tabName = "lipidsQuantitative")
+               menuItem("Correlation", tabName = "lipidsCorrelation"),
+               menuSubItem("Quantitative", menuSubItem("Plot", tabName = "lipidsQuantitative"), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               )
     )
   ),
@@ -524,8 +529,13 @@ server <- function(input, output) {
   output$primaryLinePlt <- renderPlotly({
     subplot(lapply(selected_cpds()$Name,
       function(name) {
+        sharey <- input$primaryQuantShareY
         subplot(lapply(tissues, function(tissue) {
-          cpd_data <- primary %>% filter(primary$Name == name) %>% filter(Tissue == tissue) %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC)) %>% arrange(factor(Population, levels = pops)) %>% arrange(factor(Condition, levels = conditions))
+          cpd_data <- primary %>% filter(primary$Name == name) %>% filter(Tissue == tissue)
+          if (!input$primaryQuantIncludeOutliers){
+            cpd_data <- cpd_data %>% filter(Outlier == FALSE)
+          }
+          cpd_data <- cpd_data %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC)) %>% arrange(factor(Population, levels = pops)) %>% arrange(factor(Condition, levels = conditions))
           cpd_data$Condition <- factor(cpd_data$Condition, levels = conditions)
           cpd_data$Population <- factor(cpd_data$Population, levels=pops)
 #           https://stackoverflow.com/questions/37285729/how-to-give-subtitles-for-subplot-in-plot-ly-using-r
@@ -535,7 +545,7 @@ server <- function(input, output) {
             plt <- plt %>% add_annotations(text = name, x = -0.1, y = 0.5, xref = "paper", yref = "paper", xanchor = "right", yanchor = "middle", showarrow = FALSE, textangle=-90, font=list(size=15,weight="bold"))
           }
           plt
-        }))
+        }), shareY=sharey)
       }), nrows = length(selected_cpds()$Name)
     )
   })
@@ -686,8 +696,11 @@ server <- function(input, output) {
     subplot(lapply(selected_lipids()$Name,
       function(name) {
         subplot(lapply(tissues, function(tissue) {
-          cpd_data <- lipids %>% filter(lipids$Name == name) %>% filter(Tissue == tissue) %>% filter(Outlier == FALSE) %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC)) %>% arrange(factor(Population, levels = pops)) %>% arrange(factor(Condition, levels = conditions))
-          print(cpd_data)
+          cpd_data <- lipids %>% filter(lipids$Name == name) %>% filter(Tissue == tissue)
+          if (!input$primaryQuantIncludeOutliers){
+            cpd_data <- cpd_data %>% filter(Outlier == FALSE)
+          }
+          cpd_data <- cpd_data %>% filter(Outlier == FALSE) %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC)) %>% arrange(factor(Population, levels = pops)) %>% arrange(factor(Condition, levels = conditions))
           cpd_data$Condition <- factor(cpd_data$Condition, levels = conditions)
           cpd_data$Population <- factor(cpd_data$Population, levels=pops)
 #           https://stackoverflow.com/questions/37285729/how-to-give-subtitles-for-subplot-in-plot-ly-using-r
