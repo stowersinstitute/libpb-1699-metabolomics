@@ -131,8 +131,8 @@ ui <- dashboardPage(
       menuItem("Lipids",
                menuSubItem("Selections", tabName = "lipidsSelections"),
                menuSubItem("Summary", tabName = "lipidsSummary"),
-               menuSubItem("Correlation", tabName = "lipidsCorrelation")
-#                menuSubItem("Quantitative", tabName = "lipidsQuantitative"),
+               menuSubItem("Correlation", tabName = "lipidsCorrelation"),
+               menuSubItem("Quantitative", tabName = "lipidsQuantitative")
               )
     )
   ),
@@ -356,10 +356,23 @@ ui <- dashboardPage(
             )
           ))
         )
+      ),
+      tabItem(tabName = "lipidsQuantitative",
+#         https://stackoverflow.com/questions/21609436/r-shiny-conditionalpanel-output-value
+        conditionalPanel(condition = "output.num_lipids <= 10",
+          plotlyOutput("lipidsLinePlt") %>%
+          withSpinner(type = 8, color = "#0088cf", size = 1)
+        ),
+        conditionalPanel(condition = "output.num_lipids > 10",
+          box(title = "Too many lipids", status = "danger", p("Too many lipids selected (max 10)"))
+        )
       )
     ),
     conditionalPanel(condition = "0",
       verbatimTextOutput("num_compounds")
+    ),
+    conditionalPanel(condition = "0",
+      verbatimTextOutput("num_lipids")
     )
   )
 )
@@ -533,6 +546,10 @@ server <- function(input, output) {
 
   selected_lipids <- reactive(filter(lipid_ids, lipid_ids$LMID %in% input$lipid_selector_LMID| lipid_ids$Name %in% input$lipid_selector_Name | lipid_ids$InChIKey %in% input$lipid_selector_InChIKey | lipid_ids$Category %in% input$lipid_selector_Category |  lipid_ids$MainClass %in% input$lipid_selector_MainClass |  lipid_ids$Saturation %in% input$lipid_selector_Saturation))
 
+  output$num_lipids <- reactive(nrow(selected_lipids()))
+#   https://stackoverflow.com/questions/21609436/r-shiny-conditionalpanel-output-value
+  outputOptions(output, "num_lipids", suspendWhenHidden = FALSE)
+
   output$lipids_summary <- renderDataTable(selected_lipids())
 
   ###################################################################
@@ -660,6 +677,29 @@ server <- function(input, output) {
                 prefix = "LipidsClassCorrPlot_",
                 plotlyToSave = reactive(theplt))
     theplt
+  })
+
+  ###################################################################
+  #                         Lipids Line Plot                        #
+  ###################################################################
+  output$lipidsLinePlt <- renderPlotly({
+    subplot(lapply(selected_lipids()$Name,
+      function(name) {
+        subplot(lapply(tissues, function(tissue) {
+          cpd_data <- lipids %>% filter(lipids$Name == name) %>% filter(Tissue == tissue) %>% filter(Outlier == FALSE) %>% group_by(Population,Condition) %>% summarize(.groups="drop_last",Intensity=mean(Raw_mTIC),Std=sd(Raw_mTIC)) %>% arrange(factor(Population, levels = pops)) %>% arrange(factor(Condition, levels = conditions))
+          print(cpd_data)
+          cpd_data$Condition <- factor(cpd_data$Condition, levels = conditions)
+          cpd_data$Population <- factor(cpd_data$Population, levels=pops)
+#           https://stackoverflow.com/questions/37285729/how-to-give-subtitles-for-subplot-in-plot-ly-using-r
+          plt <- plot_ly(data = cpd_data, x = ~Condition, y = ~Intensity, type = "scatter", mode="lines+markers", error_y=~list(array=Std), color= ~Population, colors=popcolors, legendgroup=~Population, height=250*length(selected_lipids()$Name), showlegend=(tissue == "Brain" && name == selected_lipids()$Name[1])) %>% add_annotations(text = tissue, x = 0.5, y = 1.0, xref = "paper", yref = "paper", xanchor = "middle", yanchor = "top", showarrow = FALSE, font=list(size=15,weight="bold"))
+#           https://stackoverflow.com/questions/57253488/how-to-remove-duplicate-legend-entries-w-plotly-subplots/57312776
+          if (tissue == "Brain") {
+            plt <- plt %>% add_annotations(text = name, x = -0.2, y = 0.5, xref = "paper", yref = "paper", xanchor = "right", yanchor = "middle", showarrow = FALSE, textangle=-90, font=list(size=15,weight="bold"))
+          }
+          plt
+        }))
+      }), nrows = length(selected_lipids()$Name)
+    )
   })
 
 }

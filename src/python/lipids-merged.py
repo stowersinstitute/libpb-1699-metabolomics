@@ -59,7 +59,7 @@ def fix_cols(df,tissue):
     def j(c):
         return ' '.join(c)
     d.columns = (f'{c[0]} {tissue} {j(c[1:])} {n}' for c,n in zip((cc.split() for cc in d.columns),list(range(1,7))*27))
-    d = process_outlier(d)
+    #d = process_outlier(d)
     d = d.reindex(sorted(d.columns), axis=1)
     return d
 
