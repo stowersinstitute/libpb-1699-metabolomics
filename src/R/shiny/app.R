@@ -30,6 +30,7 @@ options(shiny.port = 8080)
 # https://rstudio.github.io/shinydashboard/appearance.html
 # https://stats.idre.ucla.edu/other/mult-pkg/faq/general/faqhow-are-the-likelihood-ratio-wald-and-lagrange-multiplier-score-tests-different-andor-similar/
 # https://stackoverflow.com/questions/37597136/shinydashboard-is-it-not-possible-to-have-nested-menu-sub-items-cant-make-it
+# http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/118-principal-component-analysis-in-r-prcomp-vs-princomp/
 
 primary <- read_csv("out/work/primary/merged-mtic.csv") %>% arrange(KEGG)
 compounds <- unique(primary[c("Name","KEGG","HMDB","ChEBI","Category")])
@@ -130,6 +131,7 @@ ui <- dashboardPage(
       menuItem("Primary", selected = TRUE, startExpanded = TRUE,
                menuSubItem("Selections", tabName = "primarySelections"),
                menuSubItem("Summary", tabName = "primarySummary"),
+               menuSubItem("PCA", tabName = "primaryPCA"),
                menuSubItem("Correlation", tabName = "primaryCorrelation"),
                menuItem("Quantitative", menuSubItem("Plot", tabName = "primaryQuantitative"), numericInput(inputId = "primaryQuantPercentileRange", label = "Pct. range:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "primaryQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "primaryQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               ),
@@ -175,6 +177,27 @@ ui <- dashboardPage(
       ),
       tabItem(tabName = "primarySummary",
         dataTableOutput("primary_summary")
+      ),
+      tabItem(tabName = "primaryPCA",
+        tabsetPanel(type="tabs", id="primaryPCAPlotTab", selected="sampleCorr",
+          tabPanel(title = "By Sample",
+            value = "sampleCorr",
+            plotlyOutput("primarySamplePCAPlot", height = 600) %>%
+              withSpinner(type = 8, color = "#0088cf", size = 1),
+            box(title = "Controls",
+              width = NULL,
+              solidHeader = TRUE,
+              status = "primary",
+              splitLayout(cellWidths = c("25%","25%","25%","25%"),
+                column(6,
+                  checkboxInput(inputId = "primaryPCAPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  ),
+              checkboxGroupInput("primaryPCAPlotSampleSelectPops", "Populations:", pops, selected = pops),
+              checkboxGroupInput("primaryPCAPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
+              checkboxGroupInput("primaryPCAPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
+            )
+          ))
+        )
       ),
       tabItem(tabName = "primaryCorrelation",
         tabsetPanel(type="tabs", id="primaryCorrPlotTab", selected="sampleCorr",
@@ -396,6 +419,32 @@ server <- function(input, output) {
   outputOptions(output, "num_compounds", suspendWhenHidden = FALSE)
 
   output$primary_summary <- renderDataTable(selected_cpds())
+
+  ###################################################################
+  #          Primary Sample PCA                                     #
+  ###################################################################
+  output$primarySamplePCAPlot <- renderPlotly({
+    cpd_data <- primary %>% filter(primary$Name %in% selected_cpds()$Name) %>% filter(Population %in% input$primaryPCAPlotSampleSelectPops) %>% filter(Tissue %in% input$primaryPCAPlotSampleSelectTissues) %>% filter(Condition %in% input$primaryPCAPlotSampleSelectConditions)
+    if (!input$primaryPCAPlotSampleIncludeOutliers) {
+      cpd_data <- cpd_data %>% filter(Outlier == FALSE)
+    }
+    features <- cpd_data %>% select(Name,Population,Tissue,Condition,Raw_mTIC)
+    spec <- features %>% build_wider_spec(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC")
+#     print(spec)
+    features <- features %>%  pivot_wider_spec(spec, values_fn = mean)
+    features <- as.data.frame(features)
+    rownames(features) <- features$Name
+    features <- features[,-1]
+    features <- t(as.matrix(features))
+#     print(head(features))
+    pca <- prcomp(features,center=TRUE,scale.=TRUE,rank=2)
+    pca <- as.data.frame(pca$x)
+    pca$Tissue = spec$Tissue
+    pca$Population = spec$Population
+    pca$Condition = spec$Condition
+    print(pca)
+    plot_ly(data = as.data.frame(cpd_data), x = ~PC1, y = ~PC2, type = "scatter", mode="markers", color= ~Population, colors=popcolors, legendgroup=~Population, height=250*length(selected_cpds()$Name), showlegend=(tissue == "Brain" && name == selected_cpds()$Name[1]))
+  })
 
   ###################################################################
   #          Primary Sample Correlation Plot                        #
