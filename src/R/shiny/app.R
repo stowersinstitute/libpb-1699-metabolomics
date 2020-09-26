@@ -144,6 +144,7 @@ ui <- dashboardPage(
       menuItem("Lipids",
                menuSubItem("Selections", tabName = "lipidsSelections"),
                menuSubItem("Summary", tabName = "lipidsSummary"),
+               menuItem("PCA", menuSubItem("View Plot", tabName = "lipidsPCA"), selectInput("lipidsPCAMethod",label="",choices=c("PCA","MDS"))),
                menuItem("Correlation", tabName = "lipidsCorrelation"),
                menuItem("Quantitative", menuSubItem("View Plot", tabName = "lipidsQuantitative"), numericInput(inputId = "lipidsQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               )
@@ -185,22 +186,20 @@ ui <- dashboardPage(
         dataTableOutput("primary_summary")
       ),
       tabItem(tabName = "primaryPCA",
-        tabsetPanel(type="tabs", id="primaryPCAPlotTab", selected="sampleCorr",
-            plotlyOutput("primarySamplePCAPlot", height = 600) %>%
-              withSpinner(type = 8, color = "#0088cf", size = 1),
-            box(title = "Controls",
-              width = NULL,
-              solidHeader = TRUE,
-              status = "primary",
-              splitLayout(cellWidths = c("25%","25%","25%","25%"),
-                column(6,
-                  radioButtons("primaryPCAPlotSampleColorBy", label="Color by:", choices=c("Tissue","Population","Condition")),
-                  checkboxInput(inputId = "primaryPCAPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE)
-                  ),
-              checkboxGroupInput("primaryPCAPlotSampleSelectPops", "Populations:", pops, selected = pops),
-              checkboxGroupInput("primaryPCAPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
-              checkboxGroupInput("primaryPCAPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
-            )
+          plotlyOutput("primarySamplePCAPlot", height = 600) %>%
+            withSpinner(type = 8, color = "#0088cf", size = 1),
+          box(title = "Controls",
+            width = NULL,
+            solidHeader = TRUE,
+            status = "primary",
+            splitLayout(cellWidths = c("25%","25%","25%","25%"),
+              column(6,
+                radioButtons("primaryPCAPlotSampleColorBy", label="Color by:", choices=c("Tissue","Population","Condition")),
+                checkboxInput(inputId = "primaryPCAPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE)
+                ),
+            checkboxGroupInput("primaryPCAPlotSampleSelectPops", "Populations:", pops, selected = pops),
+            checkboxGroupInput("primaryPCAPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
+            checkboxGroupInput("primaryPCAPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
           )
         )
       ),
@@ -309,6 +308,24 @@ ui <- dashboardPage(
       ),
       tabItem(tabName = "lipidsSummary",
         dataTableOutput("lipids_summary")
+      ),
+      tabItem(tabName = "lipidsPCA",
+          plotlyOutput("lipidsSamplePCAPlot", height = 600) %>%
+            withSpinner(type = 8, color = "#0088cf", size = 1),
+          box(title = "Controls",
+            width = NULL,
+            solidHeader = TRUE,
+            status = "primary",
+            splitLayout(cellWidths = c("25%","25%","25%","25%"),
+              column(6,
+                radioButtons("lipidsPCAPlotSampleColorBy", label="Color by:", choices=c("Tissue","Population","Condition")),
+                checkboxInput(inputId = "lipidsPCAPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE)
+                ),
+            checkboxGroupInput("lipidsPCAPlotSampleSelectPops", "Populations:", pops, selected = pops),
+            checkboxGroupInput("lipidsPCAPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
+            checkboxGroupInput("lipidsPCAPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
+          )
+        )
       ),
       tabItem(tabName = "lipidsCorrelation",
         tabsetPanel(type="tabs", id="lipidsCorrPlotTab", selected="sampleCorr",
@@ -447,7 +464,6 @@ server <- function(input, output) {
       pca <- isoMDS(dist(features),k=2)
       pca <- as.data.frame(pca$points)
       colnames(pca) <- c("PC1","PC2")
-      print(head(pca))
     }
     pca$Tissue = spec$Tissue
     pca$Population = spec$Population
@@ -622,6 +638,39 @@ server <- function(input, output) {
   outputOptions(output, "num_lipids", suspendWhenHidden = FALSE)
 
   output$lipids_summary <- renderDataTable(selected_lipids())
+
+  ###################################################################
+  #          Lipids Sample PCA                                     #
+  ###################################################################
+  output$lipidsSamplePCAPlot <- renderPlotly({
+    cpd_data <- lipids %>% filter(lipids$Name %in% selected_lipids()$Name) %>% filter(Population %in% input$lipidsPCAPlotSampleSelectPops) %>% filter(Tissue %in% input$lipidsPCAPlotSampleSelectTissues) %>% filter(Condition %in% input$lipidsPCAPlotSampleSelectConditions)
+    if (!input$lipidsPCAPlotSampleIncludeOutliers) {
+      cpd_data <- cpd_data %>% filter(Outlier == FALSE)
+    }
+    features <- cpd_data %>% select(Name,Population,Tissue,Condition,Replicate,Raw_mTIC)
+    spec <- features %>% build_wider_spec(names_from=c("Population","Tissue","Condition","Replicate"),values_from="Raw_mTIC")
+    features <- features %>%  pivot_wider_spec(spec, values_fn = mean)
+    features <- as.data.frame(features)
+    features <- features %>% drop_na()
+    print(features)
+    rownames(features) <- features$Name
+    features <- features[,-1]
+    features <- t(as.matrix(features))
+    if (input$lipidsPCAMethod == "PCA") {
+      pca <- prcomp(features,center=TRUE,scale.=TRUE,rank=2)
+      pca <- as.data.frame(pca$x)
+    } else {
+      pca <- isoMDS(dist(features),k=2)
+      pca <- as.data.frame(pca$points)
+      colnames(pca) <- c("PC1","PC2")
+      print(head(pca))
+    }
+    pca$Tissue = spec$Tissue
+    pca$Population = spec$Population
+    pca$Condition = spec$Condition
+    colorby <- input$lipidsPCAPlotSampleColorBy
+    plot_ly(data = as.data.frame(pca), x = ~PC1, y = ~PC2, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), height=600)
+  })
 
   ###################################################################
   #           Lipids Sample Correlation Plot                        #
