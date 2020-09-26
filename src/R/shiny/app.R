@@ -12,10 +12,12 @@ suppressMessages({
   library(htmlwidgets)
   library(webshot)
   library(shinydashboard)
+  library(MASS)
 })
 
 conflict_prefer("box", "shinydashboard")
 conflict_prefer("filter", "dplyr")
+conflict_prefer("select", "dplyr")
 
 options(shiny.port = 8080)
 
@@ -110,7 +112,11 @@ savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
 
 # Define UI for app that draws a histogram ----
 ui <- dashboardPage(
-  dashboardHeader(title = "Interactive Astyanax Metabolome Project", titleWidth = 500),
+  dashboardHeader(title = "Interactive Astyanax Metabolome Project", titleWidth = 500,
+                  tags$li(class = "dropdown",
+                  tags$p("Rohner Lab, contact: Kyle Medley jmedley@stowers.org ",
+                    style = "font-size:12px;color:white"))
+  ),
   dashboardSidebar(
 #     https://community.rstudio.com/t/how-to-remove-numeric-inputs-spin-button-in-r-shiny/13769/3
     tags$head(tags$style(HTML("
@@ -131,15 +137,15 @@ ui <- dashboardPage(
       menuItem("Primary", selected = TRUE, startExpanded = TRUE,
                menuSubItem("Selections", tabName = "primarySelections"),
                menuSubItem("Summary", tabName = "primarySummary"),
-               menuSubItem("PCA", tabName = "primaryPCA"),
+               menuItem("PCA", menuSubItem("View Plot", tabName = "primaryPCA"), selectInput("primaryPCAMethod",label="",choices=c("PCA","MDS"))),
                menuSubItem("Correlation", tabName = "primaryCorrelation"),
-               menuItem("Quantitative", menuSubItem("Plot", tabName = "primaryQuantitative"), numericInput(inputId = "primaryQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "primaryQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "primaryQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
+               menuItem("Quantitative", menuSubItem("View Plot", tabName = "primaryQuantitative"), numericInput(inputId = "primaryQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "primaryQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "primaryQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               ),
       menuItem("Lipids",
                menuSubItem("Selections", tabName = "lipidsSelections"),
                menuSubItem("Summary", tabName = "lipidsSummary"),
                menuItem("Correlation", tabName = "lipidsCorrelation"),
-               menuItem("Quantitative", menuSubItem("Plot", tabName = "lipidsQuantitative"), numericInput(inputId = "lipidsQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
+               menuItem("Quantitative", menuSubItem("View Plot", tabName = "lipidsQuantitative"), numericInput(inputId = "lipidsQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               )
     )
   ),
@@ -434,8 +440,15 @@ server <- function(input, output) {
     rownames(features) <- features$Name
     features <- features[,-1]
     features <- t(as.matrix(features))
-    pca <- prcomp(features,center=TRUE,scale.=TRUE,rank=2)
-    pca <- as.data.frame(pca$x)
+    if (input$primaryPCAMethod == "PCA") {
+      pca <- prcomp(features,center=TRUE,scale.=TRUE,rank=2)
+      pca <- as.data.frame(pca$x)
+    } else {
+      pca <- isoMDS(dist(features),k=2)
+      pca <- as.data.frame(pca$points)
+      colnames(pca) <- c("PC1","PC2")
+      print(head(pca))
+    }
     pca$Tissue = spec$Tissue
     pca$Population = spec$Population
     pca$Condition = spec$Condition
