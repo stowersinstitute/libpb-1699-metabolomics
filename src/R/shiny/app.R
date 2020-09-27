@@ -301,10 +301,10 @@ ui <- dashboardPage(
               width = NULL,
               solidHeader = TRUE,
               status = "primary",
-              splitLayout(cellWidths = c("25%","25%","25%","25%"),
+              splitLayout(cellWidths = c("50%","25%","25%"),
                 column(6,
                   selectInput("primaryVolcanoPopulationComparison",label="Comparison",choices=c("PvS","TvS","PvT")),
-                  checkboxInput(inputId = "primaryVolcanoPopulationIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  selectInput("primaryVolcanoPopulationColorBy", label="Color by:", choices=c("Tissue","Condition")),
                   ),
 #                 checkboxGroupInput("primaryVolcanoPopulationSelectPops", "Populations:", pops, selected = pops),
                 checkboxGroupInput("primaryVolcanoPopulationSelectTissues", "Tissues:", tissues, selected = tissues),
@@ -698,10 +698,39 @@ server <- function(input, output) {
       filter(Tissue %in% input$primaryVolcanoPopulationSelectTissues) %>%
       mutate(Condition=recode(Condition,`30d` = "30d Starved", `4d` = "4d Starved", `Ref` = "Refed")) %>%
       filter(Condition %in% input$primaryVolcanoPopulationSelectConditions) %>%
-      select(Name,Tissue,Condition,`p-val`) %>%
-      pivot_wider(names_from=c("Name","Tissue","Condition"),values_from="p-val")
-    print(t(sig))
-#     plot_ly(data = as.data.frame(pca), x = ~PC1, y = ~PC2, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), height=600)
+      select(Name,Tissue,Condition,`p-val`)
+#     sig_spec <- sig %>% build_wider_spec(names_from=c("Name","Tissue","Condition"),values_from="p-val")
+#     sig <- sig %>%  pivot_wider_spec(sig_spec, values_fn = mean)
+#     sig <- t(as.data.frame(sig))
+#     print(head(sig))
+#     sig$Tissue <- sig_spec$Tissue
+#     print(head(sig))
+#     Q
+    print(sig)
+    cpd_data <- primary %>%
+      filter(primary$Name %in% selected_cpds()$Name) %>%
+      filter(Population %in% input$primaryHeatmapSelectPops) %>%
+      filter(Tissue %in% input$primaryHeatmapSelectTissues) %>%
+      filter(Condition %in% input$primaryHeatmapSelectConditions) %>%
+      filter(Outlier == FALSE) %>%
+      select(Name,Population,Tissue,Condition,Raw_mTIC) %>%
+      pivot_wider(names_from=c("Population"),values_from="Raw_mTIC",values_fn = mean)
+#       pivot_wider(names_from=c("Name","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean)
+    cpd_data$PvS <- log2(cpd_data$Pachon / cpd_data$Surface)
+    cpd_data$TvS <- log2(cpd_data$Tinaja / cpd_data$Surface)
+    cpd_data$PvT <- log2(cpd_data$Pachon / cpd_data$Tinaja)
+    print(cpd_data)
+#     fc <- tibble(PvS <- cpd_data$Pachon / cpd_data$Surface)
+#     print(fc)
+#     https://stackoverflow.com/questions/6709151/how-do-i-combine-two-data-frames-based-on-two-columns
+    comparison <- input$primaryVolcanoPopulationComparison
+    colorby <- input$primaryVolcanoPopulationColorBy
+    merged <- inner_join(cpd_data,sig, by=c("Name","Tissue","Condition")) %>%
+      select(Name,Tissue,Condition,PvS,TvS,PvT,`p-val`) %>%
+      rename(`-log10 p`=`p-val`)
+    merged$`-log10 p` <- -log10(merged$`-log10 p`)
+    print(merged)
+    plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), height=600)
   })
 
   ###################################################################
