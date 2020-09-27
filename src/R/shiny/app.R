@@ -35,6 +35,8 @@ options(shiny.port = 8080)
 # http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/118-principal-component-analysis-in-r-prcomp-vs-princomp/
 
 primary <- read_csv("out/work/primary/merged-mtic.csv") %>% arrange(KEGG)
+primary_cross_pop <- read_csv("out/work/primary/merged-cross-pop.csv") %>% arrange(KEGG)
+primary_cross_starvation_resp <- read_csv("out/work/primary/merged-starvation-resp.csv") %>% arrange(KEGG)
 compounds <- unique(primary[c("Name","KEGG","HMDB","ChEBI","Category")])
 lipids <- read_csv("out/work/lipids/merged-lipids.csv", col_types = cols(Saturation = "c", Polarity = "f")) %>% arrange(LMID)
 lipid_ids <- unique(lipids[c("LMID","Name","InChIKey","Category","MainClass","Saturation")])
@@ -140,6 +142,7 @@ ui <- dashboardPage(
                menuItem("PCA", menuSubItem("View Plot", tabName = "primaryPCA"), selectInput("primaryPCAMethod",label="",choices=c("PCA","MDS"))),
                menuSubItem("Correlation", tabName = "primaryCorrelation"),
                menuSubItem("Heatmap", tabName = "primaryHeatmap"),
+               menuSubItem("Differential", tabName = "primaryVolcano"),
                menuItem("Quantitative", menuSubItem("View Plot", tabName = "primaryQuantitative"), numericInput(inputId = "primaryQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "primaryQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "primaryQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               ),
       menuItem("Lipids",
@@ -287,6 +290,29 @@ ui <- dashboardPage(
             checkboxGroupInput("primaryHeatmapSelectConditions", "Conditions:", conditions, selected = conditions)
           )
         ),
+      ),
+      tabItem(tabName = "primaryVolcano",
+        tabsetPanel(type="tabs", id="primaryVolcanoPlotTab", selected="comparePop",
+          tabPanel(title = "Compare Pop.",
+            value = "comparePop",
+            plotlyOutput("primaryVolcanoPopulation", height = 600) %>%
+              withSpinner(type = 8, color = "#0088cf", size = 1),
+            box(title = "Controls",
+              width = NULL,
+              solidHeader = TRUE,
+              status = "primary",
+              splitLayout(cellWidths = c("25%","25%","25%","25%"),
+                column(6,
+                  selectInput("primaryVolcanoPopulationComparison",label="Comparison",choices=c("PvS","TvS","PvT")),
+                  checkboxInput(inputId = "primaryVolcanoPopulationIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  ),
+#                 checkboxGroupInput("primaryVolcanoPopulationSelectPops", "Populations:", pops, selected = pops),
+                checkboxGroupInput("primaryVolcanoPopulationSelectTissues", "Tissues:", tissues, selected = tissues),
+                checkboxGroupInput("primaryVolcanoPopulationSelectConditions", "Conditions:", conditions, selected = conditions)
+              )
+            )
+          )
+        )
       ),
       tabItem(tabName = "primaryQuantitative",
 #         https://stackoverflow.com/questions/21609436/r-shiny-conditionalpanel-output-value
@@ -663,6 +689,22 @@ server <- function(input, output) {
   })
 
   ###################################################################
+  #          Primary Volcano Population                             #
+  ###################################################################
+  output$primaryVolcanoPopulation <- renderPlotly({
+    sig <- primary_cross_pop %>%
+      filter(Name %in% selected_cpds()$Name) %>%
+      filter(Comparison == input$primaryVolcanoPopulationComparison) %>%
+      filter(Tissue %in% input$primaryVolcanoPopulationSelectTissues) %>%
+      mutate(Condition=recode(Condition,`30d` = "30d Starved", `4d` = "4d Starved", `Ref` = "Refed")) %>%
+      filter(Condition %in% input$primaryVolcanoPopulationSelectConditions) %>%
+      select(Name,Tissue,Condition,`p-val`) %>%
+      pivot_wider(names_from=c("Name","Tissue","Condition"),values_from="p-val")
+    print(t(sig))
+#     plot_ly(data = as.data.frame(pca), x = ~PC1, y = ~PC2, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), height=600)
+  })
+
+  ###################################################################
   #                        Primary Line Plot                        #
   ###################################################################
   output$primaryLinePlt <- renderPlotly({
@@ -880,7 +922,7 @@ server <- function(input, output) {
     theplt <- heatmaply(
       features,
       scale=scale,
-      main = "Metabolites vs Samples",
+      main = "Lipids vs Samples",
     )
 #     callModule(module = savePlotlyPDF,
 #                 id = "download_lipidsHeatmapPlot",
