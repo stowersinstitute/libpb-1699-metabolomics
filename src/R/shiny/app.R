@@ -292,6 +292,7 @@ ui <- dashboardPage(
         ),
       ),
       tabItem(tabName = "primaryVolcano",
+        p("You can choose to either compare populations (Compare Pop.) or feeding states (Compare Cond.).")
         tabsetPanel(type="tabs", id="primaryVolcanoPlotTab", selected="comparePop",
           tabPanel(title = "Compare Pop.",
             value = "comparePop",
@@ -730,7 +731,7 @@ server <- function(input, output) {
       rename(`-log10 p`=`p-val`)
     merged$`-log10 p` <- -log10(merged$`-log10 p`)
     print(merged)
-    plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), height=600)
+    plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~Name, height=600)
   })
 
   ###################################################################
