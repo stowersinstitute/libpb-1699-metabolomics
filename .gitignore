@@ -4,3 +4,4 @@
 /.venv
 /renv
 /out.old
+*.kate-swp
