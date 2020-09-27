@@ -721,13 +721,9 @@ server <- function(input, output) {
       select(Name,Tissue,Condition,PvS,TvS,PvT,`p-val`) %>%
       rename(`-log10 p`=`p-val`)
     merged$`-log10 p` <- -log10(merged$`-log10 p`)
-#     plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~Name, height=600) %>% plotly::layout(xaxis = sprintf("%s (log2fc)",comparison), yaxis = "-log10 p")
-#     plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, xlab=sprintf("%s (log2fc)",comparison), ylab="-log10 p", type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~Name, height=600)
     plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~Name, height=600) %>%
       plotly::layout(xaxis = list(title = sprintf("%s (log2fc)",comparison)), yaxis = list(title = "-log10 p")) %>%
       add_paths(x=c(min(merged[[comparison]]),max(merged[[comparison]])), y=c(1.3,1.3), text=c("a","b"), color="p=0.05")
-    print(c(min(merged[[comparison]]),max(merged[[comparison]])))
-    plt
   })
 
   ###################################################################
