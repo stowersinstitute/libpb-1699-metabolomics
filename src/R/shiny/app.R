@@ -147,6 +147,7 @@ ui <- dashboardPage(
                menuSubItem("Summary", tabName = "lipidsSummary"),
                menuItem("PCA", menuSubItem("View Plot", tabName = "lipidsPCA"), selectInput("lipidsPCAMethod",label="",choices=c("PCA","MDS"))),
                menuItem("Correlation", tabName = "lipidsCorrelation"),
+               menuSubItem("Heatmap", tabName = "lipidsHeatmap"),
                menuItem("Quantitative", menuSubItem("View Plot", tabName = "lipidsQuantitative"), numericInput(inputId = "lipidsQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               )
     )
@@ -278,7 +279,7 @@ ui <- dashboardPage(
           status = "primary",
           splitLayout(cellWidths = c("25%","25%","25%","25%"),
             column(6,
-              selectInput("primaryHeatmapNormalize",label="",choices=c("row","column")),
+              selectInput("primaryHeatmapNormalize",label="Normalize",choices=c("row","column")),
               checkboxInput(inputId = "primaryHeatmapIncludeOutliers", label = "Include Outliers?", value = FALSE),
               ),
             checkboxGroupInput("primaryHeatmapSelectPops", "Populations:", pops, selected = pops),
@@ -426,6 +427,24 @@ ui <- dashboardPage(
           ))
         )
       ),
+      tabItem(tabName = "lipidsHeatmap",
+        plotlyOutput("lipidsHeatmapPlt", height = 600) %>%
+          withSpinner(type = 8, color = "#0088cf", size = 1),
+        box(title = "Controls",
+          width = NULL,
+          solidHeader = TRUE,
+          status = "primary",
+          splitLayout(cellWidths = c("25%","25%","25%","25%"),
+            column(6,
+              selectInput("lipidsHeatmapNormalize",label="Normalize",choices=c("row","column")),
+              checkboxInput(inputId = "lipidsHeatmapIncludeOutliers", label = "Include Outliers?", value = FALSE),
+              ),
+            checkboxGroupInput("lipidsHeatmapSelectPops", "Populations:", pops, selected = pops),
+            checkboxGroupInput("lipidsHeatmapSelectTissues", "Tissues:", tissues, selected = tissues),
+            checkboxGroupInput("lipidsHeatmapSelectConditions", "Conditions:", conditions, selected = conditions)
+          )
+        ),
+      ),
       tabItem(tabName = "lipidsQuantitative",
 #         https://stackoverflow.com/questions/21609436/r-shiny-conditionalpanel-output-value
         conditionalPanel(condition = "output.num_lipids <= 10",
@@ -517,10 +536,10 @@ server <- function(input, output) {
       k_col = input$primaryCorrPlotSampleNumClusters,
       k_row = input$primaryCorrPlotSampleNumClusters
     )
-    callModule(module = savePlotlyPDF,
-                id = "download_primarySampleCorrPlot",
-                prefix = "PrimarySampleCorrPlot_",
-                plotlyToSave = reactive(theplt))
+#     callModule(module = savePlotlyPDF,
+#                 id = "download_primarySampleCorrPlot",
+#                 prefix = "PrimarySampleCorrPlot_",
+#                 plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -548,10 +567,10 @@ server <- function(input, output) {
       k_col = input$primaryCorrPlotFeatureNumClusters,
       k_row = input$primaryCorrPlotFeatureNumClusters
     )
-    callModule(module = savePlotlyPDF,
-                id = "download_primaryFeatureCorrPlot",
-                prefix = "PrimaryFeatureCorrPlot_",
-                plotlyToSave = reactive(theplt))
+#     callModule(module = savePlotlyPDF,
+#                 id = "download_primaryFeatureCorrPlot",
+#                 prefix = "PrimaryFeatureCorrPlot_",
+#                 plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -579,10 +598,10 @@ server <- function(input, output) {
       k_col = input$primaryCorrPlotCategoryNumClusters,
       k_row = input$primaryCorrPlotCategoryNumClusters
     )
-    callModule(module = savePlotlyPDF,
-                id = "download_primaryCategoryCorrPlot",
-                prefix = "PrimaryCategoryCorrPlot_",
-                plotlyToSave = reactive(theplt))
+#     callModule(module = savePlotlyPDF,
+#                 id = "download_primaryCategoryCorrPlot",
+#                 prefix = "PrimaryCategoryCorrPlot_",
+#                 plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -610,10 +629,10 @@ server <- function(input, output) {
       k_col = input$primaryCorrPlotCategoryNumClusters,
       k_row = input$primaryCorrPlotCategoryNumClusters
     )
-    callModule(module = savePlotlyPDF,
-                id = "download_primaryCategoryCorrPlot",
-                prefix = "PrimaryCategoryCorrPlot_",
-                plotlyToSave = reactive(theplt))
+#     callModule(module = savePlotlyPDF,
+#                 id = "download_primaryCategoryCorrPlot",
+#                 prefix = "PrimaryCategoryCorrPlot_",
+#                 plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -636,10 +655,10 @@ server <- function(input, output) {
       scale=scale,
       main = "Metabolites vs Samples",
     )
-    callModule(module = savePlotlyPDF,
-                id = "download_primarySampleCorrPlot",
-                prefix = "PrimarySampleCorrPlot_",
-                plotlyToSave = reactive(theplt))
+#     callModule(module = savePlotlyPDF,
+#                 id = "download_primaryHeatmapPlot",
+#                 prefix = "PrimaryHeatmapPlot_",
+#                 plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -744,10 +763,10 @@ server <- function(input, output) {
       k_col = input$lipidsCorrPlotSampleNumClusters,
       k_row = input$lipidsCorrPlotSampleNumClusters
     )
-    callModule(module = savePlotlyPDF,
-                id = "download_lipidsSampleCorrPlot",
-                prefix = "LipidsSampleCorrPlot_",
-                plotlyToSave = reactive(theplt))
+#     callModule(module = savePlotlyPDF,
+#                 id = "download_lipidsSampleCorrPlot",
+#                 prefix = "LipidsSampleCorrPlot_",
+#                 plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -775,10 +794,10 @@ server <- function(input, output) {
       k_col = input$lipidsCorrPlotFeatureNumClusters,
       k_row = input$lipidsCorrPlotFeatureNumClusters
     )
-    callModule(module = savePlotlyPDF,
-                id = "download_lipidsFeatureCorrPlot",
-                prefix = "LipidsFeatureCorrPlot_",
-                plotlyToSave = reactive(theplt))
+#     callModule(module = savePlotlyPDF,
+#                 id = "download_lipidsFeatureCorrPlot",
+#                 prefix = "LipidsFeatureCorrPlot_",
+#                 plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -806,10 +825,10 @@ server <- function(input, output) {
       k_col = input$lipidsCorrPlotCategoryNumClusters,
       k_row = input$lipidsCorrPlotCategoryNumClusters
     )
-    callModule(module = savePlotlyPDF,
-                id = "download_lipidsCategoryCorrPlot",
-                prefix = "LipidsCategoryCorrPlot_",
-                plotlyToSave = reactive(theplt))
+#     callModule(module = savePlotlyPDF,
+#                 id = "download_lipidsCategoryCorrPlot",
+#                 prefix = "LipidsCategoryCorrPlot_",
+#                 plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -837,10 +856,37 @@ server <- function(input, output) {
       k_col = input$lipidsCorrPlotClassNumClusters,
       k_row = input$lipidsCorrPlotClassNumClusters
     )
-    callModule(module = savePlotlyPDF,
-                id = "download_lipidsClassCorrPlot",
-                prefix = "LipidsClassCorrPlot_",
-                plotlyToSave = reactive(theplt))
+#     callModule(module = savePlotlyPDF,
+#                 id = "download_lipidsClassCorrPlot",
+#                 prefix = "LipidsClassCorrPlot_",
+#                 plotlyToSave = reactive(theplt))
+    theplt
+  })
+
+  ###################################################################
+  #           Lipids Heatmap                                        #
+  ###################################################################
+  output$lipidsHeatmapPlt <- renderPlotly({
+#     https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html
+    cpd_data <- lipids %>% filter(lipids$Name %in% selected_lipids()$Name) %>% filter(Population %in% input$lipidsHeatmapSelectPops) %>% filter(Tissue %in% input$lipidsHeatmapSelectTissues) %>% filter(Condition %in% input$lipidsHeatmapSelectConditions)
+    if (!input$lipidsHeatmapIncludeOutliers) {
+      cpd_data <- cpd_data %>% filter(Outlier == FALSE)
+    }
+    features <- cpd_data %>% select(Name,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean) %>% drop_na()
+    print(features)
+    features <- as.data.frame(features)
+    rownames(features) <- features$Name
+    features <- features[,-1]
+    scale <- input$lipidsHeatmapNormalize
+    theplt <- heatmaply(
+      features,
+      scale=scale,
+      main = "Metabolites vs Samples",
+    )
+#     callModule(module = savePlotlyPDF,
+#                 id = "download_lipidsHeatmapPlot",
+#                 prefix = "LipidsheatmapPlot_",
+#                 plotlyToSave = reactive(theplt))
     theplt
   })
 
