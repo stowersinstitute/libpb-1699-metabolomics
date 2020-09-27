@@ -873,7 +873,6 @@ server <- function(input, output) {
       cpd_data <- cpd_data %>% filter(Outlier == FALSE)
     }
     features <- cpd_data %>% select(Name,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean) %>% drop_na()
-    print(features)
     features <- as.data.frame(features)
     rownames(features) <- features$Name
     features <- features[,-1]
