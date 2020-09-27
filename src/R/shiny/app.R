@@ -139,6 +139,7 @@ ui <- dashboardPage(
                menuSubItem("Summary", tabName = "primarySummary"),
                menuItem("PCA", menuSubItem("View Plot", tabName = "primaryPCA"), selectInput("primaryPCAMethod",label="",choices=c("PCA","MDS"))),
                menuSubItem("Correlation", tabName = "primaryCorrelation"),
+               menuSubItem("Heatmap", tabName = "primaryHeatmap"),
                menuItem("Quantitative", menuSubItem("View Plot", tabName = "primaryQuantitative"), numericInput(inputId = "primaryQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "primaryQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "primaryQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               ),
       menuItem("Lipids",
@@ -267,6 +268,24 @@ ui <- dashboardPage(
 #         savePlotlyPDFUI(id = "download_primarySampleCorrPlot",
 #                         label = "Download Plot (PDF)")
 #       )
+      ),
+      tabItem(tabName = "primaryHeatmap",
+        plotlyOutput("primaryHeatmapPlt", height = 600) %>%
+          withSpinner(type = 8, color = "#0088cf", size = 1),
+        box(title = "Controls",
+          width = NULL,
+          solidHeader = TRUE,
+          status = "primary",
+          splitLayout(cellWidths = c("25%","25%","25%","25%"),
+            column(6,
+              selectInput("primaryHeatmapNormalize",label="",choices=c("row","column")),
+              checkboxInput(inputId = "primaryHeatmapIncludeOutliers", label = "Include Outliers?", value = FALSE),
+              ),
+            checkboxGroupInput("primaryHeatmapSelectPops", "Populations:", pops, selected = pops),
+            checkboxGroupInput("primaryHeatmapSelectTissues", "Tissues:", tissues, selected = tissues),
+            checkboxGroupInput("primaryHeatmapSelectConditions", "Conditions:", conditions, selected = conditions)
+          )
+        ),
       ),
       tabItem(tabName = "primaryQuantitative",
 #         https://stackoverflow.com/questions/21609436/r-shiny-conditionalpanel-output-value
@@ -594,6 +613,32 @@ server <- function(input, output) {
     callModule(module = savePlotlyPDF,
                 id = "download_primaryCategoryCorrPlot",
                 prefix = "PrimaryCategoryCorrPlot_",
+                plotlyToSave = reactive(theplt))
+    theplt
+  })
+
+  ###################################################################
+  #          Primary Heatmap                                        #
+  ###################################################################
+  output$primaryHeatmapPlt <- renderPlotly({
+#     https://cran.r-project.org/web/packages/heatmaply/vignettes/heatmaply.html
+    cpd_data <- primary %>% filter(primary$Name %in% selected_cpds()$Name) %>% filter(Population %in% input$primaryHeatmapSelectPops) %>% filter(Tissue %in% input$primaryHeatmapSelectTissues) %>% filter(Condition %in% input$primaryHeatmapSelectConditions)
+    if (!input$primaryHeatmapIncludeOutliers) {
+      cpd_data <- cpd_data %>% filter(Outlier == FALSE)
+    }
+    features <- cpd_data %>% select(Name,Population,Tissue,Condition,Raw_mTIC) %>% pivot_wider(names_from=c("Population","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean)
+    features <- as.data.frame(features)
+    rownames(features) <- features$Name
+    features <- features[,-1]
+    scale <- input$primaryHeatmapNormalize
+    theplt <- heatmaply(
+      features,
+      scale=scale,
+      main = "Metabolites vs Samples",
+    )
+    callModule(module = savePlotlyPDF,
+                id = "download_primarySampleCorrPlot",
+                prefix = "PrimarySampleCorrPlot_",
                 plotlyToSave = reactive(theplt))
     theplt
   })
