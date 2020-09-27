@@ -292,7 +292,7 @@ ui <- dashboardPage(
         ),
       ),
       tabItem(tabName = "primaryVolcano",
-        p("You can choose to either compare populations (Compare Pop.) or feeding states (Compare Cond.).")
+        p("You can choose to either compare populations (Compare Pop.) or feeding states (Compare Cond.)."),
         tabsetPanel(type="tabs", id="primaryVolcanoPlotTab", selected="comparePop",
           tabPanel(title = "Compare Pop.",
             value = "comparePop",
@@ -700,12 +700,6 @@ server <- function(input, output) {
       mutate(Condition=recode(Condition,`30d` = "30d Starved", `4d` = "4d Starved", `Ref` = "Refed")) %>%
       filter(Condition %in% input$primaryVolcanoPopulationSelectConditions) %>%
       select(Name,Tissue,Condition,`p-val`)
-#     sig_spec <- sig %>% build_wider_spec(names_from=c("Name","Tissue","Condition"),values_from="p-val")
-#     sig <- sig %>%  pivot_wider_spec(sig_spec, values_fn = mean)
-#     sig <- t(as.data.frame(sig))
-#     print(head(sig))
-#     sig$Tissue <- sig_spec$Tissue
-#     print(head(sig))
 #     Q
     print(sig)
     cpd_data <- primary %>%
@@ -716,13 +710,10 @@ server <- function(input, output) {
       filter(Outlier == FALSE) %>%
       select(Name,Population,Tissue,Condition,Raw_mTIC) %>%
       pivot_wider(names_from=c("Population"),values_from="Raw_mTIC",values_fn = mean)
-#       pivot_wider(names_from=c("Name","Tissue","Condition"),values_from="Raw_mTIC",values_fn = mean)
     cpd_data$PvS <- log2(cpd_data$Pachon / cpd_data$Surface)
     cpd_data$TvS <- log2(cpd_data$Tinaja / cpd_data$Surface)
     cpd_data$PvT <- log2(cpd_data$Pachon / cpd_data$Tinaja)
     print(cpd_data)
-#     fc <- tibble(PvS <- cpd_data$Pachon / cpd_data$Surface)
-#     print(fc)
 #     https://stackoverflow.com/questions/6709151/how-do-i-combine-two-data-frames-based-on-two-columns
     comparison <- input$primaryVolcanoPopulationComparison
     colorby <- input$primaryVolcanoPopulationColorBy
@@ -730,8 +721,13 @@ server <- function(input, output) {
       select(Name,Tissue,Condition,PvS,TvS,PvT,`p-val`) %>%
       rename(`-log10 p`=`p-val`)
     merged$`-log10 p` <- -log10(merged$`-log10 p`)
-    print(merged)
-    plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~Name, height=600)
+#     plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~Name, height=600) %>% plotly::layout(xaxis = sprintf("%s (log2fc)",comparison), yaxis = "-log10 p")
+#     plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, xlab=sprintf("%s (log2fc)",comparison), ylab="-log10 p", type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~Name, height=600)
+    plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~Name, height=600) %>%
+      plotly::layout(xaxis = list(title = sprintf("%s (log2fc)",comparison)), yaxis = list(title = "-log10 p")) %>%
+      add_paths(x=c(min(merged[[comparison]]),max(merged[[comparison]])), y=c(1.3,1.3), text=c("a","b"), color="p=0.05")
+    print(c(min(merged[[comparison]]),max(merged[[comparison]])))
+    plt
   })
 
   ###################################################################
