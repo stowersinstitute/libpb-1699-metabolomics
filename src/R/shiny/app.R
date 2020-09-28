@@ -36,7 +36,8 @@ options(shiny.port = 8080)
 
 primary <- read_csv("out/work/primary/merged-mtic.csv") %>% arrange(KEGG)
 primary_cross_pop <- read_csv("out/work/primary/merged-cross-pop.csv") %>% arrange(KEGG)
-primary_cross_starvation_resp <- read_csv("out/work/primary/merged-starvation-resp.csv") %>% arrange(KEGG)
+primary_cond <- read_csv("out/work/primary/merged-starvation-resp.csv") %>% arrange(KEGG)
+# primary_cross_starvation_resp <- read_csv("out/work/primary/merged-starvation-resp.csv") %>% arrange(KEGG)
 compounds <- unique(primary[c("Name","KEGG","HMDB","ChEBI","Category")])
 lipids <- read_csv("out/work/lipids/merged-lipids.csv", col_types = cols(Saturation = "c", Polarity = "f")) %>% arrange(LMID)
 lipid_ids <- unique(lipids[c("LMID","Name","InChIKey","Category","MainClass","Saturation")])
@@ -293,7 +294,7 @@ ui <- dashboardPage(
       ),
       tabItem(tabName = "primaryVolcano",
         p("You can choose to either compare populations (Compare Pop.) or feeding states (Compare Cond.)."),
-        tabsetPanel(type="tabs", id="primaryVolcanoPlotTab", selected="comparePop",
+        tabsetPanel(type="tabs", id="primaryVolcanoPopulationTab", selected="comparePop",
           tabPanel(title = "Compare Pop.",
             value = "comparePop",
             plotlyOutput("primaryVolcanoPopulation", height = 600) %>%
@@ -310,6 +311,25 @@ ui <- dashboardPage(
 #                 checkboxGroupInput("primaryVolcanoPopulationSelectPops", "Populations:", pops, selected = pops),
                 checkboxGroupInput("primaryVolcanoPopulationSelectTissues", "Tissues:", tissues, selected = tissues),
                 checkboxGroupInput("primaryVolcanoPopulationSelectConditions", "Conditions:", conditions, selected = conditions)
+              )
+            )
+          ),
+          tabPanel(title = "Compare Pop.",
+            value = "compareCond",
+            plotlyOutput("primaryVolcanoCondition", height = 600) %>%
+              withSpinner(type = 8, color = "#0088cf", size = 1),
+            box(title = "Controls",
+              width = NULL,
+              solidHeader = TRUE,
+              status = "primary",
+              splitLayout(cellWidths = c("50%","25%","25%"),
+                column(6,
+                  selectInput("primaryVolcanoConditionComparison",label="Comparison",choices=c("30vR","4vR","30v4")),
+                  selectInput("primaryVolcanoConditionColorBy", label="Color by:", choices=c("Tissue","Population")),
+                  ),
+#                 checkboxGroupInput("primaryVolcanoConditionSelectPops", "Conditions:", pops, selected = pops),
+                checkboxGroupInput("primaryVolcanoConditionSelectTissues", "Tissues:", tissues, selected = tissues),
+                checkboxGroupInput("primaryVolcanoConditionSelectPopulations", "Populations:", pops, selected = pops)
               )
             )
           )
@@ -704,9 +724,8 @@ server <- function(input, output) {
     print(sig)
     cpd_data <- primary %>%
       filter(primary$Name %in% selected_cpds()$Name) %>%
-      filter(Population %in% input$primaryHeatmapSelectPops) %>%
-      filter(Tissue %in% input$primaryHeatmapSelectTissues) %>%
-      filter(Condition %in% input$primaryHeatmapSelectConditions) %>%
+      filter(Tissue %in% input$primaryVolcanoPopulationSelectTissues) %>%
+      filter(Condition %in% input$primaryVolcanoPopulationSelectConditions) %>%
       filter(Outlier == FALSE) %>%
       select(Name,Population,Tissue,Condition,Raw_mTIC) %>%
       pivot_wider(names_from=c("Population"),values_from="Raw_mTIC",values_fn = mean)
@@ -717,8 +736,45 @@ server <- function(input, output) {
 #     https://stackoverflow.com/questions/6709151/how-do-i-combine-two-data-frames-based-on-two-columns
     comparison <- input$primaryVolcanoPopulationComparison
     colorby <- input$primaryVolcanoPopulationColorBy
+    print("pre-merge")
     merged <- inner_join(cpd_data,sig, by=c("Name","Tissue","Condition")) %>%
       select(Name,Tissue,Condition,PvS,TvS,PvT,`p-val`) %>%
+      rename(`-log10 p`=`p-val`)
+    print(merged)
+    merged$`-log10 p` <- -log10(merged$`-log10 p`)
+    plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~Name, height=600) %>%
+      plotly::layout(xaxis = list(title = sprintf("%s (log2fc)",comparison)), yaxis = list(title = "-log10 p")) %>%
+      add_paths(x=c(min(merged[[comparison]]),max(merged[[comparison]])), y=c(1.3,1.3), text=c("a","b"), color="p=0.05")
+  })
+
+  ###################################################################
+  #          Primary Volcano Condition                              #
+  ###################################################################
+  output$primaryVolcanoCondition <- renderPlotly({
+    sig <- primary_cond %>%
+      filter(Name %in% selected_cpds()$Name) %>%
+      filter(Comparison == input$primaryVolcanoConditionComparison) %>%
+      filter(Tissue %in% input$primaryVolcanoConditionSelectTissues) %>%
+      mutate(Condition=recode(Condition,`30d` = "30d Starved", `4d` = "4d Starved", `Ref` = "Refed")) %>%
+      filter(Population %in% input$primaryVolcanoConditionSelectPopulations) %>%
+      select(Name,Tissue,Population,`p-val`)
+#     Q
+    cpd_data <- primary %>%
+      filter(primary$Name %in% selected_cpds()$Name) %>%
+      filter(Tissue %in% input$primaryVolcanoConditionSelectTissues) %>%
+      filter(Population %in% input$primaryVolcanoConditionSelectPopulations) %>%
+      filter(Outlier == FALSE) %>%
+      select(Name,Population,Tissue,Condition,Raw_mTIC) %>%
+      pivot_wider(names_from=c("Condition"),values_from="Raw_mTIC",values_fn = mean)
+    cpd_data$`30vR` <- log2(cpd_data$`30d Starved` / cpd_data$Refed)
+    cpd_data$`4vR` <- log2(cpd_data$`4d Starved` / cpd_data$Refed)
+    cpd_data$`30v4` <- log2(cpd_data$`30d Starved` / cpd_data$`4d Starved`)
+    print(cpd_data)
+#     https://stackoverflow.com/questions/6709151/how-do-i-combine-two-data-frames-based-on-two-columns
+    comparison <- input$primaryVolcanoConditionComparison
+    colorby <- input$primaryVolcanoConditionColorBy
+    merged <- inner_join(cpd_data,sig, by=c("Name","Tissue","Population")) %>%
+      select(Name,Tissue,Population,`30vR`,`4vR`,`30v4`,`p-val`) %>%
       rename(`-log10 p`=`p-val`)
     merged$`-log10 p` <- -log10(merged$`-log10 p`)
     plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~Name, height=600) %>%

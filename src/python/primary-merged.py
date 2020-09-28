@@ -64,6 +64,13 @@ def read_sig_dataset(filepath,cat,tissue,cond,comp):
     d['Condition'] = cond
     d['Comparison'] = comp
     return d
+def read_sig_dataset2(filepath,cat,tissue,pop,comp):
+    d = read_csv(filepath,index_col=0)
+    d['Category'] = cat
+    d['Tissue'] = tissue
+    d['Population'] = pop
+    d['Comparison'] = comp
+    return d
 
 # cross population comparison
 for cat in categories:
@@ -87,9 +94,9 @@ group_comparisons = ['30vR','4vR','30v4']
 conserved_strv_resp_significance = []
 for cat in categories:
     for tissue in tissues:
-        for cond in condmap:
+        for pop in pops:
             for comp in group_comparisons:
-                glm = read_sig_dataset(f'out/work/primary/glm/singlefactor/{outlier}/{cat}/{tissue}/CvS/{comp}.csv',cat,tissue,cond,comp)
+                glm = read_sig_dataset2(f'out/work/primary/glm/singlefactor/{outlier}/{cat}/{tissue}/{pop}/{comp}.csv',cat,tissue,pop,comp)
                 glm['HMDB'] = glm.apply(lambda u: ','.join(kegg_to_hmdb[u['KEGG']]) if u['KEGG'] in kegg_to_hmdb and len(kegg_to_hmdb[u['KEGG']]) > 0 else None,axis=1)
                 glm['ChEBI'] = glm.apply(lambda u: ','.join(kegg_to_chebi[u['KEGG']]) if u['KEGG'] in kegg_to_chebi and len(kegg_to_chebi[u['KEGG']]) > 0 else None,axis=1)
                 conserved_strv_resp_significance.append(glm)
