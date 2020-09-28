@@ -29,6 +29,7 @@ main = shakeArgs shakeOptions $ do
          , "out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/CvS/30vR.csv" -- GLM primary cross-pop
          , "out/work/primary/merged-mtic.csv" -- Merged primary mTIC values
          , "out/work/lipids/merged-lipids.csv" -- Merged primary mTIC values
+         , "out/work/lipids/merged-cross-pop.csv" -- Merged lipids significance
          , "out/supp/kein-Ausreißern/primary-pop-compare-significance.xlsx"
          , "out/supp/mit-Ausreißern/primary-pop-compare-significance.xlsx"
          , "out/fig/kein-Ausreißern/ratios-combined.pdf"
@@ -121,7 +122,7 @@ main = shakeArgs shakeOptions $ do
     -- Table of tidy data for lipid significance values
     "out/work/lipids/merged-cross-pop.csv" %> \out -> do
       need ["out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/CvS/30vR.csv", "out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/Pachon/30vR.csv", "src/python/primary-merged.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/lipids-stats.py --exclude-outlier True --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --out-cross-pop ./out/work/lipids/merged-cross-pop.csv"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/lipids-stats.py --exclude-outlier True --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --lipidmaps-fa ./data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json --out-cross-pop ./out/work/lipids/merged-cross-pop.csv"
 
     -- conserved metabolites in starvation resistance
     "out/fig/kein-Ausreißern/primary-shared-starvation-response-30vR.pdf" %> \out -> do

@@ -39,7 +39,9 @@ primary_cross_pop <- read_csv("out/work/primary/merged-cross-pop.csv") %>% arran
 primary_cond <- read_csv("out/work/primary/merged-starvation-resp.csv") %>% arrange(KEGG)
 # primary_cross_starvation_resp <- read_csv("out/work/primary/merged-starvation-resp.csv") %>% arrange(KEGG)
 compounds <- unique(primary[c("Name","KEGG","HMDB","ChEBI","Category")])
+
 lipids <- read_csv("out/work/lipids/merged-lipids.csv", col_types = cols(Saturation = "c", Polarity = "f")) %>% arrange(LMID)
+lipids_cross_pop <- read_csv("out/work/lipids/merged-cross-pop.csv") %>% arrange(LMID)
 lipid_ids <- unique(lipids[c("LMID","Name","InChIKey","Category","MainClass","Saturation")])
 
 pops = c("Pachon","Tinaja","Surface")
@@ -152,6 +154,7 @@ ui <- dashboardPage(
                menuItem("PCA", menuSubItem("View Plot", tabName = "lipidsPCA"), selectInput("lipidsPCAMethod",label="",choices=c("PCA","MDS"))),
                menuItem("Correlation", tabName = "lipidsCorrelation"),
                menuSubItem("Heatmap", tabName = "lipidsHeatmap"),
+               menuSubItem("Differential", tabName = "lipidsVolcano"),
                menuItem("Quantitative", menuSubItem("View Plot", tabName = "lipidsQuantitative"), numericInput(inputId = "lipidsQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
               )
     )
@@ -492,6 +495,49 @@ ui <- dashboardPage(
           )
         ),
       ),
+      tabItem(tabName = "lipidsVolcano",
+        p("You can choose to either compare populations (Compare Pop.) or feeding states (Compare Cond.)."),
+        tabsetPanel(type="tabs", id="lipidsVolcanoPopulationTab", selected="comparePop",
+          tabPanel(title = "Compare Pop.",
+            value = "comparePop",
+            plotlyOutput("lipidsVolcanoPopulation", height = 600) %>%
+              withSpinner(type = 8, color = "#0088cf", size = 1),
+            box(title = "Controls",
+              width = NULL,
+              solidHeader = TRUE,
+              status = "primary",
+              splitLayout(cellWidths = c("50%","25%","25%"),
+                column(6,
+                  selectInput("lipidsVolcanoPopulationComparison",label="Comparison",choices=c("PvS","TvS","PvT")),
+                  selectInput("lipidsVolcanoPopulationColorBy", label="Color by:", choices=c("Tissue","Condition")),
+                  ),
+#                 checkboxGroupInput("lipidsVolcanoPopulationSelectPops", "Populations:", pops, selected = pops),
+                checkboxGroupInput("lipidsVolcanoPopulationSelectTissues", "Tissues:", tissues, selected = tissues),
+                checkboxGroupInput("lipidsVolcanoPopulationSelectConditions", "Conditions:", conditions, selected = conditions)
+              )
+            )
+          ),
+          tabPanel(title = "Compare Pop.",
+            value = "compareCond",
+            plotlyOutput("lipidsVolcanoCondition", height = 600) %>%
+              withSpinner(type = 8, color = "#0088cf", size = 1),
+            box(title = "Controls",
+              width = NULL,
+              solidHeader = TRUE,
+              status = "primary",
+              splitLayout(cellWidths = c("50%","25%","25%"),
+                column(6,
+                  selectInput("lipidsVolcanoConditionComparison",label="Comparison",choices=c("30vR","4vR","30v4")),
+                  selectInput("lipidsVolcanoConditionColorBy", label="Color by:", choices=c("Tissue","Population")),
+                  ),
+#                 checkboxGroupInput("lipidsVolcanoConditionSelectPops", "Conditions:", pops, selected = pops),
+                checkboxGroupInput("lipidsVolcanoConditionSelectTissues", "Tissues:", tissues, selected = tissues),
+                checkboxGroupInput("lipidsVolcanoConditionSelectPopulations", "Populations:", pops, selected = pops)
+              )
+            )
+          )
+        )
+      ),
       tabItem(tabName = "lipidsQuantitative",
 #         https://stackoverflow.com/questions/21609436/r-shiny-conditionalpanel-output-value
         conditionalPanel(condition = "output.num_lipids <= 10",
@@ -721,7 +767,6 @@ server <- function(input, output) {
       filter(Condition %in% input$primaryVolcanoPopulationSelectConditions) %>%
       select(Name,Tissue,Condition,`p-val`)
 #     Q
-    print(sig)
     cpd_data <- primary %>%
       filter(primary$Name %in% selected_cpds()$Name) %>%
       filter(Tissue %in% input$primaryVolcanoPopulationSelectTissues) %>%
@@ -732,15 +777,12 @@ server <- function(input, output) {
     cpd_data$PvS <- log2(cpd_data$Pachon / cpd_data$Surface)
     cpd_data$TvS <- log2(cpd_data$Tinaja / cpd_data$Surface)
     cpd_data$PvT <- log2(cpd_data$Pachon / cpd_data$Tinaja)
-    print(cpd_data)
 #     https://stackoverflow.com/questions/6709151/how-do-i-combine-two-data-frames-based-on-two-columns
     comparison <- input$primaryVolcanoPopulationComparison
     colorby <- input$primaryVolcanoPopulationColorBy
-    print("pre-merge")
     merged <- inner_join(cpd_data,sig, by=c("Name","Tissue","Condition")) %>%
       select(Name,Tissue,Condition,PvS,TvS,PvT,`p-val`) %>%
       rename(`-log10 p`=`p-val`)
-    print(merged)
     merged$`-log10 p` <- -log10(merged$`-log10 p`)
     plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~Name, height=600) %>%
       plotly::layout(xaxis = list(title = sprintf("%s (log2fc)",comparison)), yaxis = list(title = "-log10 p")) %>%
@@ -768,7 +810,6 @@ server <- function(input, output) {
     cpd_data$`30vR` <- log2(cpd_data$`30d Starved` / cpd_data$Refed)
     cpd_data$`4vR` <- log2(cpd_data$`4d Starved` / cpd_data$Refed)
     cpd_data$`30v4` <- log2(cpd_data$`30d Starved` / cpd_data$`4d Starved`)
-    print(cpd_data)
 #     https://stackoverflow.com/questions/6709151/how-do-i-combine-two-data-frames-based-on-two-columns
     comparison <- input$primaryVolcanoConditionComparison
     colorby <- input$primaryVolcanoConditionColorBy
@@ -1006,6 +1047,40 @@ server <- function(input, output) {
 #                 prefix = "LipidsheatmapPlot_",
 #                 plotlyToSave = reactive(theplt))
     theplt
+  })
+
+  ###################################################################
+  #           Lipids Volcano Population                             #
+  ###################################################################
+  output$lipidsVolcanoPopulation <- renderPlotly({
+    sig <- lipids_cross_pop %>%
+      filter(LMID %in% selected_lipids()$LMID) %>%
+      filter(Comparison == input$lipidsVolcanoPopulationComparison) %>%
+      filter(Tissue %in% input$lipidsVolcanoPopulationSelectTissues) %>%
+      mutate(Condition=recode(Condition,`30d` = "30d Starved", `4d` = "4d Starved", `Ref` = "Refed")) %>%
+      filter(Condition %in% input$lipidsVolcanoPopulationSelectConditions) %>%
+      select(LMID,Tissue,Condition,`p-val`)
+#     Q
+    cpd_data <- lipids %>%
+      filter(LMID %in% selected_lipids()$LMID) %>%
+      filter(Tissue %in% input$lipidsVolcanoPopulationSelectTissues) %>%
+      filter(Condition %in% input$lipidsVolcanoPopulationSelectConditions) %>%
+      filter(Outlier == FALSE) %>%
+      select(LMID,Population,Tissue,Condition,Raw_mTIC) %>%
+      pivot_wider(names_from=c("Population"),values_from="Raw_mTIC",values_fn = mean)
+    cpd_data$PvS <- log2(cpd_data$Pachon / cpd_data$Surface)
+    cpd_data$TvS <- log2(cpd_data$Tinaja / cpd_data$Surface)
+    cpd_data$PvT <- log2(cpd_data$Pachon / cpd_data$Tinaja)
+#     https://stackoverflow.com/questions/6709151/how-do-i-combine-two-data-frames-based-on-two-columns
+    comparison <- input$lipidsVolcanoPopulationComparison
+    colorby <- input$lipidsVolcanoPopulationColorBy
+    merged <- inner_join(cpd_data,sig, by=c("LMID","Tissue","Condition")) %>%
+      select(LMID,Tissue,Condition,PvS,TvS,PvT,`p-val`) %>%
+      rename(`-log10 p`=`p-val`)
+    merged$`-log10 p` <- -log10(merged$`-log10 p`)
+    plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~LMID, height=600) %>%
+      plotly::layout(xaxis = list(title = sprintf("%s (log2fc)",comparison)), yaxis = list(title = "-log10 p")) %>%
+      add_paths(x=c(min(merged[[comparison]]),max(merged[[comparison]])), y=c(1.3,1.3), text=c("a","b"), color="p=0.05")
   })
 
   ###################################################################

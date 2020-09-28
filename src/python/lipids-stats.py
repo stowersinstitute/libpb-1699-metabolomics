@@ -10,13 +10,18 @@ flatten = chain.from_iterable
 import os
 import json
 from pandas import concat, DataFrame, read_csv
+from numpy import nan
 
 parser = ArgumentParser(description="Lipids merged.")
 parser.add_argument("--lipids-normalized", type=str, help="Normalized lipids dir.")
 parser.add_argument("--lipidmaps-json", type=str, help="Lipidmaps JSON.")
+parser.add_argument("--lipidmaps-fa", type=str, help="Lipidmaps fa.")
 parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
 parser.add_argument("--out-cross-pop", type=str, help="Output (cross-pop)")
 args = parser.parse_args()
+
+with open(args.lipidmaps_fa) as f:
+  lmfa = json.load(f)
 
 with open(args.lipidmaps_json) as f:
     lm = json.load(f)
@@ -60,6 +65,22 @@ def get_lipidmap_name(lmid):
     else:
         return nan
 
+def assignfa(lmid):
+    if isinstance(lmid,str):
+        mc = ali.lipidmaps[lmid]['MAIN_CLASS']
+        if mc != "Fatty Acids and Conjugates [FA01]":
+            return nan
+        else:
+            fa = lmfa[lmid]
+            if 'unsat' in fa:
+                if fa['unsat'] > 1:
+                    return 'Polyunsaturated Fatty Acids'
+                elif fa['unsat'] == 1:
+                    return 'Monounsaturated Fatty Acids'
+            elif 'sat' in fa:
+                return 'Saturated Fatty Acids'
+            return nan
+
 # cross population comparison
 for tissue in tissues:
     for cond in condmap:
@@ -68,8 +89,11 @@ for tissue in tissues:
             opls = read_sig_dataset(f'out/work/lipids/opls/{outlier}/{tissue}/{cond}/{comp}.csv',tissue,cond,comp)
             zscore = read_sig_dataset(f'out/work/lipids/zscore/{outlier}/{tissue}/{cond}/{comp}.csv',tissue,cond,comp)
             glm['LMID'] = glm.apply(lambda u: get_lipidmap_id(u.name),axis=1)
+            glm['Category'] = glm.apply(lambda u: ali.lipidmaps[u['LMID']]['CATEGORY'] if isinstance(u['LMID'],str) else nan,axis=1)
+            glm['MainClass'] = glm.apply(lambda u: ali.lipidmaps[u['LMID']]['MAIN_CLASS'] if isinstance(u['LMID'],str) else nan,axis=1)
+            glm['Saturation'] = glm.apply(lambda u: assignfa(u['LMID']) if isinstance(u['LMID'],str) else nan,axis=1)
             cross_pop_significance.append(glm)
-cross_pop_significance = concat(cross_pop_significance,axis=0).dropna()
+cross_pop_significance = concat(cross_pop_significance,axis=0).dropna(subset=['LMID'])
 cross_pop_significance = cross_pop_significance.rename({'Pr(>|z|)':'p-val','Estimate':'Slope'},axis=1)
 cross_pop_significance.index.name = 'Name'
 if args.out_cross_pop:
