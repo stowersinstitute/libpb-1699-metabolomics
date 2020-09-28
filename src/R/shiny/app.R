@@ -42,6 +42,7 @@ compounds <- unique(primary[c("Name","KEGG","HMDB","ChEBI","Category")])
 
 lipids <- read_csv("out/work/lipids/merged-lipids.csv", col_types = cols(Saturation = "c", Polarity = "f")) %>% arrange(LMID)
 lipids_cross_pop <- read_csv("out/work/lipids/merged-cross-pop.csv") %>% arrange(LMID)
+lipids_cond <- read_csv("out/work/lipids/merged-cross-cond.csv") %>% arrange(LMID)
 lipid_ids <- unique(lipids[c("LMID","Name","InChIKey","Category","MainClass","Saturation")])
 
 pops = c("Pachon","Tinaja","Surface")
@@ -1079,6 +1080,39 @@ server <- function(input, output) {
       rename(`-log10 p`=`p-val`)
     merged$`-log10 p` <- -log10(merged$`-log10 p`)
     plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~LMID, height=600) %>%
+      plotly::layout(xaxis = list(title = sprintf("%s (log2fc)",comparison)), yaxis = list(title = "-log10 p")) %>%
+      add_paths(x=c(min(merged[[comparison]]),max(merged[[comparison]])), y=c(1.3,1.3), text=c("a","b"), color="p=0.05")
+  })
+
+  ###################################################################
+  #           Lipids Volcano Condition                              #
+  ###################################################################
+  output$lipidsVolcanoCondition <- renderPlotly({
+    sig <- lipids_cond %>%
+      filter(LMID %in% selected_lipids()$LMID) %>%
+      filter(Comparison == input$lipidsVolcanoConditionComparison) %>%
+      filter(Tissue %in% input$lipidsVolcanoConditionSelectTissues) %>%
+      filter(Population %in% input$lipidsVolcanoConditionSelectPopulations) %>%
+      select(LMID,Tissue,Population,`p-val`)
+#     Q
+    cpd_data <- lipids %>%
+      filter(lipids$LMID %in% selected_lipids()$LMID) %>%
+      filter(Tissue %in% input$lipidsVolcanoConditionSelectTissues) %>%
+      filter(Population %in% input$lipidsVolcanoConditionSelectPopulations) %>%
+      filter(Outlier == FALSE) %>%
+      select(LMID,Population,Tissue,Condition,Raw_mTIC) %>%
+      pivot_wider(names_from=c("Condition"),values_from="Raw_mTIC",values_fn = mean)
+    cpd_data$`30vR` <- log2(cpd_data$`30d Starved` / cpd_data$Refed)
+    cpd_data$`4vR` <- log2(cpd_data$`4d Starved` / cpd_data$Refed)
+    cpd_data$`30v4` <- log2(cpd_data$`30d Starved` / cpd_data$`4d Starved`)
+#     https://stackoverflow.com/questions/6709151/how-do-i-combine-two-data-frames-based-on-two-columns
+    comparison <- input$lipidsVolcanoConditionComparison
+    colorby <- input$lipidsVolcanoConditionColorBy
+    merged <- inner_join(cpd_data,sig, by=c("LMID","Tissue","Population")) %>%
+      select(LMID,Tissue,Population,`30vR`,`4vR`,`30v4`,`p-val`) %>%
+      rename(`-log10 p`=`p-val`)
+    merged$`-log10 p` <- -log10(merged$`-log10 p`)
+    plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~`%s`",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~LMID, height=600) %>%
       plotly::layout(xaxis = list(title = sprintf("%s (log2fc)",comparison)), yaxis = list(title = "-log10 p")) %>%
       add_paths(x=c(min(merged[[comparison]]),max(merged[[comparison]])), y=c(1.3,1.3), text=c("a","b"), color="p=0.05")
   })

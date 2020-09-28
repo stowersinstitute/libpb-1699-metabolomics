@@ -23,13 +23,13 @@ for (tissue in tissues) {
             data[,k] <- as.double(as.character(data[,k]))
           }
 
-          names(data)[1] <- "Population"
+          names(data)[1] <- "Condition"
 
           # single factor model
           coefs <- c()
           for (cpd in colnames(data)[-1]) {
       #       https://www.r-bloggers.com/changing-the-variable-inside-an-r-formula/
-            if (comp != 'PvT'){
+            if (comp != '30v4'){
               singlefac <- bayesglm(as.formula(sprintf("relevel(Condition,\"Refed\") ~ %s+0", cpd)), data = data, family = binomial())
             } else {
               singlefac <- bayesglm(as.formula(sprintf("relevel(Condition,\"4d Starved\") ~ %s+0", cpd)), data = data, family = binomial())

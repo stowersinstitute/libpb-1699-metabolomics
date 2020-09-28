@@ -60,22 +60,6 @@ cattypes = {'Class':'class', 'Category':'category'}
 outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
 
 def process_outlier(subset,comp):
-    #if exclude_outlier and tissue=='Liver':
-        #print(subset.columns)
-        #if comp == 'TvS':
-            #cols = list(subset.columns)
-            #cols[11] = 'dropme'
-            #subset.columns = cols
-            #return subset.drop('dropme',axis=1)
-        #elif comp == 'PvT':
-            #cols = list(subset.columns)
-            #cols[11] = 'dropme'
-            #subset.columns = cols
-            #return subset.drop('dropme',axis=1)
-        #else:
-            #return subset
-    #else:
-        #return subset
     for o in outliers:
         subset = subset.loc[:,~subset.columns.str.contains(o)]
     return subset
@@ -85,13 +69,6 @@ def process(subset, groups):
     normalized_data.columns.name = 'InChIKey'
     # get pop name
     normalized_data = normalized_data.rename(lambda u: ' '.join(u.split()[2:-1]))
-    print(normalized_data)
-    print(normalized_data.loc[:,normalized_data.isnull().any(axis=0)])
-    print(groups)
-    print([1 if groups[0] in u else -1 for u in subset.columns])
-    #print(cattype,category,tissue,cond,comp)
-    #if cattype == 'Class' and category == 'Docosanoids' and tissue == 'Brain' and cond == '30d' and comp == 'PvS':
-        #print(normalized_data)
     if len(normalized_data.columns) > 1:
         pls, opls, Z, q2, dq2, p, acc, y_pred_pre, y_pred = run_opls(
           normalized_data,
@@ -114,17 +91,11 @@ for tissue in tissues:
             for exclude_outlier,outlier_text in zip([False,True],['mit-Ausreißern','kein-Ausreißern']):
                 for cattype in cattypes:
                     not_group = [c for c in conditions.values() if c not in groups][0]
-                    print(not_group)
                     subset = DataFrame(astyanax_data.loc[
                         :,
                         astyanax_data.columns.str.contains(tissue) & astyanax_data.columns.str.contains(pop) &
                         ~astyanax_data.columns.str.contains(not_group)])
-                    print(subset)
-                    subset = process_outlier(subset,comp).dropna()
-                    print(subset)
-                    #print(subset.isnull().any(axis=1))
-                    #print(subset.loc[subset.isnull().any(axis=1),:])
-                    #stop
+                    subset = process_outlier(subset,comp)
                     normalized_data, nonortho_data = process(subset, groups)
 
                     outdir = f"{args.output_dir}/opls/{outlier_text}/{tissue}/{pop}"
@@ -133,20 +104,18 @@ for tissue in tissues:
                     pathlib.Path(outdir).mkdir(parents=True, exist_ok=True)
                     fp = os.path.join(outdir,f'{comp}.csv')
                     nonortho_data.to_csv(fp)
-                    #print(f'wrote {fp}')
                     # write z score-normalized data
                     outdir = f"{args.output_dir}/zscore/{outlier_text}/{tissue}/{pop}/"
                     pathlib.Path(outdir).mkdir(parents=True, exist_ok=True)
                     fp = os.path.join(outdir,f'{comp}.csv')
                     normalized_data.to_csv(fp)
-                    #print(f'wrote {fp}')
 
                     # categories
                     categories = list(sorted(set(ali.lmdata[cattype])))
                     for category in categories:
                         subset = DataFrame(astyanax_data.loc[
                             ali.lmdata[cattype] == category,
-                            astyanax_data.columns.str.contains(tissue) & astyanax_data.columns.str.contains(condition) &
+                            astyanax_data.columns.str.contains(tissue) & astyanax_data.columns.str.contains(pop) &
                             ~astyanax_data.columns.str.contains(not_group)])
                         subset = process_outlier(subset,comp)
 
@@ -159,11 +128,9 @@ for tissue in tissues:
                         pathlib.Path(outdir).mkdir(parents=True, exist_ok=True)
                         fp = os.path.join(outdir,f'{comp}.csv')
                         nonortho_data.to_csv(fp)
-                        #print(f'wrote {fp}')
                         # write z score-normalized data
                         outdir = f"{args.output_dir}/zscore/{outlier_text}/{cattypes[cattype]}/{c}/{tissue}/{pop}/"
                         pathlib.Path(outdir).mkdir(parents=True, exist_ok=True)
                         fp = os.path.join(outdir,f'{comp}.csv')
                         normalized_data.to_csv(fp)
-                        #print(f'wrote {fp}')
 

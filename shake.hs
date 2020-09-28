@@ -35,6 +35,7 @@ main = shakeArgs shakeOptions $ do
          , "out/fig/kein-Ausreißern/ratios-combined.pdf"
          , "out/work/lipids/opls/mit-Ausreißern/category/Sphingolipids/Muscle/Ref/PvT.csv" -- Lipid OPLS
          , "out/work/lipids/glm/singlefactor/kein-Ausreißern/Muscle/Ref/PvT.csv" -- Lipid GLM
+         , "out/work/lipids/glm/singlefactor/kein-Ausreißern/Muscle/Pachon/30vR.csv" -- Lipid GLM (compare conditions)
          , "out/work/lipids/opls/mit-Ausreißern/category/Sphingolipids/Muscle/Pachon/30vR.csv" -- Lipid OPLS for condition comparison
          , "out/work/lipidcats/opls/kein-Ausreißern/Liver/Ref/Classes/PvT.csv" -- Lipid cats/classes OPLS
          , "out/work/lipidcats/glm/kein-Ausreißern/Muscle/Ref/Categories/PvT.csv" -- Lipid cats/classes GLM
@@ -122,8 +123,8 @@ main = shakeArgs shakeOptions $ do
 
     -- Table of tidy data for lipid significance values
     "out/work/lipids/merged-cross-pop.csv" %> \out -> do
-      need ["out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/CvS/30vR.csv", "out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/Pachon/30vR.csv", "src/python/primary-merged.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/lipids-stats.py --exclude-outlier True --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --lipidmaps-fa ./data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json --out-cross-pop ./out/work/lipids/merged-cross-pop.csv"
+      need ["out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/CvS/30vR.csv", "out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/Pachon/30vR.csv", "src/python/lipids-stats.py"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/lipids-stats.py --exclude-outlier True --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --lipidmaps-fa ./data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json --out-cross-pop ./out/work/lipids/merged-cross-pop.csv --out-cross-cond ./out/work/lipids/merged-cross-cond.csv"
 
     -- conserved metabolites in starvation resistance
     "out/fig/kein-Ausreißern/primary-shared-starvation-response-30vR.pdf" %> \out -> do
@@ -156,6 +157,11 @@ main = shakeArgs shakeOptions $ do
     "out/work/lipids/opls/mit-Ausreißern/category/Sphingolipids/Muscle/Pachon/30vR.csv" %> \out -> do
       need ["src/python/opls/lipids-cond-compare.py"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/opls/lipids-cond-compare.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --output-dir out/work/lipids"
+
+    -- GLM lipids compare condition
+    "out/work/lipids/glm/singlefactor/kein-Ausreißern/Muscle/Pachon/30vR.csv" %> \out -> do
+      need ["src/R/glm/lipids-cond-compare.R", "out/work/lipids/opls/mit-Ausreißern/category/Sphingolipids/Muscle/Pachon/30vR.csv"]
+      cmd_ "Rscript ./src/R/glm/lipids-cond-compare.R"
 
     -- OPLS lipid cats
     "out/work/lipidcats/opls/kein-Ausreißern/Liver/Ref/Classes/PvT.csv" %> \out -> do
