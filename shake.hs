@@ -35,6 +35,7 @@ main = shakeArgs shakeOptions $ do
          , "out/fig/kein-Ausreißern/ratios-combined.pdf"
          , "out/work/lipids/opls/mit-Ausreißern/category/Sphingolipids/Muscle/Ref/PvT.csv" -- Lipid OPLS
          , "out/work/lipids/glm/singlefactor/kein-Ausreißern/Muscle/Ref/PvT.csv" -- Lipid GLM
+         , "out/work/lipids/opls/mit-Ausreißern/category/Sphingolipids/Muscle/Pachon/30vR.csv" -- Lipid OPLS for condition comparison
          , "out/work/lipidcats/opls/kein-Ausreißern/Liver/Ref/Classes/PvT.csv" -- Lipid cats/classes OPLS
          , "out/work/lipidcats/glm/kein-Ausreißern/Muscle/Ref/Categories/PvT.csv" -- Lipid cats/classes GLM
          ]
@@ -141,15 +142,20 @@ main = shakeArgs shakeOptions $ do
       need ["src/python/ratio-plot-combined.py"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/ratio-plot-combined.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --sample-sheet ./data/primary/sample-sheet.csv --lipids-normalized ./data/lipids/normalized --lipidmaps-fa ./data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --output ./out/fig/kein-Ausreißern/ratios-combined.pdf --output-legend ./out/fig/kein-Ausreißern/ratios-combined-legend.pdf"
 
-    -- OPLS lipids
+    -- OPLS lipids compare pop
     "out/work/lipids/opls/mit-Ausreißern/category/Sphingolipids/Muscle/Ref/PvT.csv" %> \out -> do
       need ["src/python/opls/lipids-pop-compare.py"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/opls/lipids-pop-compare.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --output-dir out/work/lipids"
 
-    -- GLM lipids
+    -- GLM lipids compare pop
     "out/work/lipids/glm/singlefactor/kein-Ausreißern/Muscle/Ref/PvT.csv" %> \out -> do
       need ["src/R/glm/lipids-pop-compare.R", "out/work/lipids/opls/mit-Ausreißern/category/Sphingolipids/Muscle/Ref/PvT.csv"]
       cmd_ "Rscript ./src/R/glm/lipids-pop-compare.R"
+
+    -- OPLS lipids compare condition
+    "out/work/lipids/opls/mit-Ausreißern/category/Sphingolipids/Muscle/Pachon/30vR.csv" %> \out -> do
+      need ["src/python/opls/lipids-cond-compare.py"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/opls/lipids-cond-compare.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --output-dir out/work/lipids"
 
     -- OPLS lipid cats
     "out/work/lipidcats/opls/kein-Ausreißern/Liver/Ref/Classes/PvT.csv" %> \out -> do
