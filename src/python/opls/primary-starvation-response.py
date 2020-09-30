@@ -44,7 +44,7 @@ astyanax_data.columns = [' '.join(u) for u in ame.treatment_descriptors]
 weights_series.index = [' '.join(u) for u in ame.treatment_descriptors]
 astyanax_data = astyanax_data.loc[:,['pools' not in c for c in astyanax_data.columns]]
 weights_series = weights_series.loc[['pools' not in c for c in weights_series.index]]
-astyanax_data = astyanax_data.apply(log)
+astyanax_data = astyanax_data.apply(log10)
 
 pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']

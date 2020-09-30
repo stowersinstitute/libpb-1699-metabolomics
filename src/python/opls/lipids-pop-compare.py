@@ -43,6 +43,7 @@ ali = AstyanaxLi(
 astyanax_data = ali.lmdata.iloc[:,ali.non_numeric_cols-1:]
 astyanax_data.columns = (c[0] + ' ' + c[-2] + ' ' + ' '.join(c[1:-2]) + ' ' + c[-1] for c in (cc.split() for cc in astyanax_data.columns))
 astyanax_data = astyanax_data.reindex(sorted(astyanax_data.columns), axis=1)
+astyanax_data = astyanax_data.apply(log10)
 #print(astyanax_data.columns)
 
 #weights_series = ame.column_table['Mass (mg)']
