@@ -89,11 +89,6 @@ def plot_pca(astyanax_data,selectors,subset_category,ax):
 
     ax.set_title(f'Lipid & Primary Metabolite PCA\n by Tissue & {subset_category}')
 
-    #ax.legend()
-
-    #plt.show()
-    #plt.cla()
-
 
 
 for subset_category,selectors,filename in zip(

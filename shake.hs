@@ -15,6 +15,7 @@ main = shakeArgs shakeOptions $ do
           -- ID mapping
          , "out/work/ids/kegg-to-chebi.json"
           -- Figs
+         , "out/fig/kein-Ausreißern/pca-global-pop.pdf"
          , "out/fig/kein-Ausreißern/pca-categorized-primary.pdf"
          , "out/fig/kein-Ausreißern/pca-categorized-lipids.pdf"
          , "out/fig/kein-Ausreißern/pca-categorized-legend.pdf"
@@ -23,6 +24,7 @@ main = shakeArgs shakeOptions $ do
          , "out/fig/kein-Ausreißern/sugar-phosphate-heatmap.pdf"
          , "out/fig/kein-Ausreißern/metabolites-of-interest.pdf"
          , "out/fig/kein-Ausreißern/primary-shared-starvation-response-30vR.pdf"
+         , "out/table/primary/starvation-response/kein-Ausreißern/CvS/30vR.pdf"
          , "out/work/primary/opls/kein-Ausreißern/Nucleotides/Muscle/Ref/PvT.csv" -- OPLS primary cross-pop
          , "out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/Ref/PvT.csv" -- GLM primary cross-pop
          , "out/work/primary/opls/kein-Ausreißern/Nucleotides/Muscle/Pachon/30vR.csv" -- OPLS primary starvation response
@@ -49,6 +51,12 @@ main = shakeArgs shakeOptions $ do
     -- Get mapping to ChEBI ids
     "out/work/ids/kegg-to-chebi.json" %> \out -> do
       cmd_ (AddEnv "PYTHONPATH" "./out/generated") "pipenv run python3 ./src/python/kegg-to-chebi.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --out out/work/ids/kegg-to-chebi.json"
+
+    -- global pca
+    "out/fig/kein-Ausreißern/pca-global-pop.pdf" %> \out -> do
+      need ["src/python/pca-global.py"]
+--       PIPENV_VENV_IN_PROJECT
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-global.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet ./data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --exclude-outlier True --out-dir ./out/fig/kein-Ausreißern"
 
     -- categorized pca for primary
     "out/fig/kein-Ausreißern/pca-categorized-primary.pdf" %> \out -> do
@@ -130,6 +138,11 @@ main = shakeArgs shakeOptions $ do
     "out/fig/kein-Ausreißern/primary-shared-starvation-response-30vR.pdf" %> \out -> do
       need ["src/python/primary-shared-starvation-response.py", "out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/CvS/30vR.csv"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-shared-starvation-response.py --exclude-outlier True --output-dir ./out/fig"
+
+    -- table for conserved metabolites in starvation resistance
+    "out/table/primary/starvation-response/kein-Ausreißern/CvS/30vR.pdf" %> \out -> do
+      need ["src/python/primary-shared-starvation-response.py", "out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/CvS/30vR.csv"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-shared-starvation-response-tables.py --exclude-outlier True --output-dir ./out/table/primary/starvation-response/kein-Ausreißern/CvS"
 
     -- significance table primary
     "out/supp/kein-Ausreißern/primary-pop-compare-significance.xlsx" %> \out -> do
