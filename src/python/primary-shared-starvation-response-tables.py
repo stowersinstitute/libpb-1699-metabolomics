@@ -17,7 +17,7 @@ pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']
 conditions = ['30d Starved', '4d Starved', 'Refed']
 comparisons = {'30vR':('30d Starved','Refed'),'4vR':('4d Starved','Refed'),'30v4':('30d Starved','4d Starved')}
-categories = {"Aminoacids":'Amino acids',"Carbohydrates_-CCM": 'Carbohydrates / CCM',"Fattyacids":'Fatty acids',"Misc._-_sec.metabolites":'Misc',"Nucleotides":'Nucleotides'}
+categories = {"Aminoacids":'Amino acids',"Carbohydrates_-CCM": 'Carbohydrates / CCM',"Fattyacids":'Fatty acids',"Misc._-_sec.metabolites":'Misc. / sec. metabolites',"Nucleotides":'Nucleotides'}
 
 sigmetabs = {}
 for catname,category in categories.items():
@@ -54,22 +54,31 @@ catsub['Carbohydrates / CCM'] = r'\shortstack[l]{Carbo-\\hydrates /\\ CCM}'
 catlines = {}
 for comp,groups in comparisons.items():
     for catname,category in categories.items():
-        group_data = [
-          merged_data.loc[
-            (merged_data['Category'] == category) &
-            (merged_data['Condition'] == g)].drop(
-              'Category',axis=1) for g in groups]
-        group_data = [g.groupby(['Name','Population','Tissue','Condition']).mean().drop(['Replicate'],axis=1).reset_index() for g in group_data]
-        #print(group_data[0])
-        #print(group_data[1])
-        group_merged = group_data[0].merge(group_data[1],on=['Name','Population','Tissue'])
-        #print(group_merged)
-        group_merged['log2fc'] = log2(group_merged['Raw_mTIC_x']/group_merged['Raw_mTIC_y'])
-        print(group_merged)
-        stop
         m = {}
         for tissue in tissues:
-            m[tissue] = list(zip(sigmetabs[tissue,comp,category]['Compound'],(f'{p:.2f}' for p in sigmetabs[tissue,comp,category]['p']),(r'\uparrow' if e > 0. else r'\downarrow' for e in sigmetabs[tissue,comp,category]['Estimate'])))
+            group_data = [
+              merged_data.loc[
+                (merged_data['Tissue'] == tissue) &
+                (merged_data['Category'] == category) &
+                (merged_data['Condition'] == g)].drop(
+                  'Category',axis=1) for g in groups]
+            group_data = [g.groupby(['Name','Population','Tissue','Condition']).mean().drop(['Replicate'],axis=1).reset_index() for g in group_data]
+            group_merged = group_data[0].merge(group_data[1],on=['Name','Population','Tissue'])
+            group_merged['log2fc'] = log2(group_merged['Raw_mTIC_x']/group_merged['Raw_mTIC_y'])
+            #print(category,tissue)
+            #print(group_merged)
+            avg_log2fc = {cpd.strip():
+                            0.5*float(group_merged.loc[(group_merged['Name'] == cpd) & (group_merged['Population'] == 'Pachon'),'log2fc']) +
+                            0.5*float(group_merged.loc[(group_merged['Name'] == cpd) & (group_merged['Population'] == 'Tinaja'),'log2fc']) -float(group_merged.loc[(group_merged['Name'] == cpd) & (group_merged['Population'] == 'Surface'),'log2fc'])
+                            for cpd in sorted(list(group_merged['Name']))}
+            #print(avg_log2fc)
+            m[tissue] = list(
+              zip(
+                sigmetabs[tissue,comp,category]['Compound'],
+                (f'{v:.2f}' for v in (avg_log2fc[cpd.strip()] for cpd in sigmetabs[tissue,comp,category]['Compound'])),
+                  (r'\uparrow' if e > 0. else r'\downarrow' for e in sigmetabs[tissue,comp,category]['Estimate'])
+                )
+              )
         lines = []
         k = 1
         l = max([len(m[t]) for t in tissues])
