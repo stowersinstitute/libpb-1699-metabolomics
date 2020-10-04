@@ -1,8 +1,9 @@
 from pandas import read_csv
-from obj_tables import (Model, TableFormat, StringAttribute, UrlAttribute, OneToOneAttribute, ManyToOneAttribute, OneToManyAttribute, FloatAttribute)
+from obj_tables import (Model, TableFormat, StringAttribute, UrlAttribute, OneToOneAttribute, ManyToOneAttribute, OneToManyAttribute, FloatAttribute, IntegerAttribute, BooleanAttribute)
 from obj_tables.io import Writer
 from pprint import pprint
 
+# because Pyhthon's defaultdict is worthless
 #https://stackoverflow.com/questions/19399032/accessing-key-in-factory-of-defaultdict
 class RealDefaultDict(dict):
     def __init__(self, factory):
@@ -18,6 +19,45 @@ class RealDefaultDict(dict):
 data = read_csv('out/work/primary/merged-mtic.csv', index_col=0)
 print(data)
 
+class Population(Model):
+    name = StringAttribute(unique=True,primary=True)
+
+    class Meta(Model.Meta):
+        table_format = TableFormat.row
+        attribute_order = ('name',)
+        verbose_name = 'Population'
+        verbose_name_plural = 'Populations'
+
+Pachon = Population(name='Pachon')
+Tinaja = Population(name='Tinaja')
+Surface = Population(name='Surface')
+
+class Tissue(Model):
+    name = StringAttribute(unique=True,primary=True)
+
+    class Meta(Model.Meta):
+        table_format = TableFormat.row
+        attribute_order = ('name',)
+        verbose_name = 'Tissue'
+        verbose_name_plural = 'Tissues'
+
+Brain = Population(name='Brain')
+Muscle = Population(name='Muscle')
+Liver = Population(name='Liver')
+
+class Condition(Model):
+    name = StringAttribute(unique=True,primary=True)
+
+    class Meta(Model.Meta):
+        table_format = TableFormat.row
+        attribute_order = ('name',)
+        verbose_name = 'Condition'
+        verbose_name_plural = 'Conditions'
+
+cond_4d = Population(name='4d Starved')
+cond_30d = Population(name='30d Starved')
+cond_ref = Population(name='Refed')
+
 class HMDBRecord(Model):
     hmdb_id = StringAttribute(unique=True,primary=True)
 
@@ -27,15 +67,31 @@ class HMDBRecord(Model):
         verbose_name = 'HMDBRecord'
         verbose_name_plural = 'HMDBRecords'
 
+class ChEBIRecord(Model):
+    chebi_id = StringAttribute(unique=True,primary=True)
+
+    class Meta(Model.Meta):
+        table_format = TableFormat.row
+        attribute_order = ('chebi_id',)
+        verbose_name = 'ChEBIRecord'
+        verbose_name_plural = 'ChEBIRecords'
+
 class Observation(Model):
     name = StringAttribute(unique=False,primary=False)
     kegg = StringAttribute(unique=False,primary=False)
     hmdb = OneToManyAttribute(HMDBRecord,related_name='observations')
+    chebi = OneToManyAttribute(ChEBIRecord,related_name='observations')
+    category = StringAttribute(unique=False,primary=False)
+    population = ManyToOneAttribute(Population,related_name='observations')
+    tissue = ManyToOneAttribute(Tissue,related_name='observations')
+    condition = ManyToOneAttribute(Condition,related_name='observations')
+    replicate = IntegerAttribute()
+    Outlier = BooleanAttribute()
     raw_mtic = FloatAttribute()
 
     class Meta(Model.Meta):
         table_format = TableFormat.row
-        attribute_order = ('name', 'kegg', 'hmdb', 'raw_mtic',)
+        attribute_order = ('name', 'kegg', 'hmdb', 'chebi', 'category', 'population', 'tissue', 'condition', 'replicate', 'outlier', 'raw_mtic',)
         verbose_name = 'Observation'
         verbose_name_plural = 'Observations'
 
@@ -46,21 +102,55 @@ def parse_list(u):
         return []
 
 observations = []
-#hmdb = RealDefaultDict(lambda hmdb_id: HMDBRecord(hmdb_id))
-hmdb = {}
+hmdb = RealDefaultDict(lambda hmdb_id: HMDBRecord(hmdb_id=hmdb_id))
+chebi = RealDefaultDict(lambda chebi_id: ChEBIRecord(chebi_id=chebi_id))
 for i,row in data.iloc[:10,:].iterrows():
-    #print(row)
-    #print(list(parse_list(row["HMDB"])))
-    #hmdbs = [hmdb[u] for u in parse_list(row["HMDB"])]
-    hmdbs = {u: hmdb[u] if u in hmdb else HMDBRecord(hmdb_id=u) for u in parse_list(row["HMDB"])}
+    hmdbs = {u: hmdb[u] for u in parse_list(row["HMDB"])}
     hmdb.update(hmdbs)
-    print(hmdbs)
+
+    chebis = {u: chebi[u] for u in parse_list(row["ChEBI"])}
+    chebi.update(chebis)
+
+    if row['Population'] == 'Pachon':
+        pop = Pachon
+    elif row['Population'] == 'Tinaja':
+        pop = Tinaja
+    elif row['Population'] == 'Surface':
+        pop = Surface
+    else:
+        assert False
+
+    if row['Tissue'] == 'Brain':
+        tissue = Brain
+    elif row['Tissue'] == 'Muscle':
+        tissue = Muscle
+    elif row['Tissue'] == 'Liver':
+        tissue = Liver
+    else:
+        assert False
+
+    if row['Condition'] == '4d Starved':
+        condition = cond_4d
+    elif row['Condition'] == '30d Starved':
+        condition = cond_30d
+    elif row['Condition'] == 'Refed':
+        condition = cond_ref
+    else:
+        assert False
+
     obs = Observation(
       name = i.strip(),
       kegg = row['KEGG'],
       hmdb = hmdbs.values(),
+      chebi = chebis.values(),
+      category = row['Category'],
+      population = pop,
+      tissue = tissue,
+      condition = condition,
+      replicate = row['Replicate'],
+      outlier = row['Outlier'],
       raw_mtic = row['Raw_mTIC'])
-    #pprint(obs)
+
     observations.append(obs)
 
 #schema = type('primary', (types.ModuleType, ), {
