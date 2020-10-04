@@ -11,6 +11,20 @@ This repository contains the pipeline and Shiny app from the paper "Untargeted M
  - Can usually be obtained by running `sudo pip install pipenv` or `conda install pipenv` if using Anaconda.
 * R (specifically the `Rscript` command, which needs to be on the `PATH`) 3.6.3 or later with the `arm` package installed.
 
+# Installing dependencies
+
+First, install all required Python packages:
+
+```
+python3 -m pipenv install
+```
+
+Then install all required R packages:
+
+```
+Rscript -e "renv::restore()"
+```
+
 # Running the Pipeline
 
 Run the following three commands:
