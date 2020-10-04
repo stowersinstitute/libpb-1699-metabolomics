@@ -24,7 +24,7 @@ main = shakeArgs shakeOptions $ do
          , "out/fig/kein-Ausreißern/sugar-phosphate-heatmap.pdf"
          , "out/fig/kein-Ausreißern/metabolites-of-interest.pdf"
          , "out/fig/kein-Ausreißern/primary-shared-starvation-response-30vR.pdf"
-         , "out/table/primary/starvation-response/kein-Ausreißern/CvS/30vR.pdf"
+         , "out/table/primary/starvation-response/kein-Ausreißern/CvS/30vR.tex"
          , "out/work/primary/opls/kein-Ausreißern/Nucleotides/Muscle/Ref/PvT.csv" -- OPLS primary cross-pop
          , "out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/Ref/PvT.csv" -- GLM primary cross-pop
          , "out/work/primary/opls/kein-Ausreißern/Nucleotides/Muscle/Pachon/30vR.csv" -- OPLS primary starvation response
@@ -140,9 +140,9 @@ main = shakeArgs shakeOptions $ do
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-shared-starvation-response.py --exclude-outlier True --output-dir ./out/fig"
 
     -- table for conserved metabolites in starvation resistance
-    "out/table/primary/starvation-response/kein-Ausreißern/CvS/30vR.pdf" %> \out -> do
+    "out/table/primary/starvation-response/kein-Ausreißern/CvS/30vR.tex" %> \out -> do
       need ["src/python/primary-shared-starvation-response.py", "out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/CvS/30vR.csv"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-shared-starvation-response-tables.py --exclude-outlier True --output-dir ./out/table/primary/starvation-response/kein-Ausreißern/CvS"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-shared-starvation-response-tables.py --exclude-outlier True --out-dir ./out/table/primary/starvation-response/kein-Ausreißern/CvS"
 
     -- significance table primary
     "out/supp/kein-Ausreißern/primary-pop-compare-significance.xlsx" %> \out -> do

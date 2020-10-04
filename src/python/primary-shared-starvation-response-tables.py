@@ -1,6 +1,7 @@
 from pandas import read_csv
 from itertools import chain, zip_longest
 from numpy import log2
+import os
 from argparse import ArgumentParser
 
 parser = ArgumentParser(description="Adaptive response table.")
@@ -89,15 +90,15 @@ for comp,groups in comparisons.items():
         catlines[comp,category] = '\n'.join(l+r' \\' for l in lines)
 
 captions = {
-  '30vR': 'Conserved Metabolites in 30-day Fasting',
-  '4vR': 'Conserved Metabolites in 4-day Fasting',
-  '30v4': 'Conserved Metabolites in 30- vs 4-day Fasting',
+  '30vR': 'Adaptive Response in 30-day Fasting',
+  '4vR': 'Adaptive Response in 4-day Fasting',
+  '30v4': 'Adaptive Response in 30- vs 4-day Fasting',
 }
 
 descs = {
-  '30vR': r"Conserved differentially significant metabolites in 30-day fasted states. This table shows p--values associated with a logistic regression model using OPLS--filtered z--scores for 30-day tasted and refed fish as input. To identify metabolites conserved between both cave populations, we implemented the test $0.5 \cdot (\mathrm{PS}-\mathrm{PR}+\mathrm{TS}-\mathrm{TR}) - (\mathrm{SS} - \mathrm{SR})$ where $\mathrm{PS}$ refers to Pach\'{o}n 30-day fasted, $\mathrm{PR}$ refers to Pach\'{o}n refed, etc. Tables \ref{table:significant-4vR} and \ref{table:significant-30v4} show conserved metabolites in cave populations versus surface for 4-day fasted versus refed and 30-day fasted versus 4-day fasted respectively. $\log_2$ fc values are also based on this formula. Outliers were excluded for this analysis (Fig \ref{fig:mahalanobis-outliers}).",
-  '4vR': r"Conserved differentially significant metabolites in cave populations with respect to surface in 4-day fasted states. This table is similar to Table \ref{table:significant-30vR} with the difference that this table compares 4-day fasted versus refed conditions. Thus, metabolites displayed as upregulated in this table are differentially upregulated in 4-day fasted cave fish versus refed cave fish using surface fish as a baseline for comparison. Outliers are not included in this analysis.",
-  '30v4': r"Conserved differentially significant metabolites in cave populations with respect to surface using a GLM fit to 30-day vs 4-d starvation states. This table is similar to Table \ref{table:significant-30vR} with the differences that this table compares 30-day fasted versus 4-day fasted conditions. Thus, metabolites displayed as upregulated in this table are differentially upregulated in 30-day fasted cave fish versus 4-day fasted cave fish using surface fish as a baseline for comparison. This data excludes the Tinaja refed outlier.",
+  '30vR': r"Differentially significant metabolites in 30-day fasted states which are similar in both cave populations. This table shows p--values associated with a logistic regression model using OPLS--filtered z--scores for 30-day tasted and refed fish as input. To identify metabolites conserved between both cave populations, we implemented the test $0.5 \cdot (\mathrm{PS}-\mathrm{PR}+\mathrm{TS}-\mathrm{TR}) - (\mathrm{SS} - \mathrm{SR})$ where $\mathrm{PS}$ refers to Pach\'{o}n 30-day fasted, $\mathrm{PR}$ refers to Pach\'{o}n refed, etc. Tables \ref{table:significant-4vR} and \ref{table:significant-30v4} show conserved metabolites in cave populations versus surface for 4-day fasted versus refed and 30-day fasted versus 4-day fasted respectively. $\log_2$ fc values are also based on this formula. Outliers were excluded for this analysis (Fig \ref{fig:mahalanobis-outliers}).",
+  '4vR': r"Differentially significant metabolites in 4-day fasted states which are similar in both cave populations. Cf. Table \ref{table:significant-30vR} with the difference that this table compares 4-day fasted versus refed conditions. Thus, metabolites displayed as upregulated in this table are differentially upregulated in 4-day fasted cave fish versus refed cave fish using surface fish as a baseline for comparison. Outliers are not included in this analysis.",
+  '30v4': r"Differentially significant metabolites in 30-day vs 4-day fasting which are similar between both cave populations. Cf. Table \ref{table:significant-30vR} with the differences that this table compares 30-day fasted versus 4-day fasted conditions. Thus, metabolites displayed as upregulated in this table are differentially upregulated in 30-day fasted cave fish versus 4-day fasted cave fish using surface fish as a baseline for comparison. Outliers are not included in this analysis.",
 }
 
 labels = {
@@ -135,6 +136,8 @@ $desc
       labels[comp]
       )
     #print(f'\n\n\n% {comp}\n\n\n')
-    print(tabletex)
-    #with open(os.path.join(args.out_dir,f'{comp}.tex'),'w') as f:
-        #f.write(tabletex)
+    if args.out_dir is not None:
+        with open(os.path.join(args.out_dir,f'{comp}.tex'),'w') as f:
+            f.write(tabletex)
+    else:
+        print(tabletex)

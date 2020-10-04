@@ -20,6 +20,7 @@ pyopls = "*"
 statsmodels = "*"
 openpyxl = "*"
 swagger-codegen = "*"
+obj-tables = "*"
 
 [requires]
 python_version = "3.8"

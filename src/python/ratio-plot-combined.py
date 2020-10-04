@@ -382,7 +382,7 @@ def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, nam
     plt.savefig(args.output_legend,bbox_inches='tight',transparent=True,pad_inches=0)
 
 matplotlib.rcParams['axes.prop_cycle'] = matplotlib.cycler(color=[
-  "#363062", "#4d4c7d", "#827397","#d8b9c3","#ffb6b6",
+  "#28215c", "#695c88", "#98799f","#d8b9c3","#ffb6b6",
   #"#726a95",
   "#709fb0", "#a0c1b8",
   #"#f4ebc1",
