@@ -20,10 +20,10 @@ data = read_csv('out/work/primary/merged-mtic.csv', index_col=0)
 print(data)
 
 class Population(Model):
-    name = StringAttribute(unique=True,primary=True)
+    name = StringAttribute(unique=True,primary=True,verbose_name='Name')
 
     class Meta(Model.Meta):
-        table_format = TableFormat.row
+        table_format = TableFormat.column
         attribute_order = ('name',)
         verbose_name = 'Population'
         verbose_name_plural = 'Populations'
@@ -41,9 +41,9 @@ class Tissue(Model):
         verbose_name = 'Tissue'
         verbose_name_plural = 'Tissues'
 
-Brain = Population(name='Brain')
-Muscle = Population(name='Muscle')
-Liver = Population(name='Liver')
+Brain = Tissue(name='Brain')
+Muscle = Tissue(name='Muscle')
+Liver = Tissue(name='Liver')
 
 class Condition(Model):
     name = StringAttribute(unique=True,primary=True)
@@ -54,9 +54,9 @@ class Condition(Model):
         verbose_name = 'Condition'
         verbose_name_plural = 'Conditions'
 
-cond_4d = Population(name='4d Starved')
-cond_30d = Population(name='30d Starved')
-cond_ref = Population(name='Refed')
+cond_4d = Condition(name='4d Starved')
+cond_30d = Condition(name='30d Starved')
+cond_ref = Condition(name='Refed')
 
 class HMDBRecord(Model):
     hmdb_id = StringAttribute(unique=True,primary=True)
@@ -82,11 +82,11 @@ class Observation(Model):
     hmdb = OneToManyAttribute(HMDBRecord,related_name='observations')
     chebi = OneToManyAttribute(ChEBIRecord,related_name='observations')
     category = StringAttribute(unique=False,primary=False)
-    population = ManyToOneAttribute(Population,related_name='observations')
+    population = ManyToOneAttribute(Population,related_name='observationsx',verbose_name='Population')
     tissue = ManyToOneAttribute(Tissue,related_name='observations')
     condition = ManyToOneAttribute(Condition,related_name='observations')
     replicate = IntegerAttribute()
-    Outlier = BooleanAttribute()
+    outlier = BooleanAttribute()
     raw_mtic = FloatAttribute()
 
     class Meta(Model.Meta):
@@ -111,14 +111,14 @@ for i,row in data.iloc[:10,:].iterrows():
     chebis = {u: chebi[u] for u in parse_list(row["ChEBI"])}
     chebi.update(chebis)
 
-    if row['Population'] == 'Pachon':
-        pop = Pachon
-    elif row['Population'] == 'Tinaja':
-        pop = Tinaja
-    elif row['Population'] == 'Surface':
-        pop = Surface
-    else:
-        assert False
+    #if row['Population'] == 'Pachon':
+        #pop = Pachon
+    #elif row['Population'] == 'Tinaja':
+        #pop = Tinaja
+    #elif row['Population'] == 'Surface':
+        #pop = Surface
+    #else:
+        #assert False
 
     if row['Tissue'] == 'Brain':
         tissue = Brain
@@ -144,9 +144,9 @@ for i,row in data.iloc[:10,:].iterrows():
       hmdb = hmdbs.values(),
       chebi = chebis.values(),
       category = row['Category'],
-      population = pop,
-      tissue = tissue,
-      condition = condition,
+      population = Pachon,
+      #tissue = tissue,
+      #condition = condition,
       replicate = row['Replicate'],
       outlier = row['Outlier'],
       raw_mtic = row['Raw_mTIC'])
@@ -158,4 +158,4 @@ for i,row in data.iloc[:10,:].iterrows():
     #'models': [Observation],
 #})
 
-Writer().run('/tmp/x/*.csv', observations, models=[HMDBRecord,Observation], write_toc=True, write_schema=True)
+Writer().run('/tmp/x/*.csv', observations, models=[Population,Tissue,Condition,HMDBRecord,ChEBIRecord,Observation], write_toc=True, write_schema=True)
