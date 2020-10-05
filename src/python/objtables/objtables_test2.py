@@ -2,30 +2,28 @@ from obj_tables import (Model, TableFormat, StringAttribute, UrlAttribute, OneTo
 import obj_tables
 from obj_tables.io import Writer
 
-class Population(Model):
-    name = StringAttribute(unique=True,primary=True,verbose_name='Name')
+class Company(obj_tables.Model):
+    name = obj_tables.StringAttribute(unique=True, primary=True, verbose_name='Name')
 
     class Meta(Model.Meta):
-        table_format = TableFormat.column
+        table_format = obj_tables.TableFormat.column
         attribute_order = ('name',)
-        verbose_name = 'Population'
-        verbose_name_plural = 'Populations'
+        verbose_name = 'Company'
+        verbose_name_plural = 'Companies'
 
-Pachon = Population(name='Pachon')
-Tinaja = Population(name='Tinaja')
-Surface = Population(name='Surface')
+google = Company(name='Google')
 
 class Observation(Model):
     name = StringAttribute(unique=True,primary=True)
-    population = ManyToOneAttribute(Population,related_name='observationsx',verbose_name='Population')
+    company = ManyToOneAttribute(Company,related_name='observationsx',verbose_name='Population')
 
     class Meta(Model.Meta):
         table_format = TableFormat.row
-        attribute_order = ('name', 'population',)
+        attribute_order = ('name', 'company',)
         verbose_name = 'Observation'
         verbose_name_plural = 'Observations'
 
 
 obs = Observation(
   name = 'this',
-  population = Pachon)
+  company = google)
