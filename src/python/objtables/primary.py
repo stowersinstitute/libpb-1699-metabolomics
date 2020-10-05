@@ -28,10 +28,6 @@ class Population(Model):
         verbose_name = 'Population'
         verbose_name_plural = 'Populations'
 
-Pachon = Population(name='Pachon')
-Tinaja = Population(name='Tinaja')
-Surface = Population(name='Surface')
-
 class Tissue(Model):
     name = StringAttribute(unique=True,primary=True)
 
@@ -41,10 +37,6 @@ class Tissue(Model):
         verbose_name = 'Tissue'
         verbose_name_plural = 'Tissues'
 
-Brain = Tissue(name='Brain')
-Muscle = Tissue(name='Muscle')
-Liver = Tissue(name='Liver')
-
 class Condition(Model):
     name = StringAttribute(unique=True,primary=True)
 
@@ -53,10 +45,6 @@ class Condition(Model):
         attribute_order = ('name',)
         verbose_name = 'Condition'
         verbose_name_plural = 'Conditions'
-
-cond_4d = Condition(name='4d Starved')
-cond_30d = Condition(name='30d Starved')
-cond_ref = Condition(name='Refed')
 
 class HMDBRecord(Model):
     hmdb_id = StringAttribute(unique=True,primary=True)
@@ -100,6 +88,18 @@ def parse_list(u):
         return u.split(';')
     else:
         return []
+
+Pachon = Population(name='Pachon')
+Tinaja = Population(name='Tinaja')
+Surface = Population(name='Surface')
+
+Brain = Tissue(name='Brain')
+Muscle = Tissue(name='Muscle')
+Liver = Tissue(name='Liver')
+
+cond_4d = Condition(name='4d Starved')
+cond_30d = Condition(name='30d Starved')
+cond_ref = Condition(name='Refed')
 
 observations = []
 hmdb = RealDefaultDict(lambda hmdb_id: HMDBRecord(hmdb_id=hmdb_id))
