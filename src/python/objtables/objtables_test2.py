@@ -36,7 +36,7 @@ google = Company(name='Google',
 
 class Observation(Model):
     name = StringAttribute(unique=True,primary=True)
-    company = ManyToOneAttribute(Company,related_name='observationsx',verbose_name='Population')
+    company = ManyToOneAttribute(Company,related_name='employees',verbose_name='Population')
 
     class Meta(Model.Meta):
         table_format = TableFormat.row
