@@ -1,4 +1,5 @@
 from obj_tables import (Model, TableFormat, StringAttribute, UrlAttribute, OneToOneAttribute, ManyToOneAttribute, OneToManyAttribute, FloatAttribute, IntegerAttribute, BooleanAttribute)
+import obj_tables
 from obj_tables.io import Writer
 
 class Population(Model):
@@ -15,7 +16,7 @@ Tinaja = Population(name='Tinaja')
 Surface = Population(name='Surface')
 
 class Observation(Model):
-    name = StringAttribute(unique=False,primary=False)
+    name = StringAttribute(unique=True,primary=True)
     population = ManyToOneAttribute(Population,related_name='observationsx',verbose_name='Population')
 
     class Meta(Model.Meta):
