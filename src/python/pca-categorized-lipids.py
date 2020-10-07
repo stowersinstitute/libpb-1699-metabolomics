@@ -98,6 +98,11 @@ def process_outlier(exclude,subset):
             subset = subset.loc[:,~subset.columns.str.contains(outlier)]
     return subset
 
+remap_cond = {
+  '4d Starved': '4d Fasted',
+  '30d Starved': '30d Fasted',
+  }
+
 fig,ax = plt.subplots(nrows=len(categories),ncols=5,figsize=(12, 8), gridspec_kw=gridspec_kw)
 fig.suptitle('Lipids',fontsize=24,fontweight='bold',y=1.0)
 for i,category in zip(range(len(categories)),categories):
@@ -106,7 +111,6 @@ for i,category in zip(range(len(categories)),categories):
         subset = process_outlier(args.exclude_outlier,fix_cols(DataFrame(astyanax_data.loc[
             ali.lmdata[cattype] == category,
             astyanax_data.columns.str.contains(tissue)]),tissue))
-        print(subset.columns)
 
         pca_data = StandardScaler().fit_transform(subset.transpose())
         pca = PCA(n_components=2)
@@ -117,7 +121,7 @@ for i,category in zip(range(len(categories)),categories):
             for color,feeding_state in zip([adjust_lightness(colors[pop],c) for c in [0.5, 1.0, 1.5]], ['4d Starved', '30d Starved', 'Refed']):
                 p = tf_data.iloc[subset.columns.str.contains(feeding_state) & subset.columns.str.contains(pop)]
                 #print(pop,feeding_state,tissue,p)
-                label = ', '.join((pop, feeding_state))
+                label = ', '.join((pop, remap_cond[feeding_state] if feeding_state in remap_cond else feeding_state))
                 ax[i,j].scatter(p['C1'],p['C2'], label=label, color=color)
         handles, labels = ax[i,j].get_legend_handles_labels()
 

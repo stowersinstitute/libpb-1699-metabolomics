@@ -79,6 +79,11 @@ def process_outlier(exclude,subset):
     return subset
 
 
+remap_cond = {
+  '4d Starved': '4d Fasted',
+  '30d Starved': '30d Fasted',
+  }
+
 fig,ax = plt.subplots(figsize=(8, 8))
 for i,category in zip(range(len(categories)),categories):
     for j,tissue in zip(range(3),['Brain', 'Muscle', 'Liver']):
@@ -96,7 +101,7 @@ for i,category in zip(range(len(categories)),categories):
         for pop in ['Surface', 'Tinaja', 'Pachon']:
             for color,feeding_state in zip([adjust_lightness(colors[pop],c) for c in [0.5, 1.0, 1.5]], ['4d Starved', '30d Starved', 'Refed']):
                 p = tf_data.iloc[subset.columns.str.contains(feeding_state) & subset.columns.str.contains(pop)]
-                label = ', '.join((pop, feeding_state))
+                label = ', '.join((pop, remap_cond[feeding_state] if feeding_state in remap_cond else feeding_state))
                 ax.scatter(p['C1'],p['C2'], label=label, color=color)
         handles, labels = ax.get_legend_handles_labels()
 

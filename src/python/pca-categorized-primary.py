@@ -85,6 +85,11 @@ else:
     height_ratios = [float(len(ame.compounds_by_category_from_dataset[c])) for c in categories]
 gridspec_kw = {"height_ratios":height_ratios, "width_ratios" : [3.,3.,3.,1.,1]}
 
+remap_cond = {
+  '4d Starved': '4d Fasted',
+  '30d Starved': '30d Fasted',
+  }
+
 fig,ax = plt.subplots(nrows=len(categories),ncols=5,figsize=(12, 8), gridspec_kw=gridspec_kw)
 fig.suptitle('Primary',fontsize=24,fontweight='bold',y=1.0)
 for i,category in zip(range(len(categories)),categories):
@@ -104,7 +109,7 @@ for i,category in zip(range(len(categories)),categories):
                 p = tf_data.iloc[subset.columns.str.contains(feeding_state) & subset.columns.str.contains(pop)]
                 #print(subset.columns)
                 #print(pop,feeding_state,tissue,p)
-                label = ', '.join((pop, feeding_state))
+                label = ', '.join((pop, remap_cond[feeding_state] if feeding_state in remap_cond else feeding_state))
                 ax[i,j].scatter(p['C1'],p['C2'], label=label, color=color)
         handles, labels = ax[i,j].get_legend_handles_labels()
 

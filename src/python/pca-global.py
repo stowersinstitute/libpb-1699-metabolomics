@@ -62,6 +62,11 @@ first_cmap = LinearSegmentedColormap.from_list('First', ["#224b67", "#3498db", "
 second_cmap = LinearSegmentedColormap.from_list('Second', ["#493054", "#9b59b6", "#e2bdf1"])
 third_cmap = LinearSegmentedColormap.from_list('Third', ["#1f4736", "#57997d", "#8eddbb"])
 
+remap_cond = {
+  '4d Starved': '4d Fasted',
+  '30d Starved': '30d Fasted',
+  }
+
 def plot_pca(astyanax_data,selectors,subset_category,ax):
     global handles, labels
     joined_dataset = astyanax_data
@@ -78,7 +83,7 @@ def plot_pca(astyanax_data,selectors,subset_category,ax):
         cmap = matplotlib.cm.get_cmap(color_theme)
         for color_pos,var2 in selectors:
             p = components.iloc[joined_dataset.columns.isin(astyanax_data.columns) & joined_dataset.columns.str.contains(tissue) & joined_dataset.columns.str.contains(var2)]
-            label = ', '.join((tissue, var2))
+            label = ', '.join((tissue, remap_cond[var2] if var2 in remap_cond else var2))
             #https://www.thetopsites.net/article/52439590.shtml
             ax.scatter(p['Comp1'],p['Comp2'],p['Comp3'], label=label, depthshade=False, color=cmap(color_pos))
             handles, labels = ax.get_legend_handles_labels()

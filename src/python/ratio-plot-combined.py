@@ -270,6 +270,11 @@ flattened = concat((flattened[tissue,condition] for tissue in tissues for condit
 bar_width = 0.35
 width = 0.35
 
+remap_cond = {
+  '4d\nStarved': '4d Fasted',
+  '30d\nStarved': '30d Fasted',
+  }
+
 def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, name):
     gridspec_kw = {"height_ratios":[1.]*3, "width_ratios" : [0.5,3.,3.,3.]}
     fig,ax = plt.subplots(nrows=3,ncols=len(tissues)+1,sharex=False,sharey=False,gridspec_kw=gridspec_kw,figsize=(12.,12.))
@@ -330,7 +335,7 @@ def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, nam
                 #https://matplotlib.org/3.3.1/gallery/lines_bars_and_markers/barchart.html#sphx-glr-gallery-lines-bars-and-markers-barchart-py
                 ax[i,j].bar(array(range(3)) - width/2., list(vals.values()), bar_width, tick_label=pops, **kwds) #
                 if i == 0:
-                    ax[i,j].set_title(conditions_short[j-1])
+                    ax[i,j].set_title(remap_cond[conditions_short[j-1]] if conditions_short[j-1] in remap_cond else conditions_short[j-1])
             for cls in lipid_subsets:
                 if cls in lipid_renamer:
                     cls = lipid_renamer[cls]
@@ -348,7 +353,7 @@ def make_fig(primary_subsets, lipid_subsets, primary_renamer, lipid_renamer, nam
                     lipids_last_bar = array(list(vals.values()))
                 ax[i,j].bar(array(range(3)) + width/2., list(vals.values()), bar_width, tick_label=pops, **kwds) #
                 if i == 0:
-                    ax[i,j].set_title(conditions_short[j-1],size=16,fontweight='bold')
+                    ax[i,j].set_title(remap_cond[conditions_short[j-1]] if conditions_short[j-1] in remap_cond else conditions_short[j-1],size=16,fontweight='bold')
             ax[i,j].bar(array(range(3)) + width/2., array([1.]*3)-lipids_last_bar, bar_width, tick_label=pops, bottom=lipids_last_bar, label='Other lipids' if i==0 and j==1 else "") #
             ax[i,j].set_xticks(arange(3))
             ax[i,j].set_xticklabels(ax[i,j].get_xticklabels(),fontsize='large')
