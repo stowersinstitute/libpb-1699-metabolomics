@@ -3,8 +3,8 @@ library(readr)
 library(tidyr)
 library(dplyr)
 library(performance)
-library(car)
 library(lme4)
+library(car)
 
 conflict_prefer("filter", "dplyr")
 
@@ -18,10 +18,15 @@ primary <- read_csv("out/work/primary/merged-mtic.csv",
   arrange(KEGG) %>%
   filter(Outlier == FALSE) %>%
   select(!Outlier)
-# print(primary)
+print(primary)
 
-model <- lmer(Raw_mTIC ~ (1|Category) + (1|Population) + (1|Tissue) + (1|Condition), data=primary)
-# anova <- Anova(model, type = "III")
-print(r2_nakagawa(model))
-print(r2(model))
+model <- lmer(Raw_mTIC ~ Name + (1|Population) + (1|Tissue) + (1|Condition), data=primary)
+print(model)
+anova <- Anova(model, type = "III")
+print(anova)
+print(r2_nakagawa(model, by_group=TRUE))
+# print(pp_check(model))
+# print(coef(model))
+# print(confint(model))
+# print(varianceDecomposition(model))
 # print(model_performance(model))
