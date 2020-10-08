@@ -15,6 +15,9 @@ from pandas import read_csv
 
 from cavefinomics import AstyanaxMe
 
+#https://stackoverflow.com/questions/34706845/change-xticklabels-fontsize-of-seaborn-heatmap
+sns.set(font_scale=1.4)
+
 parser = ArgumentParser(description="Heatmap of conserved metabolites.")
 parser.add_argument("--output-dir", type=str, help="Output directory.")
 parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
@@ -48,10 +51,15 @@ for tissue in tissues:
 
 
 
+remap_cond = {
+  '4d Starved': '4d Fasted',
+  '30d Starved': '30d Fasted',
+  }
+
 for comp,groups in comparisons.items():
     gridspec_kw = {"height_ratios":[1.], "width_ratios" : [3.,3.,3.]}
     fig,ax = plt.subplots(nrows=1,ncols=3,figsize=(12, 8), gridspec_kw=gridspec_kw)
-    fig.suptitle(' vs '.join(groups),fontsize='xx-large',fontweight='bold')
+    fig.suptitle(' vs '.join((remap_cond[g] if g in remap_cond else g for g in groups)),fontsize='xx-large',fontweight='bold')
 
     vmin = -1.7
     vmax = 1.7
@@ -64,8 +72,6 @@ for comp,groups in comparisons.items():
         N = 10
         reg = reg.iloc[:N].sort_values(ascending=False)
 
-        #https://stackoverflow.com/questions/34706845/change-xticklabels-fontsize-of-seaborn-heatmap
-        sns.set(font_scale=1.4)
         heatmap(array([list(reg.iloc[:N].values)]).T, vmin=vmin, vmax=vmax, annot=array([list(reg.iloc[:N].index)]).T, fmt = '', ax=ax[j], cbar=False, xticklabels=False, yticklabels=j==0, cmap='coolwarm')
         ax[j].set_yticks([], minor=[])
         ax[j].set_xticks([], minor=[])
@@ -83,9 +89,9 @@ cax = fig.add_axes([0.1,0.1,0.25,0.8])
 fig.colorbar(sm, cax=cax)
 #cax.set_title(r'$-d\log_{10}p$',fontsize='xx-large')
 cax.yaxis.set_major_locator(plt.FixedLocator([vmin, 0., vmax]))
-cax.set_yticklabels([f'$p = {10.**vmin:.2f} (\\mathrm{{down}})$',r'$p = 1$',f'$p = {10.**(-vmax):.2f} (\\mathrm{{up}})$'],fontsize='xx-large',fontweight='bold')
-cax.text(0.5,1.1,'Up in \ncave+starved',size=20,ha='center',va='center',fontweight='bold',transform=ax.transAxes)
-cax.text(0.5,-0.1,'Down in \ncave+starved',size=20,ha='center',va='center',fontweight='bold',transform=ax.transAxes)
+cax.set_yticklabels([f'$p = {10.**vmin:.2f}$',r'$p = 1$',f'$p = {10.**(-vmax):.2f}$'],fontsize='xx-large',fontweight='bold')
+cax.text(0.5,1.1,'Up in \ncave+fasted',size=20,ha='center',va='center',fontweight='bold',transform=ax.transAxes)
+cax.text(0.5,-0.1,'Down in \ncave+fasted',size=20,ha='center',va='center',fontweight='bold',transform=ax.transAxes)
 # clear extra axes
 # hide graphics
 ax.set_yticks([], minor=[])
