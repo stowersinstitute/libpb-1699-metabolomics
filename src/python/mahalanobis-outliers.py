@@ -4,7 +4,8 @@ from sklearn.preprocessing import StandardScaler, Normalizer
 from sklearn.decomposition import PCA as PCA
 from pandas import DataFrame, concat
 from seaborn import violinplot, catplot, distplot
-from numpy import log, array
+from numpy import log, array, cov
+from numpy.linalg import LinAlgError, cholesky
 
 
 import matplotlib.pyplot as plt
@@ -28,7 +29,12 @@ parser.add_argument("--hmdb", type=str, help="HMDB file.")
 parser.add_argument("--out-plot", type=str, help="Outplot.")
 args = parser.parse_args()
 
-ame = AstyanaxMe(args.astyanax, kegg_compounds_file=args.compounds, hmdb_file=args.hmdb)
+ame = AstyanaxMe(
+    data_csv=args.astyanax,
+    kegg_compounds_file=args.compounds,
+    sample_sheet_path=args.sample_sheet,
+    hmdb_file=args.hmdb,
+    )
 
 #https://franciscomorales.org/2017/03/09/how-to-python-calculate-mahalanobis-distance/
 
@@ -45,20 +51,6 @@ astyanax_data.columns = [f'{c} {n}' for c,n in zip(astyanax_data.columns,chain.f
 #print(astyanax_data)
 #print(astyanax_data.columns)
 
-v = inv(astyanax_data.transpose().cov())
-#print(astyanax_data.shape)
-#print(v.shape)
-maha = DataFrame([{'Source': x, **{y: mahalanobis(astyanax_data[x],astyanax_data[y],v) for y in astyanax_data.columns}} for x in astyanax_data.columns])
-maha = maha.set_index('Source')
-#print(maha)
-#maha.to_csv('/tmp/maha.csv')
-
-# versus global mean
-global_mean = astyanax_data.mean(axis=1)
-maha_global_mean = Series([mahalanobis(astyanax_data[x],global_mean,v) for x in astyanax_data.columns],index=astyanax_data.columns).sort_values(ascending=False)
-
-maha_global_mean.to_csv('/tmp/maha_global.csv')
-
 pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']
 conditions = ['30d Starved', '4d Starved', 'Refed']
@@ -66,19 +58,34 @@ conditions = ['30d Starved', '4d Starved', 'Refed']
 # mean within groups
 maha_local_means = []
 maha_local_means_labels = []
-for pop in pops:
-    for tissue in tissues:
+for tissue in tissues:
+    tissue_subset = astyanax_data.loc[:,astyanax_data.columns.str.contains(tissue)]
+    v = inv(cov(tissue_subset))
+    print(tissue)
+    #print(tissue_subset.transpose().values)
+    try:
+        x = cholesky(v)
+        print('pos def')
+    except LinAlgError:
+        print('Not pos def')
+    for pop in pops:
         for condition in conditions:
-            subset = astyanax_data.loc[:,astyanax_data.columns.str.contains(pop) & astyanax_data.columns.str.contains(tissue) & astyanax_data.columns.str.contains(condition)]
+            subset = tissue_subset.loc[:,tissue_subset.columns.str.contains(pop) & tissue_subset.columns.str.contains(condition)]
             #print(subset)
             mean = subset.mean(axis=1)
-            maha_local_means += [float(mahalanobis(subset[x],mean,v)) for x in subset.columns]
+            #print(mean)
+            print(len(mean))
+            print(v.shape)
+            #stop
+            #print(len(subset[x]))
+            maha_local_means += [float(mahalanobis(subset[x].values,mean,v)) for x in subset.columns]
+            print(maha_local_means[-1])
             maha_local_means_labels += list(subset.columns)
 
 maha_local_means = Series(maha_local_means,index=maha_local_means_labels).sort_values(ascending=False)
-#print(maha_local_means)
+print(maha_local_means)
 #maha_local_means.name = 'Mahalanobis'
-#maha_local_means.to_csv('/tmp/maha_local_means.csv')
+maha_local_means.to_csv('/tmp/maha_local_means.csv')
 
 maha_local_means_flat = []
 for pop in pops:
@@ -92,7 +99,7 @@ maha_local_means_flat = DataFrame(maha_local_means_flat)
 
 # chi square cutoff
 #maha_local_means = maha_local_means.apply(lambda x: x*x)
-cutoff = chi.ppf(0.975,162)
+cutoff = chi.ppf(0.975,len(astyanax_data.index)/3)
 #https://seaborn.pydata.org/examples/scatterplot_categorical.html
 #https://seaborn.pydata.org/examples/simple_violinplots.html
 fig,ax = plt.subplots()
@@ -129,7 +136,7 @@ plt.gca().annotate(
 )
 
 plt.gca().annotate(
-    f'Pachon Liver\n30d Starved 3',
+    f'Pachon Liver\n30d Fasted 3',
     xy=(0.825, 0.87),
     xycoords="axes fraction",
     xytext=(0.68, 0.75),
