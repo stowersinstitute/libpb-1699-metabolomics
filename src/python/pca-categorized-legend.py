@@ -26,9 +26,6 @@ parser.add_argument("--exclude-outlier", type=int, help="Exclude the single Tina
 parser.add_argument("--output", type=str, help="Output primary PCA.")
 args = parser.parse_args()
 
-if not args.exclude_outlier:
-    raise RuntimeError('should exclude outlier')
-
 short_groups = ['4d Starved', 'Refed']
 long_groups = ['30d Starved', 'Refed']
 
