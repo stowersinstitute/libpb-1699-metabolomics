@@ -57,7 +57,7 @@ for j,category in zip(range(len(categories)),categories):
     for i,tissue in zip(range(3),['Brain', 'Muscle', 'Liver']):
         for pop in ['Pachon', 'Tinaja', 'Surface']:
             for comp,groups in comparisons.items():
-                for exclude_outlier,outlier_text in zip([False,True],['mit-Ausreißern','kein-Ausreißern']):
+                for exclude_outlier,outlier_text in zip([False,True],['with-outliers','without-outliers']):
                     not_group = [c for c in conditions if c not in groups][0]
                     subset = DataFrame(astyanax_data.iloc[
                         astyanax_data.index.isin(ame.compounds_by_category_from_dataset[category]),

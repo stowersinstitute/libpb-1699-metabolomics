@@ -10,9 +10,9 @@ parser.add_argument("--out-dir", type=str, help="Out dir")
 args = parser.parse_args()
 
 if args.exclude_outlier:
-    outlier = 'kein-Ausreißern'
+    outlier = 'without-outliers'
 else:
-    outlier = 'mit-Ausreißern'
+    outlier = 'with-outliers'
 
 pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']

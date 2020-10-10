@@ -41,9 +41,9 @@ for metabolite in hmdb:
         kegg_to_hmdb[metabolite['kegg_id']].append(metabolite['accession'])
 
 if args.exclude_outlier:
-    outlier = 'kein-Ausreißern'
+    outlier = 'without-outliers'
 else:
-    outlier = 'mit-Ausreißern'
+    outlier = 'with-outliers'
 
 pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']

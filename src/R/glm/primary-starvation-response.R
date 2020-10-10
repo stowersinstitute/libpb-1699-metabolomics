@@ -3,7 +3,7 @@ library(MASS)
 
 pops = c('Pachon', 'Tinaja', 'Surface')
 tissues = c('Brain', 'Muscle', 'Liver')
-outliers = c('mit-Ausreißern','kein-Ausreißern')
+outliers = c('with-outliers','without-outliers')
 comparisons = c('30vR','4vR','30v4')
 conditions = c('30d Starved','4d Starved','Refed')
 categories = c("Aminoacids","Carbohydrates_-CCM","Fattyacids","Misc._-_sec.metabolites","Nucleotides")
@@ -30,7 +30,7 @@ for (tissue in tissues) {
             tinaja[,k] <- as.double(as.character(tinaja[,k]))
             surface[,k] <- as.double(as.character(surface[,k]))
           }
-          if (outlier == "kein-Ausreißern") {
+          if (outlier == "without-outliers") {
             if (tissue == "Liver") {
               # Pachon 30d outlier
               if (comp == "30vR" || comp == "30v4") {
