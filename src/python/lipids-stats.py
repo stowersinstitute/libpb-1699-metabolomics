@@ -33,9 +33,9 @@ ali = AstyanaxLi(
     )
 
 if args.exclude_outlier:
-    outlier = 'without-outliers'
+    outlier = 'kein-Ausreißern'
 else:
-    outlier = ''
+    outlier = 'mit-Ausreißern'
 
 pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']

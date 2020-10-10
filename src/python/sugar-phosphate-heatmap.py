@@ -201,9 +201,9 @@ datasets = []
 sig = {}
 up = {}
 if args.exclude_outlier:
-    outlier_text = 'without-outliers'
+    outlier_text = 'kein-Ausreißern'
 else:
-    outlier_text = ''
+    outlier_text = 'mit-Ausreißern'
 for cat in categories:
     for tissue in tissues:
         for cond in conditions:

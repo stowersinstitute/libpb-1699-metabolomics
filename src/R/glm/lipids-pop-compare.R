@@ -3,7 +3,7 @@ library(MASS)
 
 pops = c('Pachon', 'Tinaja', 'Surface')
 tissues = c('Brain', 'Muscle', 'Liver')
-outliers = c('','without-outliers')
+outliers = c('mit-Ausreißern','kein-Ausreißern')
 comparisons = c('PvS','TvS','PvT')
 conditions = c('30d','4d','Ref')
 

@@ -52,7 +52,7 @@ def process_outlier(subset):
         subset.loc[:,subset.columns.str.contains(o)] = nan
     return subset
 
-for include_outliers,outlier_label in zip([True,False],['','without-outliers']):
+for include_outliers,outlier_label in zip([True,False],['mit-Ausreißern','kein-Ausreißern']):
     cats = []
     classes = []
     def fix_cols(df,tissue):
