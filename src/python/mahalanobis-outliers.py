@@ -4,7 +4,7 @@ from sklearn.preprocessing import StandardScaler, Normalizer
 from sklearn.decomposition import PCA as PCA
 from pandas import DataFrame, concat
 from seaborn import violinplot, catplot, distplot
-from numpy import log, array, cov
+from numpy import log, array, cov, dot
 from numpy.linalg import LinAlgError, cholesky
 
 
@@ -74,16 +74,21 @@ for tissue in tissues:
             #print(subset)
             mean = subset.mean(axis=1)
             #print(mean)
-            print(len(mean))
-            print(v.shape)
+            #print(len(mean))
+            #print(v.shape)
             #stop
             #print(len(subset[x]))
+            for x in subset.columns:
+                d = subset[x].values-mean
+                print(dot(dot(d,v),d))
+                print(float(mahalanobis(subset[x].values,mean,v)))
+                print('')
             maha_local_means += [float(mahalanobis(subset[x].values,mean,v)) for x in subset.columns]
-            print(maha_local_means[-1])
+            #print(maha_local_means[-1])
             maha_local_means_labels += list(subset.columns)
 
 maha_local_means = Series(maha_local_means,index=maha_local_means_labels).sort_values(ascending=False)
-print(maha_local_means)
+#print(maha_local_means)
 #maha_local_means.name = 'Mahalanobis'
 maha_local_means.to_csv('/tmp/maha_local_means.csv')
 
