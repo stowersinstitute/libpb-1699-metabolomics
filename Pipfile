@@ -21,6 +21,7 @@ statsmodels = "*"
 openpyxl = "*"
 swagger-codegen = "*"
 obj-tables = "*"
+matplotlib-venn = "*"
 
 [requires]
 python_version = "3.8"

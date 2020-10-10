@@ -24,6 +24,8 @@ main = shakeArgs shakeOptions $ do
          , "out/fig/kein-Ausreißern/sugar-phosphate-heatmap.pdf"
          , "out/fig/kein-Ausreißern/metabolites-of-interest.pdf"
          , "out/fig/kein-Ausreißern/primary-shared-starvation-response-30vR.pdf"
+         , "out/fig/kein-Ausreißern/venn-diagrams-cross-pop.pdf"
+         , "out/fig/kein-Ausreißern/mahaplot.pdf"
          , "out/table/primary/starvation-response/kein-Ausreißern/CvS/30vR.tex"
          , "out/work/primary/opls/kein-Ausreißern/Nucleotides/Muscle/Ref/PvT.csv" -- OPLS primary cross-pop
          , "out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/Ref/PvT.csv" -- GLM primary cross-pop
@@ -139,10 +141,20 @@ main = shakeArgs shakeOptions $ do
       need ["src/python/primary-shared-starvation-response.py", "out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/CvS/30vR.csv"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-shared-starvation-response.py --exclude-outlier True --output-dir ./out/fig"
 
+    -- conserved metabolites in starvation resistance
+    "out/fig/kein-Ausreißern/mahaplot.pdf" %> \out -> do
+      need ["src/python/mahalanobis-outliers.py"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/mahalanobis-outliers.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --out-plot ./out/fig/kein-Ausreißern/mahaplot.pdf"
+
     -- table for conserved metabolites in starvation resistance
     "out/table/primary/starvation-response/kein-Ausreißern/CvS/30vR.tex" %> \out -> do
       need ["src/python/primary-shared-starvation-response.py", "out/work/primary/glm/singlefactor/kein-Ausreißern/Nucleotides/Muscle/CvS/30vR.csv"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-shared-starvation-response-tables.py --exclude-outlier True --out-dir ./out/table/primary/starvation-response/kein-Ausreißern/CvS"
+
+    -- conserved metabolites in starvation resistance
+    "out/fig/kein-Ausreißern/venn-diagrams-cross-pop.pdf" %> \out -> do
+      need ["src/python/venn/primary-pop-compare.py"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/venn/primary-pop-compare.py --exclude-outlier True --level 0.05 --output-dir ./out/fig"
 
     -- significance table primary
     "out/supp/kein-Ausreißern/primary-pop-compare-significance.xlsx" %> \out -> do
