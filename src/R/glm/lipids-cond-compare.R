@@ -3,7 +3,7 @@ library(MASS)
 
 pops = c('Pachon', 'Tinaja', 'Surface')
 tissues = c('Brain', 'Muscle', 'Liver')
-outliers = c('mit-Ausreißern','kein-Ausreißern')
+outliers = c('','without-outliers')
 comparisons = c('30vR','4vR','30v4')
 categories = c("Fatty_Acyls","Glycerolipids","Glycerophospholipids","Sphingolipids","Sterol_Lipids")
 

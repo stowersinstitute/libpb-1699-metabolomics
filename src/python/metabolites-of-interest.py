@@ -65,9 +65,9 @@ compounds = [
   ]
 
 if args.exclude_outlier:
-    outlier = 'kein-Ausreißern'
+    outlier = 'without-outliers'
 else:
-    outlier = 'mit-Ausreißern'
+    outlier = ''
 pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']
 conditions = ['4d Starved', '30d Starved', 'Refed']

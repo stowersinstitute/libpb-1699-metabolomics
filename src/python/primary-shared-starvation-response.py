@@ -29,9 +29,9 @@ tissues = ['Brain', 'Muscle', 'Liver']
 comparisons = {'30vR':('30d Starved','Refed'),'4vR':('4d Starved','Refed'),'30v4':('30d Starved','4d Starved')}
 categories = {"Aminoacids":'Amino acids',"Carbohydrates_-CCM": 'Carbohydrates / CCM',"Fattyacids":'Fatty acids',"Misc._-_sec.metabolites":'Misc',"Nucleotides":'Nucleotides'}
 if args.exclude_outlier:
-    outlier_text = 'kein-Ausreißern'
+    outlier_text = 'without-outliers'
 else:
-    outlier_text = 'mit-Ausreißern'
+    outlier_text = ''
 
 metabolites = {}
 for tissue in tissues:

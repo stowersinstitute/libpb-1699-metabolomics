@@ -88,7 +88,7 @@ def process(subset, groups):
 for tissue in tissues:
     for pop in pops:
         for comp,groups in comparisons.items():
-            for exclude_outlier,outlier_text in zip([False,True],['mit-Ausreißern','kein-Ausreißern']):
+            for exclude_outlier,outlier_text in zip([False,True],['','without-outliers']):
                 for cattype in cattypes:
                     not_group = [c for c in conditions.values() if c not in groups][0]
                     subset = DataFrame(astyanax_data.loc[

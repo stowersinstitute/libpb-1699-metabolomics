@@ -74,4 +74,4 @@ Most analyses produce outputs with and without the following outliers:
 * Tinaja Liver Refed 6
 * Pachon Liver 30d Starved 3
 
-Results including the outliers are in an `mit-Ausreißern` subdirectory whereas results excluding the outliers are in a `kein-Ausreißern` subdirectory. Most results from the paper exclude outliers.
+Results including the outliers are in an `` subdirectory whereas results excluding the outliers are in a `without-outliers` subdirectory. Most results from the paper exclude outliers.
