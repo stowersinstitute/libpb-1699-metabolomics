@@ -51,13 +51,13 @@ tissues = ['Brain', 'Muscle', 'Liver']
 conditions = ['30d Starved', '4d Starved', 'Refed']
 comparisons = {'30vR':('30d Starved','Refed'),'4vR':('4d Starved','Refed'),'30v4':('30d Starved','4d Starved')}
 categories = list(sorted(ame.compounds_by_category_from_dataset.keys()))
-outliers = ['Pachon Muscle Refed 5','Tinaja Liver Refed 6','Pachon Liver 30d Starved 3']
+outliers = ['Tinaja Liver Refed 6']
 
 for j,category in zip(range(len(categories)),categories):
     for i,tissue in zip(range(3),['Brain', 'Muscle', 'Liver']):
         for pop in ['Pachon', 'Tinaja', 'Surface']:
             for comp,groups in comparisons.items():
-                for exclude_outlier,outlier_text in zip([False,True],['with-outliers','without-outliers']):
+                for exclude_outlier,outlier_text in zip([False],['with-outliers']):
                     not_group = [c for c in conditions if c not in groups][0]
                     subset = DataFrame(astyanax_data.iloc[
                         astyanax_data.index.isin(ame.compounds_by_category_from_dataset[category]),

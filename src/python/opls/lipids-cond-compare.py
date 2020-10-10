@@ -57,7 +57,7 @@ conditions = {'30d':'30d Starved', '4d':'4d Starved', 'Ref':'Refed'}
 #comparisons = {'PvS':('Pachon','Surface'),'TvS':('Tinaja','Surface'),'PvT':('Pachon','Tinaja')}
 comparisons = {'30vR':('30d Starved','Refed'),'4vR':('4d Starved','Refed'),'30v4':('30d Starved','4d Starved')}
 cattypes = {'Class':'class', 'Category':'category'}
-outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
+outliers = ['Tinaja Liver Refed 6']
 
 def process_outlier(subset,comp):
     for o in outliers:
@@ -88,14 +88,15 @@ def process(subset, groups):
 for tissue in tissues:
     for pop in pops:
         for comp,groups in comparisons.items():
-            for exclude_outlier,outlier_text in zip([False,True],['with-outliers','without-outliers']):
+            for exclude_outlier,outlier_text in zip([False],['with-outliers']):
                 for cattype in cattypes:
                     not_group = [c for c in conditions.values() if c not in groups][0]
                     subset = DataFrame(astyanax_data.loc[
                         :,
                         astyanax_data.columns.str.contains(tissue) & astyanax_data.columns.str.contains(pop) &
                         ~astyanax_data.columns.str.contains(not_group)])
-                    subset = process_outlier(subset,comp)
+                    if exclude_outlier:
+                        subset = process_outlier(subset,comp)
                     normalized_data, nonortho_data = process(subset, groups)
 
                     outdir = f"{args.output_dir}/opls/{outlier_text}/{tissue}/{pop}"

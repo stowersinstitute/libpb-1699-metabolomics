@@ -75,7 +75,7 @@ def fix_cols(df,tissue):
     #print(d.columns)
     return d
 
-outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
+outliers = ['Tinaja Liver Refed 6']
 
 def process_outlier(subset):
     for o in outliers:

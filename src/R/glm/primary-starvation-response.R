@@ -3,7 +3,7 @@ library(MASS)
 
 pops = c('Pachon', 'Tinaja', 'Surface')
 tissues = c('Brain', 'Muscle', 'Liver')
-outliers = c('with-outliers','without-outliers')
+outliers = c('with-outliers')
 comparisons = c('30vR','4vR','30v4')
 conditions = c('30d Starved','4d Starved','Refed')
 categories = c("Aminoacids","Carbohydrates_-CCM","Fattyacids","Misc._-_sec.metabolites","Nucleotides")
@@ -30,34 +30,10 @@ for (tissue in tissues) {
             tinaja[,k] <- as.double(as.character(tinaja[,k]))
             surface[,k] <- as.double(as.character(surface[,k]))
           }
-          if (outlier == "without-outliers") {
-            if (tissue == "Liver") {
-              # Pachon 30d outlier
-              if (comp == "30vR" || comp == "30v4") {
-                tinaja <- tinaja[-3,]
-                surface <-surface[-3,]
-              }
-              # Tinaja R outlier
-              if (comp == "30vR" || comp == "4vR") {
-                pachon <- pachon[-11,]
-                surface <-surface[-11,]
-              }
-            }
-            else if (tissue == "Muscle") {
-              # Pachon R outlier
-              if (comp == "30vR" || comp == "4vR") {
-                tinaja <- tinaja[-11,]
-                surface <- surface[-11,]
-              }
-            }
-          }
 
           names(pachon)[1] <- "Condition"
           names(tinaja)[1] <- "Condition"
           names(surface)[1] <- "Condition"
-#           print(table(pachon$Condition))
-#           print(table(tinaja$Condition))
-#           print(table(surface$Condition))
           for (condition in conditions){
             stopifnot(sum(pachon$Condition == condition) == sum(tinaja$Condition == condition))
             stopifnot(sum(tinaja$Condition == condition) == sum(surface$Condition == condition))
@@ -66,16 +42,16 @@ for (tissue in tissues) {
           contrasted$Condition = factor(pachon$Condition)
 
           # all-factor model
-          m <- model.matrix(~ .+0, contrasted[-1])
-          if (comp != '30v4'){
-            allfac <- bayesglm(relevel(Condition,"Refed") ~ m+0, data = contrasted, family = binomial())
-          } else {
-            allfac <- bayesglm(relevel(Condition,"4d Starved") ~ m+0, data = contrasted, family = binomial())
-          }
-          glm.summary <- summary(allfac)
-
-          dir.create(sprintf("out/work/primary/glm/allfactor/%s/%s/%s/%s",outlier,category,tissue,test,comp), showWarnings = FALSE, recursive = TRUE, mode = "0755")
-          write.csv(glm.summary$coefficients,sprintf("out/work/primary/glm/allfactor/%s/%s/%s/%s.csv",outlier,category,tissue,test,comp))
+#           m <- model.matrix(~ .+0, contrasted[-1])
+#           if (comp != '30v4'){
+#             allfac <- bayesglm(relevel(Condition,"Refed") ~ m+0, data = contrasted, family = binomial())
+#           } else {
+#             allfac <- bayesglm(relevel(Condition,"4d Starved") ~ m+0, data = contrasted, family = binomial())
+#           }
+#           glm.summary <- summary(allfac)
+#
+#           dir.create(sprintf("out/work/primary/glm/allfactor/%s/%s/%s/%s",outlier,category,tissue,test,comp), showWarnings = FALSE, recursive = TRUE, mode = "0755")
+#           write.csv(glm.summary$coefficients,sprintf("out/work/primary/glm/allfactor/%s/%s/%s/%s.csv",outlier,category,tissue,test,comp))
 
           # single factor model
           coefs <- c()

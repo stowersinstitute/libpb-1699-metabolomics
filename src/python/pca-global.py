@@ -52,7 +52,7 @@ astyanax_lipids = astyanax_lipids.reindex(sorted(astyanax_lipids.columns), axis=
 
 astyanax_data = concat((astyanax_data,astyanax_lipids),axis=0)
 
-outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
+outliers = ['Tinaja Liver Refed 6']
 
 if args.exclude_outlier:
     for o in outliers:

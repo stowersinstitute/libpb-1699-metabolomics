@@ -114,7 +114,7 @@ astyanax_data = astyanax_data.loc[:,['pools' not in c for c in astyanax_data.col
 astyanax_data.columns = (' '.join((c,str(n))) for c,n in zip(astyanax_data.columns,chain.from_iterable(repeat(range(1,6+1),9*3))))
 kegg_to_category = {kegg: category.replace('\n',' ') for category,keggs in ame.compounds_by_category_from_dataset.items() for kegg in keggs}
 
-outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
+outliers = ['Tinaja Liver Refed 6']
 
 # raw mtic data
 mtic_data = []

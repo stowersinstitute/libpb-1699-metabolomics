@@ -45,14 +45,14 @@ def get_lipidmap_id(inchikey):
     return nan
 
 
-outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
+outliers = ['Tinaja Liver Refed 6']
 
 def process_outlier(subset):
     for o in outliers:
         subset.loc[:,subset.columns.str.contains(o)] = nan
     return subset
 
-for include_outliers,outlier_label in zip([True,False],['with-outliers','without-outliers']):
+for include_outliers,outlier_label in zip([True],['with-outliers']):
     cats = []
     classes = []
     def fix_cols(df,tissue):

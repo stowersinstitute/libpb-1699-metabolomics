@@ -46,12 +46,11 @@ tissues = ['Brain', 'Muscle', 'Liver']
 conditions = {'30d':'30d Starved', '4d':'4d Starved', 'Ref':'Refed'}
 comparisons = {'PvS':('Pachon','Surface'),'TvS':('Tinaja','Surface'),'PvT':('Pachon','Tinaja')}
 cattypes = {'Class':'class', 'Category':'category'}
-outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
 
 cattype = 'Category'
 
 categories = list(sorted(set(ali.lmdata[cattype])))
-outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
+outliers = ['Tinaja Liver Refed 6']
 
 colors = {
   'Pachon': 'firebrick',

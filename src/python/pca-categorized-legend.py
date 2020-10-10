@@ -48,7 +48,7 @@ astyanax_data = astyanax_data.apply(log10)
 
 
 categories = list(sorted(ame.compounds_by_category_from_dataset.keys()))
-outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
+outliers = ['Tinaja Liver Refed 6']
 
 colors = {
   'Pachon': 'firebrick',

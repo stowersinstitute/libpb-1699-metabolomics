@@ -3,7 +3,7 @@ library(MASS)
 
 pops = c('Pachon', 'Tinaja', 'Surface')
 tissues = c('Brain', 'Muscle', 'Liver')
-outliers = c('with-outliers','without-outliers')
+outliers = c('with-outliers')
 comparisons = c('PvS','TvS','PvT')
 conditions = c('30d','4d','Ref')
 categories = c("Aminoacids","Carbohydrates_-CCM","Fattyacids","Misc._-_sec.metabolites","Nucleotides")

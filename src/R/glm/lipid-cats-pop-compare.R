@@ -3,9 +3,8 @@ library(MASS)
 
 pops = c('Pachon', 'Tinaja', 'Surface')
 tissues = c('Brain', 'Muscle', 'Liver')
-outliers = c('with-outliers','without-outliers')
+outliers = c('with-outliers')
 polarities = c('positive','negative')
-# conditions = c('4d Starved', '30d Starved', 'Refed')
 conditions = c('30d','4d','Ref')
 cattypes = c('Categories','Classes')
 comparisons = c('PvS','TvS','PvT')
@@ -21,8 +20,6 @@ for (tissue in tissues) {
           data <- read.csv(sprintf("out/work/lipidcats/%s/%s/%s/%s/%s/%s.csv",input_type,outlier,tissue,condition,cattype,comparison))
           names(data)[1] <- "Population"
           data$Population = factor(data$Population)
-
-  #         print(data)
 
           # single factor model
           coefs <- c()
@@ -43,7 +40,6 @@ for (tissue in tissues) {
         #     https://stat.ethz.ch/R-manual/R-devel/library/stats/html/p.adjust.html
           q <- p.adjust(singlefac.data[,"Pr(>|z|)"],"BH")
           singlefac.data$q <- q
-  #         print(singlefac.data)
           dir.create(sprintf("out/work/lipidcats/glm/%s/%s/%s/%s",outlier,tissue,condition,cattype), showWarnings = FALSE, recursive = TRUE, mode = "0755")
           write.csv(singlefac.data,sprintf("out/work/lipidcats/glm/%s/%s/%s/%s/%s.csv",outlier,tissue,condition,cattype,comparison))
         }

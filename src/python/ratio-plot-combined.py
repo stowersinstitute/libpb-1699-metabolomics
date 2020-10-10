@@ -34,6 +34,7 @@ parser.add_argument("--astyanax", type=str, help="Astyanax metabolomics csv file
 parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
 parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
+parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
 parser.add_argument("--lipids-normalized", type=str, help="Normalized lipids dir.")
 parser.add_argument("--lipidmaps-json", type=str, help="Lipidmaps JSON.")
 parser.add_argument("--lipidmaps-fa", type=str, help="Lipidmaps fa.")
@@ -66,7 +67,7 @@ polarities = ['positive','negative']
 conditions = ['4d Starved', '30d Starved', 'Refed']
 conditions_short = ['4d\nStarved', '30d\nStarved', 'Refed']
 
-outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
+outliers = ['Tinaja Liver Refed 6']
 
 def process_outlier(subset):
     for o in outliers:
@@ -116,16 +117,10 @@ def fix_cols(df,tissue):
     def j(c):
         return ' '.join(c)
     d.columns = (f'{c[0]} {tissue} {j(c[1:])} {n}' for c,n in zip((cc.split() for cc in d.columns),list(range(1,7))*27))
-    d = process_outlier(d)
+    if args.exclude_outlier:
+        d = process_outlier(d)
     d = d.reindex(sorted(d.columns), axis=1)
     return d
-
-outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
-
-def process_outlier(subset):
-    for o in outliers:
-        subset.loc[:,subset.columns.str.contains(o)] = nan
-    return subset
 
 cats = []
 classs = []

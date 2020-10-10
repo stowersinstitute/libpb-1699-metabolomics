@@ -107,7 +107,7 @@ astyanax_data.columns = (' '.join((c,str(n))) for c,n in zip(astyanax_data.colum
 astyanax_data = astyanax_data.rename(ame.get_kegg_to_name_map(), axis=0)
 astyanax_data = astyanax_data.loc[compounds]
 
-outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
+outliers = ['Tinaja Liver Refed 6']
 
 def process_outlier(exclude,subset):
     for outlier in outliers:

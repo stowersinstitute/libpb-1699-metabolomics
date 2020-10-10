@@ -62,7 +62,7 @@ def get_lipidmap_id(inchikey):
 cats = []
 classs = []
 
-outliers = ['Tinaja Liver Refed 6', 'Pachon Muscle Refed 5', 'Pachon Liver 30d Starved 3']
+outliers = ['Tinaja Liver Refed 6']
 
 def process_outlier(subset):
     for o in outliers:
@@ -75,7 +75,8 @@ def fix_cols(df,tissue):
         return ' '.join(c)
     #print(d.columns)
     d.columns = (f'{c[0]} {tissue} {j(c[1:])} {n}' for c,n in zip((cc.split() for cc in d.columns),list(range(1,7))*27))
-    d = process_outlier(d)
+    if args.exclude_outlier:
+        d = process_outlier(d)
     d = d.reindex(sorted(d.columns), axis=1)
     #print(d.columns)
     return d
