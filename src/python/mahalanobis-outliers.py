@@ -5,7 +5,7 @@ from sklearn.decomposition import PCA as PCA
 from pandas import DataFrame, concat
 from seaborn import violinplot, catplot, distplot
 from numpy import log, array, cov, dot
-from numpy.linalg import LinAlgError, cholesky
+from numpy.linalg import LinAlgError, cholesky, eig, eigh
 
 
 import matplotlib.pyplot as plt
@@ -55,19 +55,37 @@ pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']
 conditions = ['30d Starved', '4d Starved', 'Refed']
 
+#https://stats.stackexchange.com/questions/60622/why-is-a-sample-covariance-matrix-singular-when-sample-size-is-less-than-number
+
+#https://stackoverflow.com/questions/41097878/covariance-isnt-positive-definite
+def calcCov(x):
+    import numpy as np
+    m, n = x.shape
+
+    mean = np.mean(x, axis=0)
+    cov = np.zeros((n, n))
+    for j in range(0, n):
+        for k in range(0, n):
+            sum = 0
+            for i in range(0, m):
+                sum += (x[i, j] - mean[j])*(x[i, k] - mean[k])
+            cov[j, k] = sum / (m - 1.0)
+
+    return cov
+
 # mean within groups
 maha_local_means = []
 maha_local_means_labels = []
 for tissue in tissues:
     tissue_subset = astyanax_data.loc[:,astyanax_data.columns.str.contains(tissue)]
-    v = inv(cov(tissue_subset))
+    print(tissue_subset)
+    v = inv(calcCov(array(tissue_subset.transpose().values)))
     print(tissue)
-    #print(tissue_subset.transpose().values)
-    try:
-        x = cholesky(v)
-        print('pos def')
-    except LinAlgError:
-        print('Not pos def')
+    print(calcCov(array(tissue_subset.transpose().values)))
+    w,_ = eigh(v)
+    print(w)
+    print(len(w))
+    stop
     for pop in pops:
         for condition in conditions:
             subset = tissue_subset.loc[:,tissue_subset.columns.str.contains(pop) & tissue_subset.columns.str.contains(condition)]
