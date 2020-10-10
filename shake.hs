@@ -53,7 +53,7 @@ main = shakeArgs shakeOptions $ do
 
     -- Get mapping to ChEBI ids
     "out/work/ids/kegg-to-chebi.json" %> \out -> do
-      need [primary_src]
+      need [primary_src, "out/generated/cts/client.py"]
       cmd_ (AddEnv "PYTHONPATH" "./out/generated") "pipenv run python3 ./src/python/kegg-to-chebi.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --out out/work/ids/kegg-to-chebi.json"
 
     -- global pca
