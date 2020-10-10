@@ -20,7 +20,7 @@ from cavefinomics import AstyanaxLi
 parser = ArgumentParser(description="PCA for lipids.")
 parser.add_argument("--lipids-normalized", type=str, help="Normalized lipids dir.")
 parser.add_argument("--lipidmaps-json", type=str, help="Lipidmaps JSON.")
-parser.add_argument("--exclude-outlier", type=bool, help="Exclude the single Tinaja outlier?")
+parser.add_argument("--exclude-outlier", type=int, help="Exclude the single Tinaja outlier?")
 parser.add_argument("--output", type=str, help="Output lipids PCA.")
 args = parser.parse_args()
 

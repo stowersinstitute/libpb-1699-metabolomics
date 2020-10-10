@@ -60,43 +60,43 @@ main = shakeArgs shakeOptions $ do
     "out/fig/with-outliers/pca-global-pop.pdf" %> \out -> do
       need [primary_src, "src/python/pca-global.py"]
 --       PIPENV_VENV_IN_PROJECT
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-global.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet ./data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --exclude-outlier False --out-dir ./out/fig/with-outliers"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-global.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet ./data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --exclude-outlier 0 --out-dir ./out/fig/with-outliers"
 
     -- categorized pca for primary
     "out/fig/with-outliers/pca-categorized-primary.pdf" %> \out -> do
       need [primary_src, "src/python/pca-categorized-primary.py"]
 --       PIPENV_VENV_IN_PROJECT
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-categorized-primary.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds ./data/kegg/compounds.json --sample-sheet data/primary/sample-sheet.csv --hmdb ./data/hmdb/hmdb.json --exclude-outlier False --output ./out/fig/with-outliers/pca-categorized-primary.pdf"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-categorized-primary.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds ./data/kegg/compounds.json --sample-sheet data/primary/sample-sheet.csv --hmdb ./data/hmdb/hmdb.json --exclude-outlier 0 --output ./out/fig/with-outliers/pca-categorized-primary.pdf"
 
     -- categorized pca plot for lipids
     "out/fig/with-outliers/pca-categorized-lipids.pdf" %> \out -> do
       need [lipid_src, "src/python/pca-categorized-lipids.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-categorized-lipids.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --exclude-outlier False --output ./out/fig/with-outliers/pca-categorized-lipids.pdf"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-categorized-lipids.py --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --exclude-outlier 0 --output ./out/fig/with-outliers/pca-categorized-lipids.pdf"
 
     -- legend for categorized pca plots
     "out/fig/with-outliers/pca-categorized-legend.pdf" %> \out -> do
       need [primary_src, "src/python/pca-categorized-legend.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-categorized-legend.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds ./data/kegg/compounds.json --sample-sheet data/primary/sample-sheet.csv --hmdb ./data/hmdb/hmdb.json --exclude-outlier False --output ./out/fig/with-outliers/pca-categorized-legend.pdf"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/pca-categorized-legend.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds ./data/kegg/compounds.json --sample-sheet data/primary/sample-sheet.csv --hmdb ./data/hmdb/hmdb.json --exclude-outlier 0 --output ./out/fig/with-outliers/pca-categorized-legend.pdf"
 
     -- orotic acid plot
 --     "out/fig/with-outliers/orotic-acid-plot.pdf" %> \out -> do
 --       need ["src/python/orotic-acid-plot.py"]
---       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/orotic-acid-plot.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier False --output ./out/fig/with-outliers/orotic-acid-plot.pdf"
+--       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/orotic-acid-plot.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier 0 --output ./out/fig/with-outliers/orotic-acid-plot.pdf"
 
     -- sugar phosphate plot
     "out/fig/with-outliers/sugar-phosphate-plot.pdf" %> \out -> do
       need [primary_src, "src/python/sugar-phosphate-plot.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/sugar-phosphate-plot.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier False --output ./out/fig/with-outliers/sugar-phosphate-plot.pdf"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/sugar-phosphate-plot.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier 0 --output ./out/fig/with-outliers/sugar-phosphate-plot.pdf"
 
     -- sugar phosphate heatmap
     "out/fig/with-outliers/sugar-phosphate-heatmap.pdf" %> \out -> do
       need [primary_src, "src/python/sugar-phosphate-heatmap.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/sugar-phosphate-heatmap.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier False --level 0.05 --output ./out/fig/with-outliers/sugar-phosphate-heatmap.pdf --output-cbar ./out/fig/with-outliers/sugar-phosphate-heatmap-cbar.pdf"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/sugar-phosphate-heatmap.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier 0 --level 0.05 --output ./out/fig/with-outliers/sugar-phosphate-heatmap.pdf --output-cbar ./out/fig/with-outliers/sugar-phosphate-heatmap-cbar.pdf"
 
     -- metabolites of interest
     "out/fig/with-outliers/metabolites-of-interest.pdf" %> \out -> do
       need [primary_src, "src/python/metabolites-of-interest.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/metabolites-of-interest.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier False --output ./out/fig/with-outliers/metabolites-of-interest.pdf --output-dir-extra ./out/fig/with-outliers/"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/metabolites-of-interest.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier 0 --output ./out/fig/with-outliers/metabolites-of-interest.pdf --output-dir-extra ./out/fig/with-outliers/"
 
     -- OPLS primary cross-pop
     "out/work/primary/opls/with-outliers/Nucleotides/Muscle/Ref/PvT.csv" %> \out -> do
@@ -126,7 +126,7 @@ main = shakeArgs shakeOptions $ do
     -- Table of tidy data for primary mTIC values
     "out/work/primary/merged-mtic.csv" %> \out -> do
       need [primary_src, "out/work/primary/glm/singlefactor/with-outliers/Nucleotides/Muscle/CvS/30vR.csv", "out/work/primary/glm/singlefactor/with-outliers/Nucleotides/Muscle/Pachon/30vR.csv", "src/python/primary-merged.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-merged.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet ./data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier False --kegg-to-chebi out/work/ids/kegg-to-chebi.json --out-mtic ./out/work/primary/merged-mtic.csv --out-cross-pop ./out/work/primary/merged-cross-pop.csv --out-starvation-resp ./out/work/primary/merged-starvation-resp.csv"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-merged.py --astyanax ./data/primary/metabolomics-corrected.csv --sample-sheet ./data/primary/sample-sheet.csv --compounds ./data/kegg/compounds.json --hmdb ./data/hmdb/hmdb.json --exclude-outlier 0 --kegg-to-chebi out/work/ids/kegg-to-chebi.json --out-mtic ./out/work/primary/merged-mtic.csv --out-cross-pop ./out/work/primary/merged-cross-pop.csv --out-starvation-resp ./out/work/primary/merged-starvation-resp.csv"
 
     -- Table of tidy data for lipid mTIC values
     "out/work/lipids/merged-lipids.csv" %> \out -> do
@@ -136,22 +136,22 @@ main = shakeArgs shakeOptions $ do
     -- Table of tidy data for lipid significance values
     "out/work/lipids/merged-cross-pop.csv" %> \out -> do
       need ["out/work/primary/glm/singlefactor/with-outliers/Nucleotides/Muscle/CvS/30vR.csv", "out/work/primary/glm/singlefactor/with-outliers/Nucleotides/Muscle/Pachon/30vR.csv", "src/python/lipids-stats.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/lipids-stats.py --exclude-outlier False --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --lipidmaps-fa ./data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json --out-cross-pop ./out/work/lipids/merged-cross-pop.csv --out-cross-cond ./out/work/lipids/merged-cross-cond.csv"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/lipids-stats.py --exclude-outlier 0 --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --lipidmaps-fa ./data/lipidmaps/lipidmaps-20200724-sat-unsat-fas.json --out-cross-pop ./out/work/lipids/merged-cross-pop.csv --out-cross-cond ./out/work/lipids/merged-cross-cond.csv"
 
     -- conserved metabolites in starvation resistance
     "out/fig/with-outliers/primary-shared-starvation-response-30vR.pdf" %> \out -> do
       need ["src/python/primary-shared-starvation-response.py", "out/work/primary/glm/singlefactor/with-outliers/Nucleotides/Muscle/CvS/30vR.csv"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-shared-starvation-response.py --exclude-outlier False --output-dir ./out/fig"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-shared-starvation-response.py --exclude-outlier 0 --output-dir ./out/fig"
 
     -- table for conserved metabolites in starvation resistance
     "out/table/primary/starvation-response/with-outliers/CvS/30vR.tex" %> \out -> do
       need ["src/python/primary-shared-starvation-response.py", "out/work/primary/glm/singlefactor/with-outliers/Nucleotides/Muscle/CvS/30vR.csv"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-shared-starvation-response-tables.py --exclude-outlier False --out-dir ./out/table/primary/starvation-response/with-outliers/CvS"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-shared-starvation-response-tables.py --exclude-outlier 0 --out-dir ./out/table/primary/starvation-response/with-outliers/CvS"
 
     -- conserved metabolites in starvation resistance
     "out/fig/with-outliers/venn-diagrams-cross-pop.pdf" %> \out -> do
       need [primary_src, "src/python/venn/primary-pop-compare.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/venn/primary-pop-compare.py --exclude-outlier False --level 0.05 --output-dir ./out/fig"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/venn/primary-pop-compare.py --exclude-outlier 0 --level 0.05 --output-dir ./out/fig"
 
     -- significance table primary
     "out/supp/with-outliers/primary-pop-compare-significance.xlsx" %> \out -> do

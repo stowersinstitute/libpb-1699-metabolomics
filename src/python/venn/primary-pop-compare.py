@@ -7,15 +7,15 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 parser = ArgumentParser(description="Venn diagrams.")
-parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
+parser.add_argument("--exclude-outlier", type=int, help="Exclude the outliers?")
 parser.add_argument("--output-dir", type=str, help="Out dir")
 parser.add_argument("--level", type=float, help="p value cutoff.")
 args = parser.parse_args()
 
 if args.exclude_outlier:
-    outlier = 'kein-Ausreißern'
+    outlier = 'without-outliers'
 else:
-    outlier = 'mit-Ausreißern'
+    outlier = 'with-outliers'
 
 #colors = ['firebrick','goldenrod','mediumseagreen','rosybrown']
 #https://colorhunt.co/palette/184190

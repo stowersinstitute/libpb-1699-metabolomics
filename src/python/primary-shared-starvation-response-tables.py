@@ -5,7 +5,7 @@ import os
 from argparse import ArgumentParser
 
 parser = ArgumentParser(description="Adaptive response table.")
-parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
+parser.add_argument("--exclude-outlier", type=int, help="Exclude the outliers?")
 parser.add_argument("--out-dir", type=str, help="Out dir")
 args = parser.parse_args()
 

@@ -20,7 +20,7 @@ sns.set(font_scale=1.4)
 
 parser = ArgumentParser(description="Heatmap of conserved metabolites.")
 parser.add_argument("--output-dir", type=str, help="Output directory.")
-parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
+parser.add_argument("--exclude-outlier", type=int, help="Exclude the outliers?")
 args = parser.parse_args()
 
 conditions = {'4d':'4d Starved', '30d':'30d Starved', 'Ref':'Refed'}

@@ -23,7 +23,7 @@ parser.add_argument("--astyanax", type=str, help="Astyanax metabolomics csv file
 parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
 parser.add_argument("--lipids-normalized", type=str, help="Normalized lipids dir.")
 parser.add_argument("--lipidmaps-json", type=str, help="Lipidmaps JSON.")
-parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
+parser.add_argument("--exclude-outlier", type=int, help="Exclude the outliers?")
 parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
 parser.add_argument("--out-dir", type=str, help="Out dir.")

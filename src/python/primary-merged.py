@@ -16,7 +16,7 @@ parser.add_argument("--astyanax", type=str, help="Astyanax metabolomics csv file
 parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
 parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
-parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
+parser.add_argument("--exclude-outlier", type=int, help="Exclude the outliers?")
 parser.add_argument("--kegg-to-chebi", type=str, help="The KEGG to ChEBI map")
 parser.add_argument("--out-mtic", type=str, help="Output for mTIC")
 parser.add_argument("--out-cross-pop", type=str, help="Output for cross-pop comparison")

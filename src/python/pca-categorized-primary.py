@@ -22,7 +22,7 @@ parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
 parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
 parser.add_argument("--groups", type=str, help="Groups to compare (30d Starved, 4d Starved, Refed).")
-parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
+parser.add_argument("--exclude-outlier", type=int, help="Exclude the outliers?")
 parser.add_argument("--output", type=str, help="Output primary PCA.")
 args = parser.parse_args()
 

@@ -41,7 +41,7 @@ parser.add_argument("--astyanax", type=str, help="Astyanax metabolomics csv file
 parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
 parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
-parser.add_argument("--exclude-outlier", type=bool, help="Exclude the outliers?")
+parser.add_argument("--exclude-outlier", type=int, help="Exclude the outliers?")
 parser.add_argument("--output", type=str, help="Output.")
 parser.add_argument("--output-dir-extra", type=str, help="Output for smaller plots.")
 args = parser.parse_args()
