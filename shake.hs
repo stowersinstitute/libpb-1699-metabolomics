@@ -25,7 +25,6 @@ main = shakeArgs shakeOptions $ do
          , "out/fig/without-outliers/metabolites-of-interest.pdf"
          , "out/fig/without-outliers/primary-shared-starvation-response-30vR.pdf"
          , "out/fig/without-outliers/venn-diagrams-cross-pop.pdf"
-         , "out/fig/without-outliers/mahaplot.pdf"
          , "out/table/primary/starvation-response/without-outliers/CvS/30vR.tex"
          , "out/work/primary/opls/without-outliers/Nucleotides/Muscle/Ref/PvT.csv" -- OPLS primary cross-pop
          , "out/work/primary/glm/singlefactor/without-outliers/Nucleotides/Muscle/Ref/PvT.csv" -- GLM primary cross-pop
