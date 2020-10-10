@@ -145,7 +145,7 @@ main = shakeArgs shakeOptions $ do
 
     -- table for conserved metabolites in starvation resistance
     "out/table/primary/starvation-response/with-outliers/CvS/30vR.tex" %> \out -> do
-      need ["src/python/primary-shared-starvation-response.py", "out/work/primary/glm/singlefactor/with-outliers/Nucleotides/Muscle/CvS/30vR.csv"]
+      need ["src/python/primary-shared-starvation-response.py", "out/work/primary/glm/singlefactor/with-outliers/Nucleotides/Muscle/CvS/30vR.csv", "out/work/primary/merged-mtic.csv"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/primary-shared-starvation-response-tables.py --exclude-outlier 0 --out-dir ./out/table/primary/starvation-response/with-outliers/CvS"
 
     -- conserved metabolites in starvation resistance
