@@ -68,10 +68,4 @@ However, some packages may not work with newer versions of Python or may have di
 
 ## Outliers
 
-Most analyses produce outputs with and without the following outliers:
-
-* Pachon Muscle Refed 5
-* Tinaja Liver Refed 6
-* Pachon Liver 30d Starved 3
-
-Results including the outliers are in an `with-outliers` subdirectory whereas results excluding the outliers are in a `without-outliers` subdirectory. Most results from the paper exclude outliers.
+An earlier version of the pipeline were applied in parallel to data with and without outliers. Hence, directories may have "with-outliers" in the name.
