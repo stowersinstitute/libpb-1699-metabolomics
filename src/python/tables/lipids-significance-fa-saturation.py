@@ -118,10 +118,13 @@ sig_table['Comparison'] = Categorical(sig_table['Comparison'], comparisons)
 def make_comp_text(comp):
     return ' vs. '.join(comp)
 
-table_cols = '| r{3cm} | ' + ' | '.join([' | '.join(['l']*9)]*3) + ' | '
-table_comparison_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c|}}{{{make_comp_text(comp)}}}' for comp in comparisons.values()]) + r' \\'
-table_tissue_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c|}}{{{tissue}}}' for tissue in tissues]*3) + r' \\'
-table_condition_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'{condition}' for condition in conditions_really_short]*9) + r' \\'
+def bold(u):
+    return f'\\textbf{{{str(u)}}}'
+
+table_cols = '| r | ' + ' !{\\vrule width 2pt} '.join([' | '.join(['l']*9)]*3) + ' | '
+table_comparison_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c}}{{{bold(make_comp_text(comp))}}}' for comp in comparisons.values()]) + r' \\'
+table_tissue_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c}}{{{bold(tissue)}}}' for tissue in tissues]*3) + r' \\'
+table_condition_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{1}}{{c}}{{{bold(condition)}}}' for condition in conditions_really_short]*9) + r' \\'
 
 #https://tex.stackexchange.com/questions/178622/how-to-place-a-line-for-n-a-at-a-cell-of-a-table
 # row height

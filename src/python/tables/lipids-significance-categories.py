@@ -21,10 +21,13 @@ parser.add_argument("--outlier", type=str, help="Outlier directory name.")
 parser.add_argument('--output-dir', type=str, help="Output directory.")
 args = parser.parse_args()
 
-
+# nice table examples
 #https://tex.stackexchange.com/questions/112343/beautiful-table-samples
 #http://cpansearch.perl.org/src/LIMAONE/LaTeX-Table-v1.0.6/examples/examples.pdf
 #https://tex.stackexchange.com/questions/113101/how-can-i-avoid-the-gap-between-cellcolor-colored-cells-created-by-tabucline
+
+# thick line
+#https://tex.stackexchange.com/questions/156807/single-thicker-vertical-line
 
 pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']
@@ -93,7 +96,7 @@ def make_comp_text(comp):
 def bold(u):
     return f'\\textbf{{{str(u)}}}'
 
-table_cols = '| r{3cm} | ' + ' | '.join([' | '.join(['l']*9)]*3) + ' | '
+table_cols = '| r | ' + ' !{\\vrule width 2pt} '.join([' | '.join(['l']*9)]*3) + ' | '
 table_comparison_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c}}{{{bold(make_comp_text(comp))}}}' for comp in comparisons.values()]) + r' \\'
 table_tissue_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c}}{{{bold(tissue)}}}' for tissue in tissues]*3) + r' \\'
 table_condition_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{1}}{{c}}{{{bold(condition)}}}' for condition in conditions_really_short]*9) + r' \\'
@@ -174,9 +177,9 @@ captions = {
 #https://tex.stackexchange.com/questions/369429/write-block-character-with-char/369568#369568
 
 descriptions = {
-  'Classes': r"Significant increased ($+$) or decreased ($-$) lipid classes based on summed peak intensities for every lipid species belonging to a given LipidMaps ``\texttt{MAIN\_CLASS}'' label. Compare Table \ref{table:sig-lipid-classes} based on the ``\texttt{MAIN\_CLASS}'' attribute. $\varnothing$ denotes classes which were not detected in a given sample set.",
+  'Classes': r"Significant increased ($+$) or decreased ($-$) lipid classes based on summed peak intensities for every lipid species belonging to a given LipidMaps ``\texttt{MAIN\_CLASS}'' label. $\varnothing$ denotes classes which were not detected in a given sample set. LipidMaps also possesses a ``\texttt{CATEGORY}'' attribute that provides a more coarse--grained classification of lipid species, which is used as a basis for a similar analysis shown in Table \ref{table:sig-lipid-categories}.",
 
-  'Categories': r"Peak intensities for all lipids in a given category (determined from the LipidMaps ``\texttt{CATEGORY}'' attribute) were summed to yield a total intensity for each category which is either significantly (at the $p<0.05$ level) up-- ($+$) or down--regulated ($-$) in a given cave population with respect to surface (Pach\'{o}n versus surface and Tinaja versus surface, top row) or the Pach\'{o}n cave population with respect to the Tinaja cave population (last comparison, top row). The sample set for each tissue / feeding state combination consists of six individuals from each population as shown in Fig \ref{fig:exp-setup}. P--values were obtained from the OPLS / GLM approach described in Methods. Coloring (\textcolor{cellhl}{$\blacksquare\!$}) indicates a class that agrees in significance and directionality between both cave populations and is thus may be related to cave adaptation. Columns corresponding to muscle are highlighted to help distinguish the different tissues. LipidMaps also possesses a ``\texttt{CATEGORY}'' attribute that provides a more coarse--grained classification of lipid species, which is used as a basis for a similar analysis shown in Table \ref{table:sig-lipid-categories}.",
+  'Categories': r"Peak intensities for all lipids in a given category (determined from the LipidMaps ``\texttt{CATEGORY}'' attribute) were summed to yield a total intensity for each category which is either significantly (at the $p<0.05$ level) up-- ($+$) or down--regulated ($-$) in a given cave population with respect to surface (Pach\'{o}n versus surface and Tinaja versus surface, top row) or the Pach\'{o}n cave population with respect to the Tinaja cave population (last comparison, top row). The sample set for each tissue / feeding state combination consists of six individuals from each population as shown in Fig \ref{fig:exp-setup}. P--values were obtained from the OPLS / GLM approach described in Methods. Coloring (\textcolor{cellhl}{$\blacksquare\!$}) indicates a class that agrees in significance and directionality between both cave populations and is thus may be related to cave adaptation. Columns corresponding to muscle are highlighted to help distinguish the different tissues. Compare Table \ref{table:sig-lipid-classes} based on the ``\texttt{MAIN\_CLASS}'' attribute.",
 }
 
 level = 0.05
