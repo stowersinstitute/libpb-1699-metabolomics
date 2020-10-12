@@ -44,6 +44,7 @@ main = shakeArgs shakeOptions $ do
          , "out/table/lipidcats/Categories.tex" -- Lipid cats/classes Latex table
          , "out/work/lipidcats/opls/with-outliers/Liver/Ref/fas/PvT.csv" -- Lipid fatty acid saturation OPLS
          , "out/work/lipidcats/glm/with-outliers/Liver/Ref/fas/PvT.csv" -- Lipid fatty acid saturation GLM
+         , "out/table/lipidcats/fas.tex" -- Lipid fatty acid saturation table
          ]
 
     let primary_src = "data/primary/metabolomics-corrected.csv"
@@ -195,6 +196,7 @@ main = shakeArgs shakeOptions $ do
       need ["src/R/glm/lipid-cats-pop-compare.R", "out/work/lipidcats/opls/with-outliers/Liver/Ref/Classes/PvT.csv"]
       cmd_ "Rscript ./src/R/glm/lipid-cats-pop-compare.R"
 
+    -- Lipids category-based significance table
     "out/table/lipidcats/Categories.tex" %> \out -> do
       need ["src/python/tables/lipids-significance-categories.py", "out/work/lipidcats/glm/with-outliers/Muscle/Ref/Categories/PvT.csv"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/tables/lipids-significance-categories.py --input-dir ./out/work/lipidcats/glm --outlier with-outliers --output-dir ./out/table/lipidcats"
@@ -208,4 +210,9 @@ main = shakeArgs shakeOptions $ do
     "out/work/lipidcats/glm/with-outliers/Liver/Ref/fas/PvT.csv" %> \out -> do
       need ["src/R/glm/lipids-fa-saturation.R", "out/work/lipidcats/opls/with-outliers/Liver/Ref/fas/PvT.csv"]
       cmd_ "Rscript ./src/R/glm/lipids-fa-saturation.R"
+
+    -- Lipids fatty acid saturation table
+    "out/table/lipidcats/fas.tex" %> \out -> do
+      need ["src/python/tables/lipids-significance-fa-saturation.py", "out/work/lipidcats/glm/with-outliers/Muscle/Ref/Categories/PvT.csv"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/tables/lipids-significance-fa-saturation.py --input-dir ./out/work/lipidcats/glm --outlier with-outliers --output-dir ./out/table/lipidcats"
 
