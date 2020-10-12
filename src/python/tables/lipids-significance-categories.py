@@ -183,7 +183,7 @@ level = 0.05
 for cattype in cattypes:
     table_data = []
     for cat,name in cattypes[cattype].items():
-        table_data.append(f'\multicolumn{{1}}{{r|}}{{{name}}} & ' + ' & '.join(get_sigs(level,cat)) + r' \\')
+        table_data.append(f'\\multicolumn{{1}}{{r|}}{{{name}}} & ' + ' & '.join(get_sigs(level,cat)) + r' \\')
         table_data.append(r'\cline{2-28}')
 
     table_data = '\n'.join(table_data)

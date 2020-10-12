@@ -118,10 +118,10 @@ sig_table['Comparison'] = Categorical(sig_table['Comparison'], comparisons)
 def make_comp_text(comp):
     return ' vs. '.join(comp)
 
-table_cols = '| m{3cm} | ' + ' || '.join([' | '.join(['m{0.225cm}']*9)]*3) + ' | '
-table_comparison_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c|}}{{{make_comp_text(comp)}}}' for comp in comparisons.values()]) + r' \\'
-table_tissue_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c|}}{{{tissue}}}' for tissue in tissues]*3) + r' \\'
-table_condition_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'{condition}' for condition in conditions_really_short]*9) + r' \\'
+table_cols = '| r{3cm} | ' + ' | '.join([' | '.join(['l']*9)]*3) + ' | '
+table_comparison_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c|}}{{{make_comp_text(comp)}}}' for comp in comparisons.values()]) + r' \\'
+table_tissue_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c|}}{{{tissue}}}' for tissue in tissues]*3) + r' \\'
+table_condition_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'{condition}' for condition in conditions_really_short]*9) + r' \\'
 
 #https://tex.stackexchange.com/questions/178622/how-to-place-a-line-for-n-a-at-a-cell-of-a-table
 # row height
@@ -141,6 +141,7 @@ def get_sigs(level,cat):
     d = d.sort_values(['Comparison','Tissue','Condition'])
     ps = d.loc[cat,'Pr(>|z|)']
     up = d.loc[cat,'Estimate'] > 0.
+    ismuscle = list(d.loc[cat,'Tissue'] == 'Muscle')
     conserved = [True if ps.iloc[k] < level and ps.iloc[k+9] < level and up.iloc[k] == up.iloc[k+9] else False for k in range(9)]
     conserved = conserved+conserved+[False]*9
     def make_symbol(p,u,conserved):
@@ -151,14 +152,19 @@ def get_sigs(level,cat):
                 return x
         if p < level:
             if u:
-                return add_cell_color(r'$\uparrow$')
+                return add_cell_color(r'$+$')
             else:#else
-                return add_cell_color(r'$\downarrow$')
+                return add_cell_color(r'$-$')
         elif isfinite(p):
             return ' '
         else:
             return ' --- '
-    row = [make_symbol(p, u, c ) for p,u,c in zip(ps,up,conserved)]
+    def highlight_muscle(input, ismuscle):
+        if ismuscle:
+            return '\cellcolor{structcell}{'+input+'}'
+        else:
+            return input
+    row = [highlight_muscle(make_symbol(p, u, c ),mus) for p,u,mus,c in zip(ps,up,ismuscle,conserved)]
     if len(row) == 27:
         return row
     else:
@@ -172,14 +178,14 @@ label = 'table:sig-lipid-categories-fas'
 
 caption = 'Intra--population Differences in Fatty Acid Saturation'
 
-description = r"The desc."
+description = r"For lipids corresponding to free fatty acids, sauturation was calculated based on the presence of double bonds in LipidMaps structural data and used to classify each LMID as either saturated, monounsaturated, or polyunsaturated. Significance values were again calculated using an OPLS / Bayesian GLM workflow. Coloring and markings as before."
 
 level = 0.05
 
 table_data = []
 for cat,name in wanted_classes.items():
-    table_data.append(f'{name} & ' + ' & '.join(get_sigs(level,cat)) + r' \\')
-    table_data.append(r'\hline')
+    table_data.append(f'\\multicolumn{{1}}{{r|}}{{{name}}} & ' + ' & '.join(get_sigs(level,cat)) + r' \\')
+    table_data.append(r'\cline{2-28}')
 
 table_data = '\n'.join(table_data)
 
@@ -187,25 +193,21 @@ tabletex = r'''
 \begin{table*}[t]
 \begin{adjustwidth}{-1cm}{}
 \centering
-\caption{
-{\bf $caption } }
 \resizebox{1.05\textwidth}{!}{
 \begin{tabular}
 {$cols}
-\cline{2-28}
 $table_comparison_header
-\cline{2-28}
 $table_tissue_header
-\cline{2-28}
 $table_condition_header
-\hline
+\cline{2-28}
 $data
 \end{tabular}
 }
 \vspace{0.75em}
-\begin{flushleft}
+\caption{
+{\bf $caption }
 $desc
-\end{flushleft}
+}
 \label{$label}
 \end{adjustwidth}
 \end{table*}
