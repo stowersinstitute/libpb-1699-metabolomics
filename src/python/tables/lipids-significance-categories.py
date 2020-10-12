@@ -23,6 +23,7 @@ args = parser.parse_args()
 
 
 #https://tex.stackexchange.com/questions/112343/beautiful-table-samples
+#http://cpansearch.perl.org/src/LIMAONE/LaTeX-Table-v1.0.6/examples/examples.pdf
 
 pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']
@@ -94,7 +95,7 @@ def bold(u):
 table_cols = '| m{3cm} | ' + ' || '.join([' | '.join(['m{0.225cm}']*9)]*3) + ' | '
 table_comparison_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c}}{{{bold(make_comp_text(comp))}}}' for comp in comparisons.values()]) + r' \\'
 table_tissue_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c}}{{{bold(tissue)}}}' for tissue in tissues]*3) + r' \\'
-table_condition_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'{bold(condition)}' for condition in conditions_really_short]*9) + r' \\'
+table_condition_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{1}}{{c}}{{{bold(condition)}}}' for condition in conditions_really_short]*9) + r' \\'
 
 def make_subtable_for_cat(cat):
     d = sig_table.loc[cat,['Comparison','Tissue','Condition','Pr(>|z|)','Estimate']]
@@ -118,9 +119,12 @@ def make_subtable_for_cat(cat):
 def get_sigs(level,cat):
     d = make_subtable_for_cat(cat)
 
-    def conserved_highlight(input,comp,tissue,condition):
+    def conserved_highlight(input,comp,tissue,condition,ismuscle):
         if comp != 'PvS' and comp != 'TvS':
-            return input
+            if ismuscle:
+                return '\cellcolor{structcell}{'+input+'}'
+            else:
+                return input
         u = float(d.loc[(d['Comparison'] == 'PvS') & (d['Tissue'] == tissue) & (d['Condition'] == condition),'Pr(>|z|)'])
         uup = float(d.loc[(d['Comparison'] == 'PvS') & (d['Tissue'] == tissue) & (d['Condition'] == condition),'Estimate']) > 0.
         v = float(d.loc[(d['Comparison'] == 'TvS') & (d['Tissue'] == tissue) & (d['Condition'] == condition),'Pr(>|z|)'])
@@ -128,14 +132,21 @@ def get_sigs(level,cat):
         if u < level and v < level and uup == vup:
             return '\cellcolor{cellhl}{'+input+'}'
         else:
-            return input
+            if ismuscle:
+                return '\cellcolor{structcell}{'+input+'}'
+            else:
+                return input
 
-    ps = d.loc[cat,'Pr(>|z|)']
+    ps = list(d.loc[cat,'Pr(>|z|)'])
     up = d.loc[cat,'Estimate'] > 0.
+    ismuscle = list(d.loc[cat,'Tissue'] == 'Muscle')
     cs = d.loc[cat,'Comparison']
     ts = d.loc[cat,'Tissue']
     cnds = d.loc[cat,'Condition']
-    row = [conserved_highlight(r'$+$' if u else r'$-$', comp,tissue,condition) if p < level else (' ' if isfinite(p) else r' $\varnothing$ ') for p,u,comp,tissue,condition in zip(ps,up,cs,ts,cnds)]
+    row = [
+      conserved_highlight(
+          (r'$+$' if u else r'$-$') if p < level else (' ' if isfinite(p) else r' $\varnothing$ '),
+          comp,tissue,condition,mus) for p,u,comp,tissue,condition,mus in zip(ps,up,cs,ts,cnds,ismuscle)]
     if len(row) == 27:
         return row
     else:
