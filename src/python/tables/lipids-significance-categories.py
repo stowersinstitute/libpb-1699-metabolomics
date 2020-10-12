@@ -93,7 +93,7 @@ def make_comp_text(comp):
 def bold(u):
     return f'\\textbf{{{str(u)}}}'
 
-table_cols = '| p{3cm} | ' + ' | '.join([' | '.join(['l']*9)]*3) + ' | '
+table_cols = '| r{3cm} | ' + ' | '.join([' | '.join(['l']*9)]*3) + ' | '
 table_comparison_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c}}{{{bold(make_comp_text(comp))}}}' for comp in comparisons.values()]) + r' \\'
 table_tissue_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c}}{{{bold(tissue)}}}' for tissue in tissues]*3) + r' \\'
 table_condition_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{1}}{{c}}{{{bold(condition)}}}' for condition in conditions_really_short]*9) + r' \\'
@@ -179,8 +179,8 @@ level = 0.05
 for cattype in cattypes:
     table_data = []
     for cat,name in cattypes[cattype].items():
-        table_data.append(f'{name} & ' + ' & '.join(get_sigs(level,cat)) + r' \\')
-        table_data.append(r'\hline')
+        table_data.append(f'\multicolumn{{1}}{{r|}}{{{name}}} & ' + ' & '.join(get_sigs(level,cat)) + r' \\')
+        table_data.append(r'\cline{2-28}')
 
     table_data = '\n'.join(table_data)
 
@@ -196,7 +196,7 @@ for cattype in cattypes:
 $table_comparison_header
 $table_tissue_header
 $table_condition_header
-\hline
+\cline{2-28}
 $data
 \end{tabular}
 }
