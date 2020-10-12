@@ -27,7 +27,15 @@ Rscript -e "renv::restore()"
 
 # Running the Pipeline
 
-Run the following three commands:
+First, activate the PipEnv:
+
+```
+export PIPENV_VENV_IN_PROJECT=1 # optional
+cd <this directory>
+pipenv shell
+```
+
+Next, run the following three commands:
 
 ```
 cabal new-update

@@ -130,10 +130,10 @@ def get_sigs(level,cat):
             else:
                 return input
         u = float(d.loc[(d['Comparison'] == 'PvS') & (d['Tissue'] == tissue) & (d['Condition'] == condition),'Pr(>|z|)'])
-        uup = float(d.loc[(d['Comparison'] == 'PvS') & (d['Tissue'] == tissue) & (d['Condition'] == condition),'Estimate']) > 0.
+        uup = float(d.loc[(d['Comparison'] == 'PvS') & (d['Tissue'] == tissue) & (d['Condition'] == condition),'Estimate'])
         v = float(d.loc[(d['Comparison'] == 'TvS') & (d['Tissue'] == tissue) & (d['Condition'] == condition),'Pr(>|z|)'])
-        vup = float(d.loc[(d['Comparison'] == 'PvS') & (d['Tissue'] == tissue) & (d['Condition'] == condition),'Estimate']) > 0.
-        if u < level and v < level and uup == vup:
+        vup = float(d.loc[(d['Comparison'] == 'TvS') & (d['Tissue'] == tissue) & (d['Condition'] == condition),'Estimate'])
+        if u < level and v < level and uup*vup > 0.:
             return '\cellcolor{cellhl}{'+input+'}'
         else:
             if ismuscle:
@@ -170,9 +170,13 @@ captions = {
   'Categories': 'Interpopulation Differences in Abundance of Lipid Categories',
 }
 
+# square
+#https://tex.stackexchange.com/questions/369429/write-block-character-with-char/369568#369568
+
 descriptions = {
-  'Classes': r"Peak intensities for all lipids in a given class (determined from the LipidMaps ``\texttt{MAIN\_CLASS}'' attribute) were summed to yield a total intensity for each class which is either significantly (at the $p<0.05$ level) up-- ($+$) or down--regulated ($-$) in a given cave population with respect to surface (first two comparisons, top row) or the Pach\'{o}n cave population with respect to the Tinaja cave population (last comparison, top row). The sample set for each tissue / feeding state combination consists of six individuals from each population as shown in Fig \ref{fig:exp-setup}. P--values were obtained from the OPLS / GLM approach described in Methods. $\varnothing$ denotes classes which were not detected in a given sample set. LipidMaps also possesses a ``\texttt{CATEGORY}'' attribute that provides a more coarse--grained classification of lipid species, which is used as a basis for a similar analysis shown in Table \ref{table:sig-lipid-categories}.",
-  'Categories': r"Significantly up-- or down--regulated lipid categories based on summed peak intensities for every lipid species belonging to a given LipidMaps ``\texttt{CATEGORY}'' label. Compare Table \ref{table:sig-lipid-classes} based on the ``\texttt{MAIN\_CLASS}'' attribute.",
+  'Classes': r"Significant increased ($+$) or decreased ($-$) lipid classes based on summed peak intensities for every lipid species belonging to a given LipidMaps ``\texttt{MAIN\_CLASS}'' label. Compare Table \ref{table:sig-lipid-classes} based on the ``\texttt{MAIN\_CLASS}'' attribute. $\varnothing$ denotes classes which were not detected in a given sample set.",
+
+  'Categories': r"Peak intensities for all lipids in a given category (determined from the LipidMaps ``\texttt{CATEGORY}'' attribute) were summed to yield a total intensity for each category which is either significantly (at the $p<0.05$ level) up-- ($+$) or down--regulated ($-$) in a given cave population with respect to surface (Pach\'{o}n versus surface and Tinaja versus surface, top row) or the Pach\'{o}n cave population with respect to the Tinaja cave population (last comparison, top row). The sample set for each tissue / feeding state combination consists of six individuals from each population as shown in Fig \ref{fig:exp-setup}. P--values were obtained from the OPLS / GLM approach described in Methods. Coloring (\textcolor{cellhl}{$\blacksquare\!$}) indicates a class that agrees in significance and directionality between both cave populations and is thus may be related to cave adaptation. LipidMaps also possesses a ``\texttt{CATEGORY}'' attribute that provides a more coarse--grained classification of lipid species, which is used as a basis for a similar analysis shown in Table \ref{table:sig-lipid-categories}.",
 }
 
 level = 0.05
@@ -188,8 +192,6 @@ for cattype in cattypes:
 \begin{table*}[t]
 \begin{adjustwidth}{-1cm}{}
 \centering
-\caption{
-{\bf $caption } }
 \resizebox{1.05\textwidth}{!}{
 \begin{tabular}
 {$cols}
@@ -201,9 +203,10 @@ $data
 \end{tabular}
 }
 \vspace{0.75em}
-\begin{flushleft}
+\caption{
+{\bf $caption }
 $desc
-\end{flushleft}
+}
 \label{$label}
 \end{adjustwidth}
 \end{table*}
