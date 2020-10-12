@@ -89,12 +89,12 @@ def make_comp_text(comp):
     return ' vs. '.join(comp)
 
 def bold(u):
-    return f'\textbf{{{str(u)}}}'
+    return f'\\textbf{{{str(u)}}}'
 
 table_cols = '| m{3cm} | ' + ' || '.join([' | '.join(['m{0.225cm}']*9)]*3) + ' | '
-table_comparison_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c|}}{{{bold(make_comp_text(comp))}}}' for comp in comparisons.values()]) + r' \\'
-table_tissue_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c|}}{{{bold(tissue)}}}' for tissue in tissues]*3) + r' \\'
-table_condition_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'{bold(condition)}' for condition in conditions_really_short]*9) + r' \\'
+table_comparison_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c}}{{{bold(make_comp_text(comp))}}}' for comp in comparisons.values()]) + r' \\'
+table_tissue_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c}}{{{bold(tissue)}}}' for tissue in tissues]*3) + r' \\'
+table_condition_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'{bold(condition)}' for condition in conditions_really_short]*9) + r' \\'
 
 def make_subtable_for_cat(cat):
     d = sig_table.loc[cat,['Comparison','Tissue','Condition','Pr(>|z|)','Estimate']]
@@ -178,11 +178,8 @@ for cattype in cattypes:
 \resizebox{1.05\textwidth}{!}{
 \begin{tabular}
 {$cols}
-\cline{2-28}
 $table_comparison_header
-\cline{2-28}
 $table_tissue_header
-\cline{2-28}
 $table_condition_header
 \hline
 $data
