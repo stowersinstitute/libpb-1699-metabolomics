@@ -107,7 +107,7 @@ def get_sigs(level,cat):
     d = d.sort_values(['Comparison','Tissue','Condition'])
     ps = d.loc[cat,'Pr(>|z|)']
     up = d.loc[cat,'Estimate'] > 0.
-    row = [(r'$\uparrow$' if u else r'$\downarrow$') if p < level else (' ' if isfinite(p) else ' --- ') for p,u in zip(ps,up)]
+    row = [(r'$+$' if u else r'$-$') if p < level else (' ' if isfinite(p) else ' N/A ') for p,u in zip(ps,up)]
     if len(row) == 27:
         return row
     else:
