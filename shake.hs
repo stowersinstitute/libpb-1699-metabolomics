@@ -45,6 +45,7 @@ main = shakeArgs shakeOptions $ do
          , "out/work/lipidcats/opls/with-outliers/Liver/Ref/fas/PvT.csv" -- Lipid fatty acid saturation OPLS
          , "out/work/lipidcats/glm/with-outliers/Liver/Ref/fas/PvT.csv" -- Lipid fatty acid saturation GLM
          , "out/table/lipidcats/fas.tex" -- Lipid fatty acid saturation table
+         , "out/table/lipids/common.tex" -- Common lipids
          ]
 
     let primary_src = "data/primary/metabolomics-corrected.csv"
@@ -215,4 +216,9 @@ main = shakeArgs shakeOptions $ do
     "out/table/lipidcats/fas.tex" %> \out -> do
       need ["src/python/tables/lipids-significance-fa-saturation.py", "out/work/lipidcats/glm/with-outliers/Muscle/Ref/Categories/PvT.csv"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/tables/lipids-significance-fa-saturation.py --input-dir ./out/work/lipidcats/glm --outlier with-outliers --output-dir ./out/table/lipidcats"
+
+    -- Common lipids (i.e. name is not systematic)
+    "out/table/lipids/common.tex" %> \out -> do
+      need ["src/python/tables/lipids-significance-categories.py", "out/work/lipidcats/glm/with-outliers/Muscle/Ref/Categories/PvT.csv"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/tables/common-lipids.py --input-dir ./out/work/lipids/glm/singlefactor --outlier with-outliers --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --output ./out/table/lipids/common.tex"
 
