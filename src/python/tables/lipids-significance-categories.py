@@ -88,26 +88,54 @@ sig_table['Comparison'] = Categorical(sig_table['Comparison'], comparisons)
 def make_comp_text(comp):
     return ' vs. '.join(comp)
 
-table_cols = '| m{3cm} | ' + ' || '.join([' | '.join(['m{0.225cm}']*9)]*3) + ' | '
-table_comparison_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c|}}{{{make_comp_text(comp)}}}' for comp in comparisons.values()]) + r' \\'
-table_tissue_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c|}}{{{tissue}}}' for tissue in tissues]*3) + r' \\'
-table_condition_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'{condition}' for condition in conditions_really_short]*9) + r' \\'
+def bold(u):
+    return f'\textbf{{{str(u)}}}'
 
-def get_sigs(level,cat):
+table_cols = '| m{3cm} | ' + ' || '.join([' | '.join(['m{0.225cm}']*9)]*3) + ' | '
+table_comparison_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c|}}{{{bold(make_comp_text(comp))}}}' for comp in comparisons.values()]) + r' \\'
+table_tissue_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c|}}{{{bold(tissue)}}}' for tissue in tissues]*3) + r' \\'
+table_condition_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'{bold(condition)}' for condition in conditions_really_short]*9) + r' \\'
+
+def make_subtable_for_cat(cat):
     d = sig_table.loc[cat,['Comparison','Tissue','Condition','Pr(>|z|)','Estimate']]
     if len(d.index) < 27:
+        # fill in missing values
         for comparison in comparisons:
             for tissue in tissues:
                 for condition in conditions.values():
                     if not ((d['Comparison'] == comparison) & (d['Tissue'] == tissue) & (d['Condition'] == condition)).any():
-                        pass
-                        new_row = DataFrame([{'Name':cat,'Comparison':comparison,'Tissue':tissue,'Condition':condition,'Pr(>|z|)':nan,'Estimate':nan}])
+                        new_row = DataFrame([{
+                            'Name':cat,
+                            'Comparison':comparison,
+                            'Tissue':tissue,
+                            'Condition':condition,
+                            'Pr(>|z|)':nan,
+                            'Estimate':nan}])
                         new_row = new_row.set_index('Name')
                         d = concat((d,new_row))
-    d = d.sort_values(['Comparison','Tissue','Condition'])
+    return d.sort_values(['Comparison','Tissue','Condition'])
+
+def get_sigs(level,cat):
+    d = make_subtable_for_cat(cat)
+
+    def conserved_highlight(input,comp,tissue,condition):
+        if comp != 'PvS' and comp != 'TvS':
+            return input
+        u = float(d.loc[(d['Comparison'] == 'PvS') & (d['Tissue'] == tissue) & (d['Condition'] == condition),'Pr(>|z|)'])
+        uup = float(d.loc[(d['Comparison'] == 'PvS') & (d['Tissue'] == tissue) & (d['Condition'] == condition),'Estimate']) > 0.
+        v = float(d.loc[(d['Comparison'] == 'TvS') & (d['Tissue'] == tissue) & (d['Condition'] == condition),'Pr(>|z|)'])
+        vup = float(d.loc[(d['Comparison'] == 'PvS') & (d['Tissue'] == tissue) & (d['Condition'] == condition),'Estimate']) > 0.
+        if u < level and v < level and uup == vup:
+            return '\cellcolor{cellhl}{'+input+'}'
+        else:
+            return input
+
     ps = d.loc[cat,'Pr(>|z|)']
     up = d.loc[cat,'Estimate'] > 0.
-    row = [(r'$+$' if u else r'$-$') if p < level else (' ' if isfinite(p) else ' N/A ') for p,u in zip(ps,up)]
+    cs = d.loc[cat,'Comparison']
+    ts = d.loc[cat,'Tissue']
+    cnds = d.loc[cat,'Condition']
+    row = [conserved_highlight(r'$+$' if u else r'$-$', comp,tissue,condition) if p < level else (' ' if isfinite(p) else r' $\varnothing$ ') for p,u,comp,tissue,condition in zip(ps,up,cs,ts,cnds)]
     if len(row) == 27:
         return row
     else:
@@ -128,14 +156,12 @@ captions = {
 }
 
 descriptions = {
-  'Classes': r"Peak intensities for all lipids in a given class (determined from the LipidMaps ``\texttt{MAIN\_CLASS}'' attribute) were summed to yield a total intensity for each class which is either significantly (at the $p<0.05$ level) up-- ($\uparrow$) or down--regulated ($\downarrow$) in a given cave population with respect to surface (first two comparisons, top row) or the Pach\'{o}n cave population with respect to the Tinaja cave population (last comparison, top row). The sample set for each tissue / feeding state combination consists of six individuals from each population as shown in Fig \ref{fig:exp-setup}. P--values were obtained from the OPLS / GLM approach described in Methods. Dashes denote classes which were not detected in a given sample set. LipidMaps also possesses a ``\texttt{CATEGORY}'' attribute that provides a more coarse--grained classification of lipid species, which is used as a basis for a similar analysis shown in Table \ref{table:sig-lipid-categories}.",
+  'Classes': r"Peak intensities for all lipids in a given class (determined from the LipidMaps ``\texttt{MAIN\_CLASS}'' attribute) were summed to yield a total intensity for each class which is either significantly (at the $p<0.05$ level) up-- ($+$) or down--regulated ($-$) in a given cave population with respect to surface (first two comparisons, top row) or the Pach\'{o}n cave population with respect to the Tinaja cave population (last comparison, top row). The sample set for each tissue / feeding state combination consists of six individuals from each population as shown in Fig \ref{fig:exp-setup}. P--values were obtained from the OPLS / GLM approach described in Methods. $\varnothing$ denotes classes which were not detected in a given sample set. LipidMaps also possesses a ``\texttt{CATEGORY}'' attribute that provides a more coarse--grained classification of lipid species, which is used as a basis for a similar analysis shown in Table \ref{table:sig-lipid-categories}.",
   'Categories': r"Significantly up-- or down--regulated lipid categories based on summed peak intensities for every lipid species belonging to a given LipidMaps ``\texttt{CATEGORY}'' label. Compare Table \ref{table:sig-lipid-classes} based on the ``\texttt{MAIN\_CLASS}'' attribute.",
 }
 
 level = 0.05
 for cattype in cattypes:
-    print(f'\n\n% {cattype}\n\n')
-
     table_data = []
     for cat,name in cattypes[cattype].items():
         table_data.append(f'{name} & ' + ' & '.join(get_sigs(level,cat)) + r' \\')
@@ -195,5 +221,6 @@ $desc
           labels[cattype]
           )
 
+    print(tabletex)
     with open(os.path.join(args.output_dir,f'{cattype}.tex'),'w') as f:
         f.write(tabletex)

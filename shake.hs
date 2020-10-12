@@ -194,6 +194,6 @@ main = shakeArgs shakeOptions $ do
       cmd_ "Rscript ./src/R/glm/lipid-cats-pop-compare.R"
 
     "out/table/lipidcats/Categories.tex" %> \out -> do
-      need ["src/python/tables/lipid-lipids-significance-categories.R", "out/work/lipidcats/glm/with-outliers/Muscle/Ref/Categories/PvT.csv"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/tables/lipids-significance-categories.py --input-dir ./out/work/lipidcats/glm --outlier with-outliers --output-dir ./out/tables/lipidcats"
+      need ["src/python/tables/lipids-significance-categories.py", "out/work/lipidcats/glm/with-outliers/Muscle/Ref/Categories/PvT.csv"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/tables/lipids-significance-categories.py --input-dir ./out/work/lipidcats/glm --outlier with-outliers --output-dir ./out/table/lipidcats"
 
