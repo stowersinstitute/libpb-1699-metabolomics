@@ -90,8 +90,8 @@ fig.colorbar(sm, cax=cax)
 #cax.set_title(r'$-d\log_{10}p$',fontsize='xx-large')
 cax.yaxis.set_major_locator(plt.FixedLocator([vmin, 0., vmax]))
 cax.set_yticklabels([f'$p = {10.**vmin:.2f}$',r'$p = 1$',f'$p = {10.**(-vmax):.2f}$'],fontsize='xx-large',fontweight='bold')
-cax.text(0.5,1.1,'Up in \ncave+fasted',size=20,ha='center',va='center',fontweight='bold',transform=ax.transAxes)
-cax.text(0.5,-0.1,'Down in \ncave+fasted',size=20,ha='center',va='center',fontweight='bold',transform=ax.transAxes)
+cax.text(0.5,1.1,'Up in \nPachón+Tinaja',size=20,ha='center',va='center',fontweight='bold',transform=ax.transAxes)
+cax.text(0.5,-0.1,'Down in \nPachón+Tinaja',size=20,ha='center',va='center',fontweight='bold',transform=ax.transAxes)
 # clear extra axes
 # hide graphics
 ax.set_yticks([], minor=[])

@@ -88,7 +88,7 @@ remap_cond = {
   }
 
 fig,ax = plt.subplots(nrows=len(categories),ncols=5,figsize=(12, 8), gridspec_kw=gridspec_kw)
-fig.suptitle('Primary',fontsize=24,fontweight='bold',y=1.0)
+fig.suptitle('Primary Metabolites',fontsize=24,fontweight='bold',y=1.0)
 for i,category in zip(range(len(categories)),categories):
     for j,tissue in zip(range(3),['Brain', 'Muscle', 'Liver']):
         # get 4d starved, 30d starved, and refed groups
