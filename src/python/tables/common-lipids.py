@@ -113,6 +113,13 @@ def conserved(tissue,condition,comp,name):
         return sig_data[tissue,condition,'PvS',name] == sig_data[tissue,condition,'TvS',name]
     else:
         return False
+
+def highlight_muscle(input, ismuscle):
+    if ismuscle:
+        return '\cellcolor{structcell}{'+input+'}'
+    else:
+        return input
+
 def get_sigs(name):
     r = []
     for comp in comparisons:
@@ -122,16 +129,16 @@ def get_sigs(name):
                 if s != 0:
                     if s > 0:
                         if conserved(tissue,condition,comp,name):
-                            r.append(r'\cellcolor{cellhl}{$\uparrow$}')
+                            r.append(r'\cellcolor{cellhl}{$+$}')
                         else:
-                            r.append(r'$\uparrow$')
+                            r.append(highlight_muscle(r'$+$', tissue=='Muscle'))
                     else:
                         if conserved(tissue,condition,comp,name):
-                            r.append(r'\cellcolor{cellhl}{$\downarrow$}')
+                            r.append(r'\cellcolor{cellhl}{$-$}')
                         else:
-                            r.append(r'$\downarrow$')
+                            r.append(highlight_muscle(r'$-$',tissue=='Muscle'))
                 else:
-                    r.append('')
+                    r.append(highlight_muscle('', tissue=='Muscle'))
     return r
 for name in sorted(set(data['Name'])):
     table_data.append(f'{name} & ' + ' & '.join(get_sigs(name)) + r' \\\hline')
@@ -149,8 +156,6 @@ tabletex = r'''
 \begin{table*}[t]
 \begin{adjustwidth}{-1cm}{}
 \centering
-\caption{
-{\bf $caption } }
 \resizebox{1.05\textwidth}{!}{
 \begin{tabular}
 {$cols}
@@ -165,9 +170,10 @@ $data
 \end{tabular}
 }
 \vspace{0.75em}
-\begin{flushleft}
+\caption{
+{\bf $caption }
 $desc
-\end{flushleft}
+}
 \label{$label}
 \end{adjustwidth}
 \end{table*}
@@ -188,13 +194,13 @@ $desc
       table_data
       ).replace(
       '$desc',
-      'the desc'
+      r'Lipids with common names were selected from the set of 447 identified lipids and analyzed using the O--PLS / GLM scheme. Many lipids exhibit a strongly conserved pattern between Pach\'{o}n and Tinaja, and these are highlighted in blue. Of note, omega--3 fatty acids appear to exhibit lower abundance in the 4-day fasted state in liver. Some metabolites, such as palmitate and oleic acid, overlap with primary metabolomics data.'
       ).replace(
       '$caption',
-      'the cap'
+      'Common lipids'
       ).replace(
       '$label',
-      'the label'
+      'table:human-readable-lipids'
       )
 
 with open(args.output,'w') as f:
