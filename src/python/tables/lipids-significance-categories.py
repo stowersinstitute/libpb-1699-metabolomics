@@ -24,6 +24,7 @@ args = parser.parse_args()
 
 #https://tex.stackexchange.com/questions/112343/beautiful-table-samples
 #http://cpansearch.perl.org/src/LIMAONE/LaTeX-Table-v1.0.6/examples/examples.pdf
+#https://tex.stackexchange.com/questions/113101/how-can-i-avoid-the-gap-between-cellcolor-colored-cells-created-by-tabucline
 
 pops = ['Pachon', 'Tinaja', 'Surface']
 tissues = ['Brain', 'Muscle', 'Liver']
@@ -92,7 +93,7 @@ def make_comp_text(comp):
 def bold(u):
     return f'\\textbf{{{str(u)}}}'
 
-table_cols = '| m{3cm} | ' + ' || '.join([' | '.join(['m{0.225cm}']*9)]*3) + ' | '
+table_cols = '| p{3cm} | ' + ' | '.join([' | '.join(['l']*9)]*3) + ' | '
 table_comparison_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c}}{{{bold(make_comp_text(comp))}}}' for comp in comparisons.values()]) + r' \\'
 table_tissue_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c}}{{{bold(tissue)}}}' for tissue in tissues]*3) + r' \\'
 table_condition_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{1}}{{c}}{{{bold(condition)}}}' for condition in conditions_really_short]*9) + r' \\'
@@ -114,6 +115,9 @@ def make_subtable_for_cat(cat):
                             'Estimate':nan}])
                         new_row = new_row.set_index('Name')
                         d = concat((d,new_row))
+    d['Tissue'] = Categorical(d['Tissue'], tissues)
+    d['Condition'] = Categorical(d['Condition'], conditions.values())
+    d['Comparison'] = Categorical(d['Comparison'], comparisons)
     return d.sort_values(['Comparison','Tissue','Condition'])
 
 def get_sigs(level,cat):
@@ -229,6 +233,5 @@ $desc
           labels[cattype]
           )
 
-    print(tabletex)
     with open(os.path.join(args.output_dir,f'{cattype}.tex'),'w') as f:
         f.write(tabletex)
