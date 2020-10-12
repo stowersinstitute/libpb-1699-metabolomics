@@ -18,7 +18,7 @@ import matplotlib.patches as patches
 parser = ArgumentParser(description="Lipid category table.")
 parser.add_argument("--input-dir", type=str, help="Input directory.")
 parser.add_argument("--outlier", type=str, help="Outlier directory name.")
-parser.add_argument('--output', type=str, help="Output file.")
+parser.add_argument('--output-dir', type=str, help="Output directory.")
 args = parser.parse_args()
 
 
@@ -83,7 +83,6 @@ sig_table = sig_table.set_index('Name')
 sig_table['Tissue'] = Categorical(sig_table['Tissue'], tissues)
 sig_table['Condition'] = Categorical(sig_table['Condition'], conditions.values())
 sig_table['Comparison'] = Categorical(sig_table['Comparison'], comparisons)
-#print(sig_table)
 
 
 def make_comp_text(comp):
@@ -105,7 +104,6 @@ def get_sigs(level,cat):
                         new_row = DataFrame([{'Name':cat,'Comparison':comparison,'Tissue':tissue,'Condition':condition,'Pr(>|z|)':nan,'Estimate':nan}])
                         new_row = new_row.set_index('Name')
                         d = concat((d,new_row))
-        #print(d)
     d = d.sort_values(['Comparison','Tissue','Condition'])
     ps = d.loc[cat,'Pr(>|z|)']
     up = d.loc[cat,'Estimate'] > 0.
@@ -113,10 +111,8 @@ def get_sigs(level,cat):
     if len(row) == 27:
         return row
     else:
-        #print(d)
         return [' x ']*27
 
-#stop
 
 #https://tex.stackexchange.com/questions/130818/how-to-draw-a-double-hline-in-a-table-without-interrupting-vertical-lines
 #https://tex.stackexchange.com/questions/152101/how-to-draw-two-hline-and-two-vertical-line
@@ -199,4 +195,5 @@ $desc
           labels[cattype]
           )
 
-    print(tabletex)
+    with open(os.path.join(args.output_dir,f'{cattype}.tex'),'w') as f:
+        f.write(tabletex)

@@ -41,6 +41,7 @@ main = shakeArgs shakeOptions $ do
          , "out/work/lipids/opls/with-outliers/category/Sphingolipids/Muscle/Pachon/30vR.csv" -- Lipid OPLS for condition comparison
          , "out/work/lipidcats/opls/with-outliers/Liver/Ref/Classes/PvT.csv" -- Lipid cats/classes OPLS
          , "out/work/lipidcats/glm/with-outliers/Muscle/Ref/Categories/PvT.csv" -- Lipid cats/classes GLM
+         , "out/table/lipidcats/Categories.tex" -- Lipid cats/classes Latex table
          ]
 
     let primary_src = "data/primary/metabolomics-corrected.csv"
@@ -191,4 +192,8 @@ main = shakeArgs shakeOptions $ do
     "out/work/lipidcats/glm/with-outliers/Muscle/Ref/Categories/PvT.csv" %> \out -> do
       need ["src/R/glm/lipid-cats-pop-compare.R", "out/work/lipidcats/opls/with-outliers/Liver/Ref/Classes/PvT.csv"]
       cmd_ "Rscript ./src/R/glm/lipid-cats-pop-compare.R"
+
+    "out/table/lipidcats/Categories.tex" %> \out -> do
+      need ["src/python/tables/lipid-lipids-significance-categories.R", "out/work/lipidcats/glm/with-outliers/Muscle/Ref/Categories/PvT.csv"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/tables/lipids-significance-categories.py --input-dir ./out/work/lipidcats/glm --outlier with-outliers --output-dir ./out/tables/lipidcats"
 
