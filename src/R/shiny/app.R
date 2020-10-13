@@ -167,33 +167,23 @@ ui <- dashboardPage(
       tabItem(tabName = "primarySelections",
   #       https://stackoverflow.com/questions/27607566/allowing-one-tick-only-in-checkboxgroupinput
         p("Select which metabolites you want to include in the analysis. You can select via compound name, category, or a number of identifier systems. You can also select from different identifier types and the app will remember your selection for each heading and combine them on the summary page. Aftering making your selection, you can view the \"Summary\" tab to see the metabolites you select or proceed to any of the \"Visualization\" tabs.\""),
-#         uiOutput("selection_type"),
-        radioButtons(
-          inputId = "selection_type",
-          label = "Select by:",
-          choices = c("Name","KEGG","HMDB","ChEBI","Category"),
-#           selected = "Name",
-#           selected = "Metabolites",
-        ),
   #       https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
         lapply(c("Name","KEGG","HMDB","ChEBI","Category"), function(t) {
-          conditionalPanel(
-            condition = sprintf("input.selection_type.startsWith('%s')",t),
-            pickerInput(
-              inputId = sprintf("selector_%s",t),
-              label = "Make selections:",
-              choices = unique(compounds[t]),
-              options = list(
-        #              https://stackoverflow.com/questions/53609546/how-can-i-have-the-search-option-based-on-typing-letters-in-pickerinput-using-sh
-                `actions-box` = TRUE,
-                size = 10,
-                `selected-text-format` = "count > 3",
-                `live-search`=TRUE
-              ),
-              multiple = TRUE,
-            )
+          pickerInput(
+            inputId = sprintf("selector_%s",t),
+            label = glue("Select by {t}:"),
+            choices = unique(compounds[t]),
+            options = list(
+      #              https://stackoverflow.com/questions/53609546/how-can-i-have-the-search-option-based-on-typing-letters-in-pickerinput-using-sh
+              `actions-box` = TRUE,
+              size = 10,
+              `selected-text-format` = "count > 3",
+              `live-search`=TRUE
+            ),
+            multiple = TRUE,
           )
-        })
+        }),
+        textOutput("primaryNumSelected")
       ),
       tabItem(tabName = "primarySummary",
         dataTableOutput("primary_summary")
@@ -572,6 +562,7 @@ server <- function( input, output, session ) {
   selected_cpds <- reactive(filter(compounds, compounds$Name %in% input$selector_Name | compounds$KEGG %in% input$selector_KEGG | compounds$HMDB %in% input$selector_HMDB | compounds$ChEBI %in% input$selector_ChEBI |  compounds$Category %in% input$selector_Category))
 
   output$num_compounds <- reactive(nrow(selected_cpds()))
+  output$primaryNumSelected <- reactive(glue("{nrow(selected_cpds())} compounds selected"))
 #   https://stackoverflow.com/questions/21609436/r-shiny-conditionalpanel-output-value
   outputOptions(output, "num_compounds", suspendWhenHidden = FALSE)
 
@@ -581,36 +572,36 @@ server <- function( input, output, session ) {
 #   https://github.com/rstudio/shiny/pull/1397
 
 #   https://stackoverflow.com/questions/44688147/r-shiny-radio-buttons-not-updating-with-updateradiobuttons
-  observe({
-    num_names <- nrow(compounds %>% filter(Name %in% input$selector_Name))
-    num_keggs <- nrow(compounds %>% filter(KEGG %in% input$selector_KEGG))
-    num_hmdbs <- nrow(compounds %>% filter(HMDB %in% input$selector_HMDB))
-    num_chebis <- nrow(compounds %>% filter(ChEBI %in% input$selector_ChEBI))
-    num_cats <- nrow(compounds %>% filter(Category %in% input$selector_Category))
-    name <- glue("Name ({num_names} compounds)")
-    kegg <- glue("KEGG ({num_keggs} compounds)")
-    hmdb <- glue("HMDB ({num_hmdbs} compounds)")
-    chebi <- glue("ChEBI ({num_chebis} compounds)")
-    cat <- glue("Category ({num_cats} compounds)")
-    sel <- str_split(input$selection_type, " ")[[1]][1]
-    if (sel == "Name") {
-      newsel <- name
-    } else if (sel == "KEGG") {
-      newsel <- kegg
-    } else if (sel == "HMDB") {
-      newsel <- hmdb
-    } else if (sel == "ChEBI") {
-      newsel <- chebi
-    } else if (sel == "Category") {
-      newsel <- cat
-    }
-    updateRadioButtons(
-      session,
-      inputId="selection_type",
-      choices = c(name,kegg,hmdb,chebi,cat),
-      selected = newsel,
-    )
-  })
+#   observe({
+#     num_names <- nrow(compounds %>% filter(Name %in% input$selector_Name))
+#     num_keggs <- nrow(compounds %>% filter(KEGG %in% input$selector_KEGG))
+#     num_hmdbs <- nrow(compounds %>% filter(HMDB %in% input$selector_HMDB))
+#     num_chebis <- nrow(compounds %>% filter(ChEBI %in% input$selector_ChEBI))
+#     num_cats <- nrow(compounds %>% filter(Category %in% input$selector_Category))
+#     name <- glue("Name ({num_names} compounds)")
+#     kegg <- glue("KEGG ({num_keggs} compounds)")
+#     hmdb <- glue("HMDB ({num_hmdbs} compounds)")
+#     chebi <- glue("ChEBI ({num_chebis} compounds)")
+#     cat <- glue("Category ({num_cats} compounds)")
+#     sel <- str_split(input$selection_type, " ")[[1]][1]
+#     if (sel == "Name") {
+#       newsel <- name
+#     } else if (sel == "KEGG") {
+#       newsel <- kegg
+#     } else if (sel == "HMDB") {
+#       newsel <- hmdb
+#     } else if (sel == "ChEBI") {
+#       newsel <- chebi
+#     } else if (sel == "Category") {
+#       newsel <- cat
+#     }
+#     updateRadioButtons(
+#       session,
+#       inputId="selection_type",
+#       choices = c(name,kegg,hmdb,chebi,cat),
+#       selected = newsel,
+#     )
+#   })
 
   ###################################################################
   #          Primary Sample PCA                                     #
