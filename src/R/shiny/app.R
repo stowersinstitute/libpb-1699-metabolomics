@@ -23,6 +23,10 @@ conflict_prefer("select", "dplyr")
 
 options(shiny.port = 8080)
 
+# phantomjs resources
+# https://github.com/rstudio/shinyapps-package-dependencies/issues/102
+# https://github.com/plotly/plotly.js/issues/4556
+
 # https://shiny.rstudio.com/articles/dynamic-ui.html
 # https://stackoverflow.com/questions/21465411/r-shiny-passing-reactive-to-selectinput-choices/21467399#21467399
 # https://stackoverflow.com/questions/33973300/issue-in-dynamic-renderui-in-shiny
@@ -62,7 +66,6 @@ savePlotlyPDFUI <- function(id, label = "Download PDF File"){
     )
 }
 
-# From RNADrama, doesn't work
 savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
                           delay = 10, ...){ # these are the default values vwidth = 992, vheight = 744
 
@@ -83,33 +86,15 @@ savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
                 # check what object is being saved, use webshot fror plotly, ggsave for ggplot
                 if(class(plotlyToSave())[1] == "plotly"){
                     filename = namehtml
-                    saveWidget(plotlyToSave(), namehtml)
-                    # vwidth = vwidth, vheight = vheight
-                    webshot::webshot(url = namehtml, file = namepdf, delay = delay, ...)
-                    file.copy(namepdf, file, overwrite = TRUE)
-                    file.remove(namehtml)
+                    saveWidget(as_widget(plotlyToSave()), namehtml, selfcontained = TRUE)
+                    str <- read_file(namehtml)
+                    str <- sub("<script>","<script>Object.setPrototypeOf = Object.setPrototypeOf || ({ __proto__: [] } instanceof Array ? setProtoOf : mixinProperties);function setProtoOf (obj, proto) {obj.__proto__ = proto;return obj;}function mixinProperties (obj, proto) {for (var prop in proto) {if (!Object.prototype.hasOwnProperty.call(obj, prop)) {obj[prop] = proto[prop];}}return obj;}</script><script>",str)
+                    write_file(str,namehtml)
+                    webshot::webshot(url = namehtml, file = "/tmp/f.png", delay = delay, cliprect = "viewport")
+#                     file.copy(namepdf, file, overwrite = TRUE)
+#                     file.remove(namehtml)
                 } else if(class(plotlyToSave())[1] == "gg"){
                     ggsave(namepdf, plotlyToSave(), ...)
-                    file.copy(namepdf, file, overwrite = TRUE)
-                } else if(class(plotlyToSave())[1] == "upset") {
-                    filename = namepdf
-                    pdf(file = namepdf, ...)
-#                     print(plotlyToSave())
-                    dev.off()
-                    file.copy(namepdf, file, overwrite = TRUE)
-                } else if(class(plotlyToSave())[1] == "visNetwork") {
-                    filename = namehtml
-                    saveWidget(plotlyToSave(), namehtml, selfcontained = TRUE)
-                    # visSave(plotlyToSave(), namehtml, selfcontained = TRUE)
-                    # vwidth = vwidth, vheight = vheight
-                    webshot::webshot(url = namehtml, file = namepdf, delay = delay, ...)
-                    file.copy(namepdf, file, overwrite = TRUE)
-                    file.remove(namehtml)
-                } else{ # supposed to be for base plots, but doesn't work at the moment
-                    filename = namepdf
-                    pdf(file = namepdf, ...)
-                    plotlyToSave()
-                    dev.off()
                     file.copy(namepdf, file, overwrite = TRUE)
                 }
                 for (i in 1:5) {
