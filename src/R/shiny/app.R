@@ -189,6 +189,10 @@ ui <- dashboardPage(
             checkboxGroupInput("primaryPCAPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
             checkboxGroupInput("primaryPCAPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
           )
+        ),
+        p(class = 'text-center',
+          savePlotlyPDFUI(id = "download_primaryPCAPlot",
+                          label = "Download Plot (PDF)")
         )
       ),
       tabItem(tabName = "primaryCorrelation",
@@ -236,7 +240,11 @@ ui <- dashboardPage(
               checkboxGroupInput("primaryCorrPlotFeatureSelectTissues", "Tissues:", tissues, selected = tissues),
               checkboxGroupInput("primaryCorrPlotFeatureSelectConditions", "Conditions:", conditions, selected = conditions)
             )
-          )),
+          ),
+            p(class = 'text-center',
+              savePlotlyPDFUI(id = "download_primaryMetaboliteCorrPlot",
+                              label = "Download Plot (PDF)")
+            )),
           tabPanel(title = "By Category",
             value = "categoryCorr",
             plotlyOutput("primaryCategoryCorrPlt", height = 600) %>%
@@ -255,7 +263,11 @@ ui <- dashboardPage(
               checkboxGroupInput("primaryCorrPlotCategorySelectTissues", "Tissues:", tissues, selected = tissues),
               checkboxGroupInput("primaryCorrPlotCategorySelectConditions", "Conditions:", conditions, selected = conditions)
             )
-          ))
+          ),
+            p(class = 'text-center',
+              savePlotlyPDFUI(id = "download_primaryCategoryCorrPlot",
+                              label = "Download Plot (PDF)")
+            ))
         )
 #       p(class = 'text-center',
 #         savePlotlyPDFUI(id = "download_primarySampleCorrPlot",
@@ -279,6 +291,10 @@ ui <- dashboardPage(
             checkboxGroupInput("primaryHeatmapSelectConditions", "Conditions:", conditions, selected = conditions)
           )
         ),
+        p(class = 'text-center',
+          savePlotlyPDFUI(id = "download_primaryHeatmapPlot",
+                          label = "Download Plot (PDF)")
+        )
       ),
       tabItem(tabName = "primaryVolcano",
         p("You can choose to either compare populations (Compare Pop.) or feeding states (Compare Cond.)."),
@@ -300,6 +316,10 @@ ui <- dashboardPage(
                 checkboxGroupInput("primaryVolcanoPopulationSelectTissues", "Tissues:", tissues, selected = tissues),
                 checkboxGroupInput("primaryVolcanoPopulationSelectConditions", "Conditions:", conditions, selected = conditions)
               )
+            ),
+            p(class = 'text-center',
+              savePlotlyPDFUI(id = "download_primaryVolcanoPopulationPlot",
+                              label = "Download Plot (PDF)")
             )
           ),
           tabPanel(title = "Compare Pop.",
@@ -319,6 +339,10 @@ ui <- dashboardPage(
                 checkboxGroupInput("primaryVolcanoConditionSelectTissues", "Tissues:", tissues, selected = tissues),
                 checkboxGroupInput("primaryVolcanoConditionSelectPopulations", "Populations:", pops, selected = pops)
               )
+            ),
+            p(class = 'text-center',
+              savePlotlyPDFUI(id = "download_primaryVolcanoConditionPlot",
+                              label = "Download Plot (PDF)")
             )
           )
         )
@@ -326,6 +350,10 @@ ui <- dashboardPage(
       tabItem(tabName = "primaryQuantitative",
 #         https://stackoverflow.com/questions/21609436/r-shiny-conditionalpanel-output-value
         conditionalPanel(condition = "output.num_compounds <= 10",
+          p(class = 'text-center',
+            savePlotlyPDFUI(id = "download_primaryQuantitativePlot",
+                            label = "Download Plot (PDF)")
+          ),
           plotlyOutput("primaryLinePlt") %>%
           withSpinner(type = 8, color = "#0088cf", size = 1)
         ),
@@ -619,7 +647,12 @@ server <- function( input, output, session ) {
     pca$Population = spec$Population
     pca$Condition = spec$Condition
     colorby <- input$primaryPCAPlotSampleColorBy
-    plot_ly(data = as.data.frame(pca), x = ~PC1, y = ~PC2, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), height=600)
+    plt <- plot_ly(data = as.data.frame(pca), x = ~PC1, y = ~PC2, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), height=600)
+    callModule(module = savePlotlyPDF,
+                id = "download_primaryPCAPlot",
+                prefix = "PrimaryPCAPlot_",
+                plotlyToSave = reactive(plt))
+    plt
   })
 
   ###################################################################
@@ -679,10 +712,10 @@ server <- function( input, output, session ) {
       k_col = input$primaryCorrPlotFeatureNumClusters,
       k_row = input$primaryCorrPlotFeatureNumClusters
     )
-#     callModule(module = savePlotlyPDF,
-#                 id = "download_primaryFeatureCorrPlot",
-#                 prefix = "PrimaryFeatureCorrPlot_",
-#                 plotlyToSave = reactive(theplt))
+    callModule(module = savePlotlyPDF,
+                id = "download_primaryMetaboliteCorrPlot",
+                prefix = "PrimaryMetaboliteCorrPlot_",
+                plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -717,6 +750,7 @@ server <- function( input, output, session ) {
     theplt
   })
 
+  # duplicate?
   ###################################################################
   #          Primary Category Correlation Plot                      #
   ###################################################################
@@ -741,10 +775,10 @@ server <- function( input, output, session ) {
       k_col = input$primaryCorrPlotCategoryNumClusters,
       k_row = input$primaryCorrPlotCategoryNumClusters
     )
-#     callModule(module = savePlotlyPDF,
-#                 id = "download_primaryCategoryCorrPlot",
-#                 prefix = "PrimaryCategoryCorrPlot_",
-#                 plotlyToSave = reactive(theplt))
+    callModule(module = savePlotlyPDF,
+                id = "download_primaryCategoryCorrPlot",
+                prefix = "PrimaryCategoryCorrPlot_",
+                plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -767,10 +801,10 @@ server <- function( input, output, session ) {
       scale=scale,
       main = "Metabolites vs Samples",
     )
-#     callModule(module = savePlotlyPDF,
-#                 id = "download_primaryHeatmapPlot",
-#                 prefix = "PrimaryHeatmapPlot_",
-#                 plotlyToSave = reactive(theplt))
+    callModule(module = savePlotlyPDF,
+                id = "download_primaryHeatmapPlot",
+                prefix = "PrimaryHeatmapPlot_",
+                plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -806,6 +840,11 @@ server <- function( input, output, session ) {
     plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~Name, height=600) %>%
       plotly::layout(xaxis = list(title = sprintf("%s (log2fc)",comparison)), yaxis = list(title = "-log10 p")) %>%
       add_paths(x=c(min(merged[[comparison]]),max(merged[[comparison]])), y=c(1.3,1.3), text=c("a","b"), color="p=0.05")
+    callModule(module = savePlotlyPDF,
+                id = "download_primaryVolcanoPopulationPlot",
+                prefix = "download_primaryVolcanoPopulationPlot",
+                plotlyToSave = reactive(plt))
+    plt
   })
 
   ###################################################################
@@ -839,13 +878,18 @@ server <- function( input, output, session ) {
     plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~`%s`",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~Name, height=600) %>%
       plotly::layout(xaxis = list(title = sprintf("%s (log2fc)",comparison)), yaxis = list(title = "-log10 p")) %>%
       add_paths(x=c(min(merged[[comparison]]),max(merged[[comparison]])), y=c(1.3,1.3), text=c("a","b"), color="p=0.05")
+    callModule(module = savePlotlyPDF,
+                id = "download_primaryVolcanoConditionPlot",
+                prefix = "download_primaryVolcanoConditionPlot",
+                plotlyToSave = reactive(plt))
+    plt
   })
 
   ###################################################################
   #                        Primary Line Plot                        #
   ###################################################################
   output$primaryLinePlt <- renderPlotly({
-    subplot(lapply(selected_cpds()$Name,
+    subplt <- subplot(lapply(selected_cpds()$Name,
       function(name) {
         sharey <- input$primaryQuantShareY
         subplot(lapply(tissues, function(tissue) {
@@ -868,6 +912,11 @@ server <- function( input, output, session ) {
         }), shareY=sharey)
       }), nrows = length(selected_cpds()$Name)
     )
+    callModule(module = savePlotlyPDF,
+                id = "download_primaryQuantitativePlot",
+                prefix = "download_primaryQuantitativePlot",
+                plotlyToSave = reactive(subplt))
+    subplt
   })
 
   ###################################################################
