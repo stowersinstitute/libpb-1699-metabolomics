@@ -149,7 +149,7 @@ ui <- dashboardPage(
                menuSubItem("Correlation", tabName = "primaryCorrelation"),
                menuSubItem("Heatmap", tabName = "primaryHeatmap"),
                menuSubItem("Differential", tabName = "primaryVolcano"),
-               menuItem("Quantitative", menuSubItem("View Plot", tabName = "primaryQuantitative"), numericInput(inputId = "primaryQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "primaryQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "primaryQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
+               menuItem("Quantitative", menuSubItem("View Plot", tabName = "primaryQuantitative"), numericInput(inputId = "primaryQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "primaryQuantShareY", label = "Share Y per row?", value = FALSE), conditionalPanel('false', checkboxInput(inputId = "primaryQuantIncludeOutliers", label = "Include Outliers?", value = FALSE)))
               ),
       menuItem("Lipids",
                menuSubItem("Selections", tabName = "lipidsSelections"),
@@ -158,7 +158,7 @@ ui <- dashboardPage(
                menuItem("Correlation", tabName = "lipidsCorrelation"),
                menuSubItem("Heatmap", tabName = "lipidsHeatmap"),
                menuSubItem("Differential", tabName = "lipidsVolcano"),
-               menuItem("Quantitative", menuSubItem("View Plot", tabName = "lipidsQuantitative"), numericInput(inputId = "lipidsQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE))
+               menuItem("Quantitative", menuSubItem("View Plot", tabName = "lipidsQuantitative"), numericInput(inputId = "lipidsQuantPercentileRange", label = "Err bar pct.:", value = 95, min = 1, max = 99, step = 1), checkboxInput(inputId = "lipidsQuantShareY", label = "Share Y per row?", value = FALSE), conditionalPanel('false', checkboxInput(inputId = "lipidsQuantIncludeOutliers", label = "Include Outliers?", value = FALSE)))
               )
     )
   ),
@@ -198,8 +198,8 @@ ui <- dashboardPage(
             splitLayout(cellWidths = c("25%","25%","25%","25%"),
               column(6,
                 radioButtons("primaryPCAPlotSampleColorBy", label="Color by:", choices=c("Tissue","Population","Condition")),
-                checkboxInput(inputId = "primaryPCAPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE)
-                ),
+                conditionalPanel('false', checkboxInput(inputId = "primaryPCAPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE)
+                )),
             checkboxGroupInput("primaryPCAPlotSampleSelectPops", "Populations:", pops, selected = pops),
             checkboxGroupInput("primaryPCAPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
             checkboxGroupInput("primaryPCAPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
@@ -220,8 +220,8 @@ ui <- dashboardPage(
               column(6,
                 numericInput(inputId = "primaryCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
                 checkboxInput(inputId = "primaryCorrPlotSampleNormalize", label = "Normalize?", value = FALSE),
-                checkboxInput(inputId = "primaryCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
-                ),
+                conditionalPanel('false', checkboxInput(inputId = "primaryCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                )),
               checkboxGroupInput("primaryCorrPlotSampleSelectPops", "Populations:", pops, selected = pops),
               checkboxGroupInput("primaryCorrPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
               checkboxGroupInput("primaryCorrPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
@@ -239,8 +239,8 @@ ui <- dashboardPage(
                 column(6,
                   numericInput(inputId = "primaryCorrPlotFeatureNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
                   checkboxInput(inputId = "primaryCorrPlotFeatureNormalize", label = "Normalize?", value = FALSE),
-                  checkboxInput(inputId = "primaryCorrPlotFeatureIncludeOutliers", label = "Include Outliers?", value = FALSE),
-                  ),
+                  conditionalPanel('false', checkboxInput(inputId = "primaryCorrPlotFeatureIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  )),
               checkboxGroupInput("primaryCorrPlotFeatureSelectPops", "Populations:", pops, selected = pops),
               checkboxGroupInput("primaryCorrPlotFeatureSelectTissues", "Tissues:", tissues, selected = tissues),
               checkboxGroupInput("primaryCorrPlotFeatureSelectConditions", "Conditions:", conditions, selected = conditions)
@@ -258,8 +258,8 @@ ui <- dashboardPage(
                 column(6,
                   numericInput(inputId = "primaryCorrPlotCategoryNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
                   checkboxInput(inputId = "primaryCorrPlotCategoryNormalize", label = "Normalize?", value = FALSE),
-                  checkboxInput(inputId = "primaryCorrPlotCategoryIncludeOutliers", label = "Include Outliers?", value = FALSE),
-                  ),
+                  conditionalPanel('false', checkboxInput(inputId = "primaryCorrPlotCategoryIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  )),
               checkboxGroupInput("primaryCorrPlotCategorySelectPops", "Populations:", pops, selected = pops),
               checkboxGroupInput("primaryCorrPlotCategorySelectTissues", "Tissues:", tissues, selected = tissues),
               checkboxGroupInput("primaryCorrPlotCategorySelectConditions", "Conditions:", conditions, selected = conditions)
@@ -281,8 +281,8 @@ ui <- dashboardPage(
           splitLayout(cellWidths = c("25%","25%","25%","25%"),
             column(6,
               selectInput("primaryHeatmapNormalize",label="Normalize",choices=c("row","column")),
-              checkboxInput(inputId = "primaryHeatmapIncludeOutliers", label = "Include Outliers?", value = FALSE),
-              ),
+              conditionalPanel('false', checkboxInput(inputId = "primaryHeatmapIncludeOutliers", label = "Include Outliers?", value = FALSE),
+              )),
             checkboxGroupInput("primaryHeatmapSelectPops", "Populations:", pops, selected = pops),
             checkboxGroupInput("primaryHeatmapSelectTissues", "Tissues:", tissues, selected = tissues),
             checkboxGroupInput("primaryHeatmapSelectConditions", "Conditions:", conditions, selected = conditions)
@@ -343,7 +343,7 @@ ui <- dashboardPage(
         )
       ),
       tabItem(tabName = "lipidsSelections",
-        p("Select which lipids you want to include in the analysis."),
+        p("Select which lipids you want to include in the analysis. The InChIKey is the primary id and does not necessarily map injectively to LipidMaps IDs."),
 #         radioButtons(
 #           inputId = "lipid_selection_type",
 #           label = "Select by:",
@@ -381,7 +381,7 @@ ui <- dashboardPage(
             splitLayout(cellWidths = c("25%","25%","25%","25%"),
               column(6,
                 radioButtons("lipidsPCAPlotSampleColorBy", label="Color by:", choices=c("Tissue","Population","Condition")),
-                checkboxInput(inputId = "lipidsPCAPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE)
+                conditionalPanel('false', checkboxInput(inputId = "lipidsPCAPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE))
                 ),
             checkboxGroupInput("lipidsPCAPlotSampleSelectPops", "Populations:", pops, selected = pops),
             checkboxGroupInput("lipidsPCAPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
@@ -403,7 +403,7 @@ ui <- dashboardPage(
               column(6,
                 numericInput(inputId = "lipidsCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
                 checkboxInput(inputId = "lipidsCorrPlotSampleNormalize", label = "Normalize?", value = FALSE),
-                checkboxInput(inputId = "lipidsCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                conditionalPanel('false', checkboxInput(inputId = "lipidsCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE)),
                 ),
               checkboxGroupInput("lipidsCorrPlotSampleSelectPops", "Populations:", pops, selected = pops),
               checkboxGroupInput("lipidsCorrPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
@@ -422,7 +422,7 @@ ui <- dashboardPage(
                 column(6,
                   numericInput(inputId = "lipidsCorrPlotFeatureNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
                   checkboxInput(inputId = "lipidsCorrPlotFeatureNormalize", label = "Normalize?", value = FALSE),
-                  checkboxInput(inputId = "lipidsCorrPlotFeatureIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  conditionalPanel('false', checkboxInput(inputId = "lipidsCorrPlotFeatureIncludeOutliers", label = "Include Outliers?", value = FALSE)),
                   ),
               checkboxGroupInput("lipidsCorrPlotFeatureSelectPops", "Populations:", pops, selected = pops),
               checkboxGroupInput("lipidsCorrPlotFeatureSelectTissues", "Tissues:", tissues, selected = tissues),
@@ -441,7 +441,7 @@ ui <- dashboardPage(
                 column(6,
                   numericInput(inputId = "lipidsCorrPlotCategoryNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
                   checkboxInput(inputId = "lipidsCorrPlotCategoryNormalize", label = "Normalize?", value = FALSE),
-                  checkboxInput(inputId = "lipidsCorrPlotCategoryIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  conditionalPanel('false', checkboxInput(inputId = "lipidsCorrPlotCategoryIncludeOutliers", label = "Include Outliers?", value = FALSE)),
                   ),
               checkboxGroupInput("lipidsCorrPlotCategorySelectPops", "Populations:", pops, selected = pops),
               checkboxGroupInput("lipidsCorrPlotCategorySelectTissues", "Tissues:", tissues, selected = tissues),
@@ -460,7 +460,7 @@ ui <- dashboardPage(
                 column(3,
                   numericInput(inputId = "lipidsCorrPlotClassNumClusters", label = "Number of Clusters:", value = 3, min = 1, width="50%", step = 1),
                   checkboxInput(inputId = "lipidsCorrPlotClassNormalize", label = "Normalize?", value = FALSE),
-                  checkboxInput(inputId = "lipidsCorrPlotClassIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  conditionalPanel('false', checkboxInput(inputId = "lipidsCorrPlotClassIncludeOutliers", label = "Include Outliers?", value = FALSE)),
                   ),
               checkboxGroupInput("lipidsCorrPlotClassSelectPops", "Populations:", pops, selected = pops),
               checkboxGroupInput("lipidsCorrPlotClassSelectTissues", "Tissues:", tissues, selected = tissues),
@@ -479,7 +479,7 @@ ui <- dashboardPage(
           splitLayout(cellWidths = c("25%","25%","25%","25%"),
             column(6,
               selectInput("lipidsHeatmapNormalize",label="Normalize",choices=c("row","column")),
-              checkboxInput(inputId = "lipidsHeatmapIncludeOutliers", label = "Include Outliers?", value = FALSE),
+              conditionalPanel('false', checkboxInput(inputId = "lipidsHeatmapIncludeOutliers", label = "Include Outliers?", value = FALSE)),
               ),
             checkboxGroupInput("lipidsHeatmapSelectPops", "Populations:", pops, selected = pops),
             checkboxGroupInput("lipidsHeatmapSelectTissues", "Tissues:", tissues, selected = tissues),
