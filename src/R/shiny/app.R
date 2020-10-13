@@ -69,15 +69,12 @@ savePlotlyPDFUI <- function(id, label = "Download PDF File"){
 savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
                           delay = 10, ...){ # these are the default values vwidth = 992, vheight = 744
 
-    print("savePlotlyPDF")
-
-    namepdf = paste0('/tmp/Plot_', prefix, Sys.Date(), ".pdf")
-    namehtml = paste0('/tmp/Plot_', prefix, Sys.Date(), ".html")
+    namepdf = paste0('Plot_', prefix, Sys.Date(), ".pdf")
+    namehtml = paste0('Plot_', prefix, Sys.Date(), ".html")
 
     output$downloadPDF <- downloadHandler(
         filename = namepdf,
         content =  function(file){
-            print("savePlotlyPDF Download")
             withProgress(message = 'Saving PDF', style = "notification", value = 0, {
                 for (i in 1:5) {
                     incProgress(0.1)
@@ -90,9 +87,9 @@ savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
                     str <- read_file(namehtml)
                     str <- sub("<script>","<script>Object.setPrototypeOf = Object.setPrototypeOf || ({ __proto__: [] } instanceof Array ? setProtoOf : mixinProperties);function setProtoOf (obj, proto) {obj.__proto__ = proto;return obj;}function mixinProperties (obj, proto) {for (var prop in proto) {if (!Object.prototype.hasOwnProperty.call(obj, prop)) {obj[prop] = proto[prop];}}return obj;}</script><script>",str)
                     write_file(str,namehtml)
-                    webshot::webshot(url = namehtml, file = "/tmp/f.png", delay = delay, cliprect = "viewport")
-#                     file.copy(namepdf, file, overwrite = TRUE)
-#                     file.remove(namehtml)
+                    webshot::webshot(url = namehtml, file = namepdf, delay = delay, cliprect = "viewport")
+                    file.copy(namepdf, file, overwrite = TRUE)
+                    file.remove(namehtml)
                 } else if(class(plotlyToSave())[1] == "gg"){
                     ggsave(namepdf, plotlyToSave(), ...)
                     file.copy(namepdf, file, overwrite = TRUE)
