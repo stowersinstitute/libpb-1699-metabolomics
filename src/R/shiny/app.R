@@ -166,7 +166,7 @@ ui <- dashboardPage(
     tabItems(
       tabItem(tabName = "primarySelections",
   #       https://stackoverflow.com/questions/27607566/allowing-one-tick-only-in-checkboxgroupinput
-        p("Select which metabolites you want to include in the analysis. You can select via compound name, category, or a number of identifier systems. You can also select from different identifier types and the app will remember your selection for each heading and combine them on the summary page. Aftering making your selection, you can view the \"Summary\" tab to see the metabolites you select or proceed to any of the \"Visualization\" tabs.\""),
+        p("Select which metabolites you want to include in the analysis. You can select via compound name, category, or a number of identifier systems. You can also select from different identifier types and the app will remember your selection for each heading and combine them on the summary page. Aftering making your selection, you can view the \"Summary\" tab to see the metabolites you select or proceed to any of the visualization tabs.\""),
   #       https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
         lapply(c("Name","KEGG","HMDB","ChEBI","Category"), function(t) {
           pickerInput(
@@ -344,31 +344,29 @@ ui <- dashboardPage(
       ),
       tabItem(tabName = "lipidsSelections",
         p("Select which lipids you want to include in the analysis."),
-        radioButtons(
-          inputId = "lipid_selection_type",
-          label = "Select by:",
-          choices = c("LMID","Name","InChIKey","Category","MainClass","Saturation"),
-          selected = "LMID",
-  #         selected = "Name",
-        ),
+#         radioButtons(
+#           inputId = "lipid_selection_type",
+#           label = "Select by:",
+#           choices = c("LMID","Name","InChIKey","Category","MainClass","Saturation"),
+#           selected = "LMID",
+#           selected = "Name",
+#         ),
   #       https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
         lapply(c("LMID","Name","InChIKey","Category","MainClass","Saturation"), function(t) {
-          conditionalPanel(
-            condition = sprintf("input.lipid_selection_type == '%s'",t),
-            pickerInput(
-              inputId = sprintf("lipid_selector_%s",t),
-              label = "Make selections:",
-              choices = unique(lipid_ids[t]),
-              options = list(
-                `actions-box` = TRUE,
-                size = 10,
-                `selected-text-format` = "count > 3",
-                `live-search`=TRUE
-              ),
-              multiple = TRUE,
-            )
+          pickerInput(
+            inputId = sprintf("lipid_selector_%s",t),
+            label = glue("Select by {t}:"),
+            choices = unique(lipid_ids[t]),
+            options = list(
+              `actions-box` = TRUE,
+              size = 10,
+              `selected-text-format` = "count > 3",
+              `live-search`=TRUE
+            ),
+            multiple = TRUE,
           )
-        })
+        }),
+        textOutput("lipidsNumSelected")
       ),
       tabItem(tabName = "lipidsSummary",
         dataTableOutput("lipids_summary")
@@ -888,6 +886,7 @@ server <- function( input, output, session ) {
   selected_lipids <- reactive(filter(lipid_ids, lipid_ids$LMID %in% input$lipid_selector_LMID| lipid_ids$Name %in% input$lipid_selector_Name | lipid_ids$InChIKey %in% input$lipid_selector_InChIKey | lipid_ids$Category %in% input$lipid_selector_Category |  lipid_ids$MainClass %in% input$lipid_selector_MainClass |  lipid_ids$Saturation %in% input$lipid_selector_Saturation))
 
   output$num_lipids <- reactive(nrow(selected_lipids()))
+  output$lipidsNumSelected <- reactive(glue("{nrow(selected_lipids())} lipids selected"))
 #   https://stackoverflow.com/questions/21609436/r-shiny-conditionalpanel-output-value
   outputOptions(output, "num_lipids", suspendWhenHidden = FALSE)
 
