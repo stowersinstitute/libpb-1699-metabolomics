@@ -322,7 +322,7 @@ ui <- dashboardPage(
                               label = "Download Plot (PDF)")
             )
           ),
-          tabPanel(title = "Compare Pop.",
+          tabPanel(title = "Compare Cond.",
             value = "compareCond",
             plotlyOutput("primaryVolcanoCondition", height = 600) %>%
               withSpinner(type = 8, color = "#0088cf", size = 1),
@@ -406,6 +406,10 @@ ui <- dashboardPage(
             checkboxGroupInput("lipidsPCAPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
             checkboxGroupInput("lipidsPCAPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
           )
+        ),
+        p(class = 'text-center',
+          savePlotlyPDFUI(id = "download_lipidsPCAPlot",
+                          label = "Download Plot (PDF)")
         )
       ),
       tabItem(tabName = "lipidsCorrelation",
@@ -428,7 +432,10 @@ ui <- dashboardPage(
               checkboxGroupInput("lipidsCorrPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
               checkboxGroupInput("lipidsCorrPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
             )
-          )),
+          ), p(class = 'text-center',
+              savePlotlyPDFUI(id = "download_lipidsSampleCorrPlot",
+                              label = "Download Plot (PDF)")
+            )),
           tabPanel(title = "By Metabolite",
             value = "featureCorr",
             plotlyOutput("lipidsFeatureCorrPlt", height = 600) %>%
@@ -447,7 +454,10 @@ ui <- dashboardPage(
               checkboxGroupInput("lipidsCorrPlotFeatureSelectTissues", "Tissues:", tissues, selected = tissues),
               checkboxGroupInput("lipidsCorrPlotFeatureSelectConditions", "Conditions:", conditions, selected = conditions)
             )
-          )),
+          ),p(class = 'text-center',
+              savePlotlyPDFUI(id = "download_lipidsMetaboliteCorrPlot",
+                              label = "Download Plot (PDF)")
+            )),
           tabPanel(title = "By Category",
             value = "categoryCorr",
             plotlyOutput("lipidsCategoryCorrPlt", height = 600) %>%
@@ -466,7 +476,11 @@ ui <- dashboardPage(
               checkboxGroupInput("lipidsCorrPlotCategorySelectTissues", "Tissues:", tissues, selected = tissues),
               checkboxGroupInput("lipidsCorrPlotCategorySelectConditions", "Conditions:", conditions, selected = conditions)
             )
-          )),
+          ),
+            p(class = 'text-center',
+              savePlotlyPDFUI(id = "download_lipidsCategoryCorrPlot",
+                              label = "Download Plot (PDF)")
+            )),
           tabPanel(title = "By Class",
             value = "classCorr",
             plotlyOutput("lipidsClassCorrPlt", height = 600) %>%
@@ -485,7 +499,11 @@ ui <- dashboardPage(
               checkboxGroupInput("lipidsCorrPlotClassSelectTissues", "Tissues:", tissues, selected = tissues),
               checkboxGroupInput("lipidsCorrPlotClassSelectConditions", "Conditions:", conditions, selected = conditions)
             )
-          ))
+          ),
+            p(class = 'text-center',
+              savePlotlyPDFUI(id = "download_lipidsClassCorrPlot",
+                              label = "Download Plot (PDF)")
+            ))
         )
       ),
       tabItem(tabName = "lipidsHeatmap",
@@ -505,6 +523,10 @@ ui <- dashboardPage(
             checkboxGroupInput("lipidsHeatmapSelectConditions", "Conditions:", conditions, selected = conditions)
           )
         ),
+        p(class = 'text-center',
+          savePlotlyPDFUI(id = "download_lipidsHeatmapPlot",
+                          label = "Download Plot (PDF)")
+        )
       ),
       tabItem(tabName = "lipidsVolcano",
         p("You can choose to either compare populations (Compare Pop.) or feeding states (Compare Cond.)."),
@@ -526,6 +548,10 @@ ui <- dashboardPage(
                 checkboxGroupInput("lipidsVolcanoPopulationSelectTissues", "Tissues:", tissues, selected = tissues),
                 checkboxGroupInput("lipidsVolcanoPopulationSelectConditions", "Conditions:", conditions, selected = conditions)
               )
+            ),
+            p(class = 'text-center',
+              savePlotlyPDFUI(id = "download_lipidsVolcanoPopulationPlot",
+                              label = "Download Plot (PDF)")
             )
           ),
           tabPanel(title = "Compare Pop.",
@@ -545,6 +571,10 @@ ui <- dashboardPage(
                 checkboxGroupInput("lipidsVolcanoConditionSelectTissues", "Tissues:", tissues, selected = tissues),
                 checkboxGroupInput("lipidsVolcanoConditionSelectPopulations", "Populations:", pops, selected = pops)
               )
+            ),
+            p(class = 'text-center',
+              savePlotlyPDFUI(id = "download_lipidsVolcanoConditionPlot",
+                              label = "Download Plot (PDF)")
             )
           )
         )
@@ -552,6 +582,10 @@ ui <- dashboardPage(
       tabItem(tabName = "lipidsQuantitative",
 #         https://stackoverflow.com/questions/21609436/r-shiny-conditionalpanel-output-value
         conditionalPanel(condition = "output.num_lipids <= 10",
+          p(class = 'text-center',
+            savePlotlyPDFUI(id = "download_lipidsQuantitativePlot",
+                            label = "Download Plot (PDF)")
+          ),
           plotlyOutput("lipidsLinePlt") %>%
           withSpinner(type = 8, color = "#0088cf", size = 1)
         ),
@@ -960,7 +994,12 @@ server <- function( input, output, session ) {
     pca$Population = spec$Population
     pca$Condition = spec$Condition
     colorby <- input$lipidsPCAPlotSampleColorBy
-    plot_ly(data = as.data.frame(pca), x = ~PC1, y = ~PC2, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), height=600)
+    plt <- plot_ly(data = as.data.frame(pca), x = ~PC1, y = ~PC2, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), height=600)
+    callModule(module = savePlotlyPDF,
+                id = "download_lipidsPCAPlot",
+                prefix = "LipidsPCAPlot_",
+                plotlyToSave = reactive(plt))
+    plt
   })
 
   ###################################################################
@@ -989,10 +1028,10 @@ server <- function( input, output, session ) {
       k_col = input$lipidsCorrPlotSampleNumClusters,
       k_row = input$lipidsCorrPlotSampleNumClusters
     )
-#     callModule(module = savePlotlyPDF,
-#                 id = "download_lipidsSampleCorrPlot",
-#                 prefix = "LipidsSampleCorrPlot_",
-#                 plotlyToSave = reactive(theplt))
+    callModule(module = savePlotlyPDF,
+                id = "download_lipidsSampleCorrPlot",
+                prefix = "LipidsSampleCorrPlot_",
+                plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -1020,10 +1059,10 @@ server <- function( input, output, session ) {
       k_col = input$lipidsCorrPlotFeatureNumClusters,
       k_row = input$lipidsCorrPlotFeatureNumClusters
     )
-#     callModule(module = savePlotlyPDF,
-#                 id = "download_lipidsFeatureCorrPlot",
-#                 prefix = "LipidsFeatureCorrPlot_",
-#                 plotlyToSave = reactive(theplt))
+    callModule(module = savePlotlyPDF,
+                id = "download_lipidsMetaboliteCorrPlot",
+                prefix = "LipidsMetaboliteCorrPlot_",
+                plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -1051,10 +1090,10 @@ server <- function( input, output, session ) {
       k_col = input$lipidsCorrPlotCategoryNumClusters,
       k_row = input$lipidsCorrPlotCategoryNumClusters
     )
-#     callModule(module = savePlotlyPDF,
-#                 id = "download_lipidsCategoryCorrPlot",
-#                 prefix = "LipidsCategoryCorrPlot_",
-#                 plotlyToSave = reactive(theplt))
+    callModule(module = savePlotlyPDF,
+                id = "download_lipidsCategoryCorrPlot",
+                prefix = "LipidsCategoryCorrPlot_",
+                plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -1082,10 +1121,10 @@ server <- function( input, output, session ) {
       k_col = input$lipidsCorrPlotClassNumClusters,
       k_row = input$lipidsCorrPlotClassNumClusters
     )
-#     callModule(module = savePlotlyPDF,
-#                 id = "download_lipidsClassCorrPlot",
-#                 prefix = "LipidsClassCorrPlot_",
-#                 plotlyToSave = reactive(theplt))
+    callModule(module = savePlotlyPDF,
+                id = "download_lipidsClassCorrPlot",
+                prefix = "LipidsClassCorrPlot_",
+                plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -1108,10 +1147,10 @@ server <- function( input, output, session ) {
       scale=scale,
       main = "Lipids vs Samples",
     )
-#     callModule(module = savePlotlyPDF,
-#                 id = "download_lipidsHeatmapPlot",
-#                 prefix = "LipidsheatmapPlot_",
-#                 plotlyToSave = reactive(theplt))
+    callModule(module = savePlotlyPDF,
+                id = "download_lipidsHeatmapPlot",
+                prefix = "LipidsHeatmapPlot_",
+                plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -1147,6 +1186,11 @@ server <- function( input, output, session ) {
     plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~%s",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~LMID, height=600) %>%
       plotly::layout(xaxis = list(title = sprintf("%s (log2fc)",comparison)), yaxis = list(title = "-log10 p")) %>%
       add_paths(x=c(min(merged[[comparison]]),max(merged[[comparison]])), y=c(1.3,1.3), text=c("a","b"), color="p=0.05")
+    callModule(module = savePlotlyPDF,
+                id = "download_lipidsVolcanoPopulationPlot",
+                prefix = "download_lipidsVolcanoPopulationPlot",
+                plotlyToSave = reactive(plt))
+    plt
   })
 
   ###################################################################
@@ -1180,13 +1224,18 @@ server <- function( input, output, session ) {
     plt <- plot_ly(data = as.data.frame(merged), x = as.formula(sprintf("~`%s`",comparison)), y = ~`-log10 p`, type = "scatter", mode="markers", color= as.formula(sprintf("~%s",colorby)), text=~LMID, height=600) %>%
       plotly::layout(xaxis = list(title = sprintf("%s (log2fc)",comparison)), yaxis = list(title = "-log10 p")) %>%
       add_paths(x=c(min(merged[[comparison]]),max(merged[[comparison]])), y=c(1.3,1.3), text=c("a","b"), color="p=0.05")
+    callModule(module = savePlotlyPDF,
+                id = "download_lipidsVolcanoConditionPlot",
+                prefix = "download_lipidsVolcanoConditionPlot",
+                plotlyToSave = reactive(plt))
+    plt
   })
 
   ###################################################################
   #                         Lipids Line Plot                        #
   ###################################################################
   output$lipidsLinePlt <- renderPlotly({
-    subplot(lapply(selected_lipids()$Name,
+    subplt <- subplot(lapply(selected_lipids()$Name,
       function(name) {
         sharey <- input$lipidsQuantShareY
         subplot(lapply(tissues, function(tissue) {
@@ -1209,51 +1258,12 @@ server <- function( input, output, session ) {
         }), shareY=sharey)
       }), nrows = length(selected_lipids()$Name)
     )
+    callModule(module = savePlotlyPDF,
+                id = "download_lipidsQuantitativePlot",
+                prefix = "download_lipidsQuantitativePlot",
+                plotlyToSave = reactive(subplt))
+    subplt
   })
-
-#   output$primaryCorrelationDownloadPDF <- downloadHandler(
-#       filename = "thefile",
-#       content =  function(file){
-#           print("savePlotlyPDF Download2")
-#           withProgress(message = 'Saving PDF', style = "notification", value = 0, {
-#               for (i in 1:5) {
-#                   incProgress(0.1)
-#                   Sys.sleep(0.01)
-#               }
-#               if(class(plotlyToSave())[1] == "plotly"){
-#                   filename = namehtml
-#                   saveWidget(plotlyToSave(), namehtml)
-#                   webshot::webshot(url = namehtml, file = namepdf, delay = delay, ...)
-#                   file.copy(namepdf, file, overwrite = TRUE)
-#                   file.remove(namehtml)
-#               } else if(class(plotlyToSave())[1] == "gg"){
-#                   ggsave(namepdf, plotlyToSave(), ...)
-#                   file.copy(namepdf, file, overwrite = TRUE)
-#               } else if(class(plotlyToSave())[1] == "upset") {
-#                   filename = namepdf
-#                   pdf(file = namepdf, ...)
-#                   dev.off()
-#                   file.copy(namepdf, file, overwrite = TRUE)
-#               } else if(class(plotlyToSave())[1] == "visNetwork") {
-#                   filename = namehtml
-#                   saveWidget(plotlyToSave(), namehtml, selfcontained = TRUE)
-#                   webshot::webshot(url = namehtml, file = namepdf, delay = delay, ...)
-#                   file.copy(namepdf, file, overwrite = TRUE)
-#                   file.remove(namehtml)
-#               } else{ # supposed to be for base plots, but doesn't work at the moment
-#                   filename = namepdf
-#                   pdf(file = namepdf, ...)
-#                   plotlyToSave()
-#                   dev.off()
-#                   file.copy(namepdf, file, overwrite = TRUE)
-#               }
-#               for (i in 1:5) {
-#                   incProgress(0.1)
-#                   Sys.sleep(0.01)
-#               }
-#           })
-#       }
-#   )
 
 }
 
