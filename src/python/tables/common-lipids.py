@@ -141,16 +141,19 @@ def get_sigs(name):
                     r.append(highlight_muscle('', tissue=='Muscle'))
     return r
 for name in sorted(set(data['Name'])):
-    table_data.append(f'{name} & ' + ' & '.join(get_sigs(name)) + r' \\\hline')
+    table_data.append(f'\\multicolumn{{1}}{{r|}}{{{name}}} & ' + ' & '.join(get_sigs(name)) + r' \\\cline{2-28}')
 table_data = '\n'.join(table_data)
 
 def make_comp_text(comp):
     return ' vs. '.join(comp)
 
-table_cols = '| m{3cm} | ' + ' || '.join([' | '.join(['m{0.225cm}']*9)]*3) + ' | '
-table_comparison_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c|}}{{{make_comp_text(comp)}}}' for comp in comparisons.values()]) + r' \\'
-table_tissue_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c|}}{{{tissue}}}' for tissue in tissues]*3) + r' \\'
-table_condition_header = r'\multicolumn{1}{c|}{} & ' + ' & '.join([f'{condition}' for condition in conditions_really_short]*9) + r' \\'
+def bold(u):
+    return f'\\textbf{{{str(u)}}}'
+
+table_cols = '| r | ' + ' !{\\vrule width 2pt} '.join([' | '.join(['l']*9)]*3) + ' | '
+table_comparison_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{9}}{{c}}{{{bold(make_comp_text(comp))}}}' for comp in comparisons.values()]) + r' \\'
+table_tissue_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{3}}{{c}}{{{bold(tissue)}}}' for tissue in tissues]*3) + r' \\'
+table_condition_header = r'\multicolumn{1}{c}{} & ' + ' & '.join([f'\\multicolumn{{1}}{{c}}{{{bold(condition)}}}' for condition in conditions_really_short]*9) + r' \\'
 
 tabletex = r'''
 \begin{table*}[t]
@@ -159,13 +162,10 @@ tabletex = r'''
 \resizebox{1.05\textwidth}{!}{
 \begin{tabular}
 {$cols}
-\cline{2-28}
 $table_comparison_header
-\cline{2-28}
 $table_tissue_header
-\cline{2-28}
 $table_condition_header
-\hline
+\cline{2-28}
 $data
 \end{tabular}
 }
