@@ -166,18 +166,18 @@ ui <- dashboardPage(
       tabItem(tabName = "primarySelections",
   #       https://stackoverflow.com/questions/27607566/allowing-one-tick-only-in-checkboxgroupinput
         p("Select which metabolites you want to include in the analysis. You can select via compound name, category, or a number of identifier systems. You can also select from different identifier types and the app will remember your selection for each heading and combine them on the summary page. Aftering making your selection, you can view the \"Summary\" tab to see the metabolites you select or proceed to any of the \"Visualization\" tabs.\""),
-        uiOutput("selection_type"),
-#         radioButtons(
-#           inputId = "selection_type",
-#           label = "Select by:",
-#           choices = c("Name","KEGG","HMDB","ChEBI","Category"),
+#         uiOutput("selection_type"),
+        radioButtons(
+          inputId = "selection_type",
+          label = "Select by:",
+          choices = c("Name","KEGG","HMDB","ChEBI","Category"),
 #           selected = "Name",
 #           selected = "Metabolites",
-#         ),
+        ),
   #       https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
         lapply(c("Name","KEGG","HMDB","ChEBI","Category"), function(t) {
           conditionalPanel(
-            condition = sprintf("input.selection_type == '%s'",t),
+            condition = sprintf("input.selection_type.startsWith('%s')",t),
             pickerInput(
               inputId = sprintf("selector_%s",t),
               label = "Make selections:",
@@ -562,7 +562,7 @@ ui <- dashboardPage(
 )
 
 
-server <- function(input, output) {
+server <- function( input, output, session ) {
 
   ###################################################################
   #                            Primary                              #
@@ -576,13 +576,26 @@ server <- function(input, output) {
 
   output$primary_summary <- renderDataTable(selected_cpds())
 
-  output$selection_type <- renderUI({
+  # Maintain names of factors when updating radio buttons' choices
+#   https://github.com/rstudio/shiny/pull/1397
+
+#   https://stackoverflow.com/questions/44688147/r-shiny-radio-buttons-not-updating-with-updateradiobuttons
+#   output$selection_type <- renderUI({
+#     nc <- nrow(selected_cpds())
+#     radioButtons(
+#       inputId = "selection_type",
+#       label = "Select by:",
+#       choices = c(glue("Name ({nc})"),"KEGG","HMDB","ChEBI","Category"),
+#       selected = "Name",
+#     )
+#   })
+  observe({
     nc <- nrow(selected_cpds())
-    radioButtons(
-      inputId = "selection_type",
-      label = "Select by:",
+    updateRadioButtons(
+      session,
+      inputId="selection_type",
       choices = c(glue("Name ({nc})"),"KEGG","HMDB","ChEBI","Category"),
-      selected = "Name",
+      selected = input$selection_type,
     )
   })
 
