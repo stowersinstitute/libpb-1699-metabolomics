@@ -66,12 +66,15 @@ savePlotlyPDFUI <- function(id, label = "Download PDF File"){
 savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
                           delay = 10, ...){ # these are the default values vwidth = 992, vheight = 744
 
-    namepdf = paste0('Plot_', prefix, Sys.Date(), ".pdf")
-    namehtml = paste0('Plot_', prefix, Sys.Date(), ".html")
+    print("savePlotlyPDF")
+
+    namepdf = paste0('/tmp/Plot_', prefix, Sys.Date(), ".pdf")
+    namehtml = paste0('/tmp/Plot_', prefix, Sys.Date(), ".html")
 
     output$downloadPDF <- downloadHandler(
         filename = namepdf,
         content =  function(file){
+            print("savePlotlyPDF Download")
             withProgress(message = 'Saving PDF', style = "notification", value = 0, {
                 for (i in 1:5) {
                     incProgress(0.1)
@@ -80,7 +83,7 @@ savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
                 # check what object is being saved, use webshot fror plotly, ggsave for ggplot
                 if(class(plotlyToSave())[1] == "plotly"){
                     filename = namehtml
-                    saveWidget(plotlyToSave(), namehtml, selfcontained = TRUE)
+                    saveWidget(plotlyToSave(), namehtml)
                     # vwidth = vwidth, vheight = vheight
                     webshot::webshot(url = namehtml, file = namepdf, delay = delay, ...)
                     file.copy(namepdf, file, overwrite = TRUE)
@@ -212,21 +215,27 @@ ui <- dashboardPage(
             value = "sampleCorr",
             plotlyOutput("primarySampleCorrPlt", height = 600) %>%
               withSpinner(type = 8, color = "#0088cf", size = 1),
-          box(title = "Controls",
-            width = NULL,
-            solidHeader = TRUE,
-            status = "primary",
-            splitLayout(cellWidths = c("25%","25%","25%","25%"),
-              column(6,
-                numericInput(inputId = "primaryCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
-                checkboxInput(inputId = "primaryCorrPlotSampleNormalize", label = "Normalize?", value = FALSE),
-                conditionalPanel('false', checkboxInput(inputId = "primaryCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
-                )),
-              checkboxGroupInput("primaryCorrPlotSampleSelectPops", "Populations:", pops, selected = pops),
-              checkboxGroupInput("primaryCorrPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
-              checkboxGroupInput("primaryCorrPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
+            box(title = "Controls",
+              width = NULL,
+              solidHeader = TRUE,
+              status = "primary",
+              splitLayout(cellWidths = c("25%","25%","25%","25%"),
+                column(6,
+                  numericInput(inputId = "primaryCorrPlotSampleNumClusters", label = "Number of Clusters:", value = 3, min = 1, step = 1),
+                  checkboxInput(inputId = "primaryCorrPlotSampleNormalize", label = "Normalize?", value = FALSE),
+                  conditionalPanel('false', checkboxInput(inputId = "primaryCorrPlotSampleIncludeOutliers", label = "Include Outliers?", value = FALSE),
+                  )),
+                checkboxGroupInput("primaryCorrPlotSampleSelectPops", "Populations:", pops, selected = pops),
+                checkboxGroupInput("primaryCorrPlotSampleSelectTissues", "Tissues:", tissues, selected = tissues),
+                checkboxGroupInput("primaryCorrPlotSampleSelectConditions", "Conditions:", conditions, selected = conditions)
+              )
+            ),
+#             downloadButton(outputId = "primaryCorrelationDownloadPDF", label = "Download PDF")
+            p(class = 'text-center',
+              savePlotlyPDFUI(id = "download_primarySampleCorrPlot",
+                              label = "Download Plot (PDF)")
             )
-          )),
+          ),
           tabPanel(title = "By Metabolite",
             value = "featureCorr",
             plotlyOutput("primaryFeatureCorrPlt", height = 600) %>%
@@ -657,10 +666,10 @@ server <- function( input, output, session ) {
       k_col = input$primaryCorrPlotSampleNumClusters,
       k_row = input$primaryCorrPlotSampleNumClusters
     )
-#     callModule(module = savePlotlyPDF,
-#                 id = "download_primarySampleCorrPlot",
-#                 prefix = "PrimarySampleCorrPlot_",
-#                 plotlyToSave = reactive(theplt))
+    callModule(module = savePlotlyPDF,
+                id = "download_primarySampleCorrPlot",
+                prefix = "PrimarySampleCorrPlot_",
+                plotlyToSave = reactive(theplt))
     theplt
   })
 
@@ -905,7 +914,6 @@ server <- function( input, output, session ) {
     features <- features %>%  pivot_wider_spec(spec, values_fn = mean)
     features <- as.data.frame(features)
     features <- features %>% drop_na()
-    print(features)
     rownames(features) <- features$Name
     features <- features[,-1]
     features <- t(as.matrix(features))
@@ -916,7 +924,6 @@ server <- function( input, output, session ) {
       pca <- isoMDS(dist(features),k=2)
       pca <- as.data.frame(pca$points)
       colnames(pca) <- c("PC1","PC2")
-      print(head(pca))
     }
     pca$Tissue = spec$Tissue
     pca$Population = spec$Population
@@ -938,7 +945,6 @@ server <- function( input, output, session ) {
     features <- as.data.frame(features)
     rownames(features) <- features$LMID
     features <- features[,-1]
-#     print(features)
     if (input$lipidsCorrPlotSampleNormalize) {
       thecor <- cor(features)
       a <- max(thecor)
@@ -1173,6 +1179,50 @@ server <- function( input, output, session ) {
       }), nrows = length(selected_lipids()$Name)
     )
   })
+
+#   output$primaryCorrelationDownloadPDF <- downloadHandler(
+#       filename = "thefile",
+#       content =  function(file){
+#           print("savePlotlyPDF Download2")
+#           withProgress(message = 'Saving PDF', style = "notification", value = 0, {
+#               for (i in 1:5) {
+#                   incProgress(0.1)
+#                   Sys.sleep(0.01)
+#               }
+#               if(class(plotlyToSave())[1] == "plotly"){
+#                   filename = namehtml
+#                   saveWidget(plotlyToSave(), namehtml)
+#                   webshot::webshot(url = namehtml, file = namepdf, delay = delay, ...)
+#                   file.copy(namepdf, file, overwrite = TRUE)
+#                   file.remove(namehtml)
+#               } else if(class(plotlyToSave())[1] == "gg"){
+#                   ggsave(namepdf, plotlyToSave(), ...)
+#                   file.copy(namepdf, file, overwrite = TRUE)
+#               } else if(class(plotlyToSave())[1] == "upset") {
+#                   filename = namepdf
+#                   pdf(file = namepdf, ...)
+#                   dev.off()
+#                   file.copy(namepdf, file, overwrite = TRUE)
+#               } else if(class(plotlyToSave())[1] == "visNetwork") {
+#                   filename = namehtml
+#                   saveWidget(plotlyToSave(), namehtml, selfcontained = TRUE)
+#                   webshot::webshot(url = namehtml, file = namepdf, delay = delay, ...)
+#                   file.copy(namepdf, file, overwrite = TRUE)
+#                   file.remove(namehtml)
+#               } else{ # supposed to be for base plots, but doesn't work at the moment
+#                   filename = namepdf
+#                   pdf(file = namepdf, ...)
+#                   plotlyToSave()
+#                   dev.off()
+#                   file.copy(namepdf, file, overwrite = TRUE)
+#               }
+#               for (i in 1:5) {
+#                   incProgress(0.1)
+#                   Sys.sleep(0.01)
+#               }
+#           })
+#       }
+#   )
 
 }
 
