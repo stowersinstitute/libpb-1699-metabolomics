@@ -13,6 +13,7 @@ suppressMessages({
   library(webshot)
   library(shinydashboard)
   library(MASS)
+  library(glue)
 })
 
 conflict_prefer("box", "shinydashboard")
@@ -165,13 +166,14 @@ ui <- dashboardPage(
       tabItem(tabName = "primarySelections",
   #       https://stackoverflow.com/questions/27607566/allowing-one-tick-only-in-checkboxgroupinput
         p("Select which metabolites you want to include in the analysis. You can select via compound name, category, or a number of identifier systems. You can also select from different identifier types and the app will remember your selection for each heading and combine them on the summary page. Aftering making your selection, you can view the \"Summary\" tab to see the metabolites you select or proceed to any of the \"Visualization\" tabs.\""),
-        radioButtons(
-          inputId = "selection_type",
-          label = "Select by:",
-          choices = c("Name","KEGG","HMDB","ChEBI","Category"),
-          selected = "Name",
-  #         selected = "Metabolites",
-        ),
+        uiOutput("selection_type"),
+#         radioButtons(
+#           inputId = "selection_type",
+#           label = "Select by:",
+#           choices = c("Name","KEGG","HMDB","ChEBI","Category"),
+#           selected = "Name",
+#           selected = "Metabolites",
+#         ),
   #       https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
         lapply(c("Name","KEGG","HMDB","ChEBI","Category"), function(t) {
           conditionalPanel(
@@ -573,6 +575,16 @@ server <- function(input, output) {
   outputOptions(output, "num_compounds", suspendWhenHidden = FALSE)
 
   output$primary_summary <- renderDataTable(selected_cpds())
+
+  output$selection_type <- renderUI({
+    nc <- nrow(selected_cpds())
+    radioButtons(
+      inputId = "selection_type",
+      label = "Select by:",
+      choices = c(glue("Name ({nc})"),"KEGG","HMDB","ChEBI","Category"),
+      selected = "Name",
+    )
+  })
 
   ###################################################################
   #          Primary Sample PCA                                     #
