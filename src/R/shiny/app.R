@@ -14,6 +14,7 @@ suppressMessages({
   library(shinydashboard)
   library(MASS)
   library(glue)
+  library(stringr)
 })
 
 conflict_prefer("box", "shinydashboard")
@@ -580,22 +581,34 @@ server <- function( input, output, session ) {
 #   https://github.com/rstudio/shiny/pull/1397
 
 #   https://stackoverflow.com/questions/44688147/r-shiny-radio-buttons-not-updating-with-updateradiobuttons
-#   output$selection_type <- renderUI({
-#     nc <- nrow(selected_cpds())
-#     radioButtons(
-#       inputId = "selection_type",
-#       label = "Select by:",
-#       choices = c(glue("Name ({nc})"),"KEGG","HMDB","ChEBI","Category"),
-#       selected = "Name",
-#     )
-#   })
   observe({
-    nc <- nrow(selected_cpds())
+    num_names <- nrow(compounds %>% filter(Name %in% input$selector_Name))
+    num_keggs <- nrow(compounds %>% filter(KEGG %in% input$selector_KEGG))
+    num_hmdbs <- nrow(compounds %>% filter(HMDB %in% input$selector_HMDB))
+    num_chebis <- nrow(compounds %>% filter(ChEBI %in% input$selector_ChEBI))
+    num_cats <- nrow(compounds %>% filter(Category %in% input$selector_Category))
+    name <- glue("Name ({num_names} compounds)")
+    kegg <- glue("KEGG ({num_keggs} compounds)")
+    hmdb <- glue("HMDB ({num_hmdbs} compounds)")
+    chebi <- glue("ChEBI ({num_chebis} compounds)")
+    cat <- glue("Category ({num_cats} compounds)")
+    sel <- str_split(input$selection_type, " ")[[1]][1]
+    if (sel == "Name") {
+      newsel <- name
+    } else if (sel == "KEGG") {
+      newsel <- kegg
+    } else if (sel == "HMDB") {
+      newsel <- hmdb
+    } else if (sel == "ChEBI") {
+      newsel <- chebi
+    } else if (sel == "Category") {
+      newsel <- cat
+    }
     updateRadioButtons(
       session,
       inputId="selection_type",
-      choices = c(glue("Name ({nc})"),"KEGG","HMDB","ChEBI","Category"),
-      selected = input$selection_type,
+      choices = c(name,kegg,hmdb,chebi,cat),
+      selected = newsel,
     )
   })
 
