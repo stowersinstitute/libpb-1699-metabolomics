@@ -27,6 +27,7 @@ main = shakeArgs shakeOptions $ do
          , "out/fig/with-outliers/venn-diagrams-cross-pop.pdf"
          , "out/fig/with-outliers/normalization/density-mtic-normalized.pdf"
          , "out/fig/with-outliers/normalization/sample-weights.pdf"
+         , "out/table/normalization/medians.tex"
          , "out/table/primary/starvation-response/with-outliers/CvS/30vR.tex"
          , "out/work/primary/opls/with-outliers/Nucleotides/Muscle/Ref/PvT.csv" -- OPLS primary cross-pop
          , "out/work/primary/glm/singlefactor/with-outliers/Nucleotides/Muscle/Ref/PvT.csv" -- GLM primary cross-pop
@@ -167,6 +168,10 @@ main = shakeArgs shakeOptions $ do
     "out/fig/with-outliers/normalization/sample-weights.pdf" %> \out -> do
       need [primary_src, "src/python/normalization/sample-weights.py"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/normalization/sample-weights.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds ./data/kegg/compounds.json --sample-sheet data/primary/sample-sheet.csv --hmdb ./data/hmdb/hmdb.json --output ./out/fig/with-outliers/normalization/sample-weights.pdf"
+
+    "out/table/normalization/medians.tex" %> \out -> do
+      need [primary_src, "src/python/normalization/medians.py"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/normalization/medians.py --astyanax ./data/primary/metabolomics-corrected.csv --unnormalized ./data/primary/unnormalized.csv --compounds ./data/kegg/compounds.json --sample-sheet data/primary/sample-sheet.csv --hmdb ./data/hmdb/hmdb.json --output ./out/table/normalization/medians.tex"
 
     -- significance table primary
     "out/supp/with-outliers/primary-pop-compare-significance.xlsx" %> \out -> do

@@ -100,9 +100,6 @@ def tidy(data):
     return DataFrame(output)
 
 tidy_mtic = tidy(astyanax_data)
-#print(tidy_mtic)
-print(tidy_mtic.loc[tidy_mtic['Weight'] < 2.].groupby(['Population','Tissue']).median())
-print(tidy_mtic.groupby(['Population','Tissue']).median())
 
 # plot low weight distributions
 low_wt_data = {}
@@ -133,34 +130,24 @@ for k in range(len(unnormalized_data.columns)):
 tidy_wt_norm = tidy(unnormalized_data)
 
 table = r'''
-\begin{tabular}{ r | r | r}
-\multicolumn{1}{c}{\textbf{Scheme}} & \multicolumn{1}{c}{\textbf{Tissue}} & \multicolumn{1}{c}{\textbf{Population}} & \multicolumn{1}{c}{\thead{Median \\ Low Wt. \\ Samples}} & \multicolumn{1}{c}{\textbf{Median \\ Rest}} \\ \hline
+\begin{tabular}{ r | r | r | r | r}
+\multicolumn{1}{c}{\thead{Scheme}} & \multicolumn{1}{c}{\thead{Tissue}} & \multicolumn{1}{c}{\thead{Population}} & \multicolumn{1}{c}{\thead{Median \\ Low Wt. \\ Samples}} & \multicolumn{1}{c}{\thead{Median \\ Rest}} \\ \hline
 '''
 def make_lines(input_data, scheme, tissue):
+    def sigfigs(u):
+        return f'{u:.2f}'
     lines = ''
     for pop in ['Pachon','Surface']:
         subset = input_data.loc[(input_data['Population'] == pop) & (input_data['Tissue'] == tissue)].reset_index()
-        lowwt = subset.loc[input_data['Weight'] < 2.].reset_index()
-
-        print("8")
-        print(subset.groupby(['Population']).median().reset_index()['Value'])
-        print(str(float(subset.groupby(['Population']).median().reset_index()['Value'])))
-        print("89")
-        print(lowwt.groupby(['Population']).median().reset_index()['Value'])
-        print(str(float(lowwt.groupby(['Population']).median().reset_index()['Value'])))
-
-        lines += r'{scheme} & {tissue} & {pop} & ' + ' & '.join([str(float(d.groupby(['Population']).median().reset_index()['Value'])) for d in [subset,lowwt]]) + r'\\'
+        lowwt = subset.loc[subset['Weight'] < 2.]
+        lines += f'{scheme} & {tissue} & {pop} & ' + ' & '.join([sigfigs(float(d.groupby(['Population']).median().reset_index()['Value'])) for d in [lowwt,subset]]) + r'\\' + '\n'
     return lines
 table += make_lines(tidy_mtic, 'mTIC', 'Liver')
 table += make_lines(tidy_unnorm, 'Unnormalized', 'Liver')
 table += make_lines(tidy_wt_norm, 'Wt. Normalized', 'Liver')
-#print(tidy_mtic)
-#print(tidy_unnorm)
-#print(tidy_wt_norm)
 
 table += '\n'+r'\end{tabular}'
 
-print(table)
 with open(args.output, 'w') as f:
     f.write(table)
 
