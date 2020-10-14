@@ -40,6 +40,13 @@ options(shiny.port = 8080)
 # https://stackoverflow.com/questions/37597136/shinydashboard-is-it-not-possible-to-have-nested-menu-sub-items-cant-make-it
 # http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/118-principal-component-analysis-in-r-prcomp-vs-princomp/
 
+phantomjs_path <- webshot:::find_phantom()
+if (is.null(phantomjs_path)) {
+  webshot::install_phantomjs()
+} else {
+  print(paste('phantomjs is installed -', phantomjs_path))
+}
+
 primary <- read_csv("out/work/primary/merged-mtic.csv") %>% arrange(KEGG)
 primary_cross_pop <- read_csv("out/work/primary/merged-cross-pop.csv") %>% arrange(KEGG)
 primary_cond <- read_csv("out/work/primary/merged-starvation-resp.csv") %>% arrange(KEGG)
@@ -60,47 +67,44 @@ popcolors = c("#b22222","#daa520","#1e90ff")
 # https://rdrr.io/cran/shinyWidgets/man/updateCheckboxGroupButtons.html
 
 savePlotlyPDFUI <- function(id, label = "Download PDF File"){
-    ns <- NS(id)
-    tagList(
-        downloadButton(outputId = ns("downloadPDF"), label = label)
-    )
+  ns <- NS(id)
+  tagList(
+    downloadButton(outputId = ns("downloadPDF"), label = label)
+  )
 }
 
-savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "",
-                          delay = 10, ...){ # these are the default values vwidth = 992, vheight = 744
+savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "", delay = 10, ...)
+  namepdf = paste0('Plot_', prefix, Sys.Date(), ".pdf")
+  namehtml = paste0('Plot_', prefix, Sys.Date(), ".html")
 
-    namepdf = paste0('Plot_', prefix, Sys.Date(), ".pdf")
-    namehtml = paste0('Plot_', prefix, Sys.Date(), ".html")
-
-    output$downloadPDF <- downloadHandler(
-        filename = namepdf,
-        content =  function(file){
-            withProgress(message = 'Saving PDF', style = "notification", value = 0, {
-                for (i in 1:5) {
-                    incProgress(0.1)
-                    Sys.sleep(0.01)
-                }
-                # check what object is being saved, use webshot fror plotly, ggsave for ggplot
-                if(class(plotlyToSave())[1] == "plotly"){
-                    filename = namehtml
-                    saveWidget(as_widget(plotlyToSave()), namehtml, selfcontained = TRUE)
-                    str <- read_file(namehtml)
-                    str <- sub("<script>","<script>Object.setPrototypeOf = Object.setPrototypeOf || ({ __proto__: [] } instanceof Array ? setProtoOf : mixinProperties);function setProtoOf (obj, proto) {obj.__proto__ = proto;return obj;}function mixinProperties (obj, proto) {for (var prop in proto) {if (!Object.prototype.hasOwnProperty.call(obj, prop)) {obj[prop] = proto[prop];}}return obj;}</script><script>",str)
-                    write_file(str,namehtml)
-                    webshot::webshot(url = namehtml, file = namepdf, delay = delay, cliprect = "viewport")
-                    file.copy(namepdf, file, overwrite = TRUE)
-                    file.remove(namehtml)
-                } else if(class(plotlyToSave())[1] == "gg"){
-                    ggsave(namepdf, plotlyToSave(), ...)
-                    file.copy(namepdf, file, overwrite = TRUE)
-                }
-                for (i in 1:5) {
-                    incProgress(0.1)
-                    Sys.sleep(0.01)
-                }
-            })
+  output$downloadPDF <- downloadHandler(
+    filename = namepdf,
+    content =  function(file){
+      withProgress(message = 'Saving PDF', style = "notification", value = 0, {
+        for (i in 1:5) {
+          incProgress(0.1)
+          Sys.sleep(0.01)
         }
-    )
+        if(class(plotlyToSave())[1] == "plotly"){
+          filename = namehtml
+          saveWidget(as_widget(plotlyToSave()), namehtml, selfcontained = TRUE)
+          str <- read_file(namehtml)
+          str <- sub("<script>","<script>Object.setPrototypeOf = Object.setPrototypeOf || ({ __proto__: [] } instanceof Array ? setProtoOf : mixinProperties);function setProtoOf (obj, proto) {obj.__proto__ = proto;return obj;}function mixinProperties (obj, proto) {for (var prop in proto) {if (!Object.prototype.hasOwnProperty.call(obj, prop)) {obj[prop] = proto[prop];}}return obj;}</script><script>",str)
+          write_file(str,namehtml)
+          webshot::webshot(url = namehtml, file = namepdf, delay = delay, cliprect = "viewport")
+          file.copy(namepdf, file, overwrite = TRUE)
+          file.remove(namehtml)
+        } else if(class(plotlyToSave())[1] == "gg"){
+          ggsave(namepdf, plotlyToSave(), ...)
+          file.copy(namepdf, file, overwrite = TRUE)
+        }
+        for (i in 1:5) {
+          incProgress(0.1)
+          Sys.sleep(0.01)
+        }
+      })
+    }
+  )
 }
 
 # Define UI for app that draws a histogram ----
