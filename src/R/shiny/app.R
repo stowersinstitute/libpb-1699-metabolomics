@@ -73,7 +73,7 @@ savePlotlyPDFUI <- function(id, label = "Download PDF File"){
   )
 }
 
-savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "", delay = 10, ...)
+savePlotlyPDF <- function(input, output, session, plotlyToSave, prefix = "", delay = 10, ...) {
   namepdf = paste0('Plot_', prefix, Sys.Date(), ".pdf")
   namehtml = paste0('Plot_', prefix, Sys.Date(), ".html")
 
