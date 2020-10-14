@@ -90,9 +90,9 @@ for comp,groups in comparisons.items():
         catlines[comp,category] = '\n'.join(l+r' \\' for l in lines)
 
 captions = {
-  '30vR': 'Adaptive Response in 30-day Fasting',
-  '4vR': 'Adaptive Response in 4-day Fasting',
-  '30v4': 'Adaptive Response in 30- vs 4-day Fasting',
+  '30vR': 'Adaptive Response in 30-day Fasting.',
+  '4vR': 'Adaptive Response in 4-day Fasting.',
+  '30v4': 'Adaptive Response in 30- vs 4-day Fasting.',
 }
 
 descs = {
@@ -112,17 +112,16 @@ for comp in comparisons:
     tabletex = r'''
 \begin{table*}[t]
 \centering
-\caption{
-{\bf $caption } }
 \begin{tabular}
 {p{1.5cm} | p{3cm} r|p{3cm} r|p{3cm} r}
 \hline
 {\bf Category} & {\bf Brain} & {$\log_2\mathrm{fc}$} & {\bf Muscle} & {$\log_2\mathrm{fc}$} & {\bf Liver} & {$\log_2\mathrm{fc}$} \\ \hline
 $lines
 \end{tabular}
-\begin{flushleft}
+\caption{
+{\bf $caption }
 $desc
-\end{flushleft}
+}
 \label{table:$label}
 \end{table*}
     '''.replace(

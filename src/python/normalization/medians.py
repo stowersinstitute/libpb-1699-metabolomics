@@ -131,7 +131,7 @@ tidy_wt_norm = tidy(unnormalized_data)
 
 table = r'''
 \begin{tabular}{ r | r | r | r | r}
-\multicolumn{1}{c}{\thead{Scheme}} & \multicolumn{1}{c}{\thead{Tissue}} & \multicolumn{1}{c}{\thead{Population}} & \multicolumn{1}{c}{\thead{Median \\ Low Wt. \\ Samples}} & \multicolumn{1}{c}{\thead{Median \\ Rest}} \\ \hline
+\multicolumn{1}{c}{\thead{Scheme}} & \multicolumn{1}{c}{\thead{Tissue}} & \multicolumn{1}{c}{\thead{Population}} & \multicolumn{1}{c}{\thead{Median \\ Low Wt. \\ Samples}} & \multicolumn{1}{c}{\thead{Median \\ All}} \\ \hline
 '''
 def make_lines(input_data, scheme, tissue):
     def sigfigs(u):
