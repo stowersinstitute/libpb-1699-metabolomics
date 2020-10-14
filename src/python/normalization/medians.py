@@ -71,7 +71,6 @@ for pop in pops:
                 weight_matrix.append({'Population':pop,'Tissue':tissue,'Condition':condition,'Mass (mg)':v})
 
 weight_matrix = DataFrame(weight_matrix)
-print(weight_matrix)
 
 
 all_pachon_liver = weight_matrix.loc[weight_matrix['Population'].str.contains('Pachon') & weight_matrix['Tissue'].str.contains('Liver')]
@@ -102,6 +101,7 @@ def tidy(data):
 
 tidy_mtic = tidy(astyanax_data)
 #print(tidy_mtic)
+print(tidy_mtic.loc[tidy_mtic['Weight'] < 2.].groupby(['Population','Tissue']).median())
 print(tidy_mtic.groupby(['Population','Tissue']).median())
 
 # plot low weight distributions
@@ -133,17 +133,26 @@ for k in range(len(unnormalized_data.columns)):
 tidy_wt_norm = tidy(unnormalized_data)
 
 table = r'''
-\begin{table*}[t]
-\centering
 \begin{tabular}{ r | r | r}
-\multicolumn{1}{c}{\textbf{Scheme}} & \multicolumn{1}{c}{\thead{Median \\ Low Wt. \\ Samples}} & \multicolumn{1}{c}{\textbf{Median \\ Rest}} \\ \hline
+\multicolumn{1}{c}{\textbf{Scheme}} & \multicolumn{1}{c}{\textbf{Tissue}} & \multicolumn{1}{c}{\textbf{Population}} & \multicolumn{1}{c}{\thead{Median \\ Low Wt. \\ Samples}} & \multicolumn{1}{c}{\textbf{Median \\ Rest}} \\ \hline
 '''
-table += ' & '.join([tidy_mtic.loc[tidy_mtic['Weight'] < 2.].groupby(['Population','Tissue']).median(),tidy_mtic.groupby(['Population','Tissue']).median()])
-print(table)
+def make_lines(input_data, scheme, tissue):
+    lines = ''
+    for pop in pops:
+        subset = input_data.loc[(input_data['Population'] == pop) & (input_data['Tissue'] == tissue)].reset_index()
+        lowwt = subset.loc[input_data['Weight'] < 2.].reset_index()
+        lines += r'{scheme} & {tissue} & {pop} & ' + ' & '.join([d.groupby(['Population']).median()['Value'] for d in [subset,lowwt]]) + r'\\'
+    return lines
+table += make_lines(tidy_mtic, 'mTIC', 'Liver')
 #print(tidy_mtic)
 #print(tidy_unnorm)
 #print(tidy_wt_norm)
 
+table += '\n'+r'\end{tabular}'
+
+print(table)
+with open(args.output, 'w') as f:
+    f.write(table)
 
 
 
