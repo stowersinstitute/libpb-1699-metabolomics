@@ -57,6 +57,8 @@ Rscript ./src/R/shiny/app.R
 and point your browser to the appropriate port number (which will be displayed on the console).
 The script will install [phantomjs](https://phantomjs.org/) if it is not already installed.
 
+This app is currently hosted at [https://cavefin.shinyapps.io/shiny/](https://cavefin.shinyapps.io/shiny/).
+
 # Notes
 
 ## Newer Python Versions (3.9+)
