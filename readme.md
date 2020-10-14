@@ -1,6 +1,6 @@
 # Introduction
 
-This repository contains the pipeline and Shiny app from the paper "Untargeted Metabolomics of the Cavefish *Astyanax mexicanus* Reveals the Basis of Metabolic Strategies in Adaptation to Extreme Conditions".
+This repository contains the analysis pipeline and Shiny app from the paper "Untargeted Metabolomics of the Cavefish *Astyanax mexicanus* Reveals the Basis of Metabolic Strategies in Adaptation to Extreme Conditions". It should be thought of as a self-contained resource for reproducing the results of the manuscript. The input consists of metabolomics data post peak-calling and normalization in the `data/primary` and `data/lipids` directories.
 
 # Required Software
 
@@ -9,7 +9,7 @@ This repository contains the pipeline and Shiny app from the paper "Untargeted M
 * Python 3.8.3 or later (if running 3.9 or later see below)
 * pipenv 2018.11.26 or later
  - Can usually be obtained by running `sudo pip install pipenv` or `conda install pipenv` if using Anaconda.
-* R (specifically the `Rscript` command, which needs to be on the `PATH`) 3.6.3 or later with the `arm` package installed.
+* R (specifically the `Rscript` command, which needs to be on the `PATH`) 3.6.3 or later.
 
 # Installing dependencies
 
@@ -55,6 +55,7 @@ Rscript ./src/R/shiny/app.R
 ```
 
 and point your browser to the appropriate port number (which will be displayed on the console).
+The script will install [phantomjs](https://phantomjs.org/) if it is not already installed.
 
 # Notes
 
@@ -76,4 +77,4 @@ However, some packages may not work with newer versions of Python or may have di
 
 ## Outliers
 
-An earlier version of the pipeline were applied in parallel to data with and without outliers. Hence, directories may have "with-outliers" in the name.
+An earlier version of the pipeline was applied in parallel to identify outliers and run analysis with and without these datapoints. Currently, no points are excluded as outliers. Directories may still have "with-outliers" in the name in reference to this scheme.
