@@ -101,6 +101,8 @@ def tidy(data):
     return DataFrame(output)
 
 tidy_mtic = tidy(astyanax_data)
+#print(tidy_mtic)
+print(tidy_mtic.groupby(['Population','Tissue']).median())
 
 # plot low weight distributions
 low_wt_data = {}
@@ -113,7 +115,6 @@ for i,pop in zip(range(len(pops)),pops):
     for tissue in tissues:
         if pop in ['Surface','Pachon'] and tissue in ['Liver']:
             d = concat((low_wt_data[pop,tissue,condition] for condition in conditions), axis=1)
-            print(d)
 
 unnormalized_data = concat((ame.row_table['KEGG'], read_csv(os.path.join(os.environ['JENNA_METABOLOMICS_PREFIX'],'unnormalized.csv'), skiprows=8).iloc[:, 8:-3]), axis=1).dropna()
 unnormalized_data = unnormalized_data.set_index('KEGG')
@@ -131,10 +132,17 @@ for k in range(len(unnormalized_data.columns)):
 
 tidy_wt_norm = tidy(unnormalized_data)
 
-
-print(tidy_mtic)
-print(tidy_unnorm)
-print(tidy_wt_norm)
+table = r'''
+\begin{table*}[t]
+\centering
+\begin{tabular}{ r | r | r}
+\multicolumn{1}{c}{\textbf{Scheme}} & \multicolumn{1}{c}{\thead{Median \\ Low Wt. \\ Samples}} & \multicolumn{1}{c}{\textbf{Median \\ Rest}} \\ \hline
+'''
+table += ' & '.join([tidy_mtic.loc[tidy_mtic['Weight'] < 2.].groupby(['Population','Tissue']).median(),tidy_mtic.groupby(['Population','Tissue']).median()])
+print(table)
+#print(tidy_mtic)
+#print(tidy_unnorm)
+#print(tidy_wt_norm)
 
 
 
