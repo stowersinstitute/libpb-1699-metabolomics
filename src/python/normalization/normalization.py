@@ -129,12 +129,13 @@ for i,pop,color in zip(range(len(pops)),pops,['firebrick','goldenrod','dodgerblu
         if i+1<3:
             ax[i,3].xaxis.set_ticklabels([])
 
+# remove axis labels
 for i in range(len(pops)):
     for j in [1,2,3,4]:
         ax[i,j].set_ylabel('')
 
 ax[0,3].set_title('Low Wt Liver')
-#ax[1,3].text(0.5,0.5,'N/A',size=16,ha='center',va='center',transform=ax[i,j].transAxes)
+ax[1,3].text(0.5,0.5,'N/A',size=16,ha='center',va='center',transform=ax[1,3].transAxes)
 
 plt.savefig(os.path.join(args.output_dir,'density-mtic-normalized.pdf'))
 
@@ -148,7 +149,6 @@ unnormalized_data = unnormalized_data.apply(log10)
 
 unnormalized_data = unnormalized_data.rename(ame.get_kegg_to_name_map(), axis=0)
 
-print(unnormalized_data)
 
 # **
 # redo plot with tissue unnormalized data
@@ -204,8 +204,13 @@ for i,pop,color in zip(range(len(pops)),pops,['firebrick','goldenrod','dodgerblu
         if i+1<3:
             ax[i,3].xaxis.set_ticklabels([])
 
+# remove axis labels
+for i in range(len(pops)):
+    for j in [1,2,3,4]:
+        ax[i,j].set_ylabel('')
+
 ax[0,3].set_title('Low Wt Liver')
-ax[1,3].text(0.5,0.5,'N/A',size=16,ha='center',va='center',transform=ax[i,j].transAxes)
+ax[1,3].text(0.5,0.5,'N/A',size=16,ha='center',va='center',transform=ax[1,3].transAxes)
 
 plt.savefig(os.path.join(args.output_dir,'density-unnormalized.pdf'))
 
@@ -268,7 +273,12 @@ for i,pop,color in zip(range(len(pops)),pops,['firebrick','goldenrod','dodgerblu
         if i+1<3:
             ax[i,3].xaxis.set_ticklabels([])
 
+# remove axis labels
+for i in range(len(pops)):
+    for j in [1,2,3,4]:
+        ax[i,j].set_ylabel('')
+
 ax[0,3].set_title('Low Wt Liver')
-ax[1,3].text(0.5,0.5,'N/A',size=16,ha='center',va='center',transform=ax[i,j].transAxes)
+ax[1,3].text(0.5,0.5,'N/A',size=16,ha='center',va='center',transform=ax[1,3].transAxes)
 
 plt.savefig(os.path.join(args.output_dir,'density-weight-normalized.pdf'))
