@@ -162,7 +162,7 @@ main = shakeArgs shakeOptions $ do
 
     "out/fig/with-outliers/normalization/density-mtic-normalized.pdf" %> \out -> do
       need [primary_src, "src/python/normalization/normalization.py"]
-      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/normalization/normalization.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds ./data/kegg/compounds.json --sample-sheet data/primary/sample-sheet.csv --hmdb ./data/hmdb/hmdb.json --output-dir ./out/fig/with-outliers/normalization"
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/normalization/normalization.py --astyanax ./data/primary/metabolomics-corrected.csv --unnormalized ./data/primary/unnormalized.csv --compounds ./data/kegg/compounds.json --sample-sheet data/primary/sample-sheet.csv --hmdb ./data/hmdb/hmdb.json --output-dir ./out/fig/with-outliers/normalization"
 
     "out/fig/with-outliers/normalization/sample-weights.pdf" %> \out -> do
       need [primary_src, "src/python/normalization/sample-weights.py"]

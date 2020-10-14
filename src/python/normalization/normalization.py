@@ -25,6 +25,7 @@ sns.set(font_scale=1.4)
 
 parser = ArgumentParser(description="Plot distribution of peak intensities for various samples.")
 parser.add_argument("--astyanax", type=str, help="Astyanax metabolomics csv file.")
+parser.add_argument("--unnormalized", type=str, help="Unnormalized metabolomics csv file.")
 parser.add_argument("--compounds", type=str, help="KEGG compounds file.")
 parser.add_argument("--sample-sheet", type=str, help="Sample sheet.")
 parser.add_argument("--hmdb", type=str, help="HMDB file.")
@@ -138,8 +139,7 @@ ax[1,3].text(0.5,0.5,'N/A',size=16,ha='center',va='center',transform=ax[1,3].tra
 
 plt.savefig(os.path.join(args.output_dir,'density-mtic-normalized.pdf'))
 
-#print(read_csv(os.path.join(os.environ['JENNA_METABOLOMICS_PREFIX'],'unnormalized.csv'), skiprows=8).iloc[:, 8:-3])
-unnormalized_data = concat((ame.row_table['KEGG'], read_csv(os.path.join(os.environ['JENNA_METABOLOMICS_PREFIX'],'unnormalized.csv'), skiprows=8).iloc[:, 8:-3]), axis=1).dropna()
+unnormalized_data = concat((ame.row_table['KEGG'], read_csv(args.unnormalized, skiprows=8).iloc[:, 8:-3]), axis=1).dropna()
 unnormalized_data = unnormalized_data.set_index('KEGG')
 unnormalized_data.columns = [' '.join(u) for u in ame.treatment_descriptors]
 unnormalized_data = unnormalized_data.loc[:,['pools' not in c for c in unnormalized_data.columns]]
