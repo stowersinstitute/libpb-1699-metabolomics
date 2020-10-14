@@ -71,6 +71,7 @@ for pop in pops:
                 weight_matrix.append({'Population':pop,'Tissue':tissue,'Condition':condition,'Mass (mg)':v})
 
 weight_matrix = DataFrame(weight_matrix)
+print(weight_matrix)
 
 
 all_pachon_liver = weight_matrix.loc[weight_matrix['Population'].str.contains('Pachon') & weight_matrix['Tissue'].str.contains('Liver')]
@@ -95,12 +96,11 @@ def tidy(data):
                 for i,row in data.loc[:,
                         data.columns.str.contains(pop) & data.columns.str.contains(tissue) & data.columns.str.contains(condition)].iterrows():
                     for k,u in enumerate(row,start=1):
-                        output.append({'Name': i, 'Population': pop, 'Tissue': tissue, 'Condition': condition, 'Replicate': k, 'Value': u})
+                        wt = float(weight_matrix.loc[(weight_matrix['Population'] == pop) & (weight_matrix['Tissue'] == tissue) & (weight_matrix['Condition'] == condition),'Mass (mg)'].iloc[k-1])
+                        output.append({'Name': i, 'Population': pop, 'Tissue': tissue, 'Condition': condition, 'Replicate': k, 'Weight': wt, 'Value': u})
     return DataFrame(output)
 
 tidy_mtic = tidy(astyanax_data)
-print(tidy_mtic)
-stop
 
 # plot low weight distributions
 low_wt_data = {}
@@ -120,81 +120,22 @@ unnormalized_data = unnormalized_data.set_index('KEGG')
 unnormalized_data.columns = [' '.join(u) for u in ame.treatment_descriptors]
 unnormalized_data = unnormalized_data.loc[:,['pools' not in c for c in unnormalized_data.columns]]
 unnormalized_data = unnormalized_data.apply(log10)
-
-
 unnormalized_data = unnormalized_data.rename(ame.get_kegg_to_name_map(), axis=0)
 
-
-# **
-# redo plot with tissue unnormalized data
-# **
-
-subsets = {}
-for pop in pops:
-    for tissue in tissues:
-        for condition in conditions:
-            subsets[pop,tissue,condition] = unnormalized_data.loc[:,
-                    unnormalized_data.columns.str.contains(pop) & unnormalized_data.columns.str.contains(tissue) & unnormalized_data.columns.str.contains(condition)]
-
-gridspec_kw = {"height_ratios":[1.]*len(pops), "width_ratios" : [3.,3.,3.,3.,1]}
-fig,ax = plt.subplots(nrows=len(pops),ncols=len(tissues)+2,sharex=False,sharey=False,gridspec_kw=gridspec_kw,figsize=(12.,8.))
-fig.suptitle('$\log_{10}$ Unnormalized Data')
-
-for i,pop in zip(range(len(pops)),pops):
-    for j,tissue in enumerate(tissues):
-        d = concat((subsets[pop,tissue,condition] for condition in conditions), axis=1)
-        print(d)
-
-# plot low weight distributions
-low_wt_data = {}
-for pop in ['Surface','Pachon']:
-    for tissue in ['Liver']:
-        for condition in conditions:
-            low_wt_data[pop,tissue,condition] = unnormalized_data.loc[:,unnormalized_data.columns.str.contains(pop) & unnormalized_data.columns.str.contains(tissue) & unnormalized_data.columns.str.contains(condition) & list(weights_series < 2.)]
-
-for i,pop in zip(range(len(pops)),pops):
-    for tissue in tissues:
-        if pop in ['Surface','Pachon'] and tissue in ['Liver']:
-            d = concat((low_wt_data[pop,tissue,condition] for condition in conditions), axis=1)
-            print(d)
-
-# **
-# redo plot with tissue weight-normalized data
-# **
+tidy_unnorm = tidy(unnormalized_data)
 
 
 w = weights_series.mean()
 for k in range(len(unnormalized_data.columns)):
     unnormalized_data.iloc[:,k] += log10(w)-log10(weights_series.iloc[k])
 
-subsets = {}
-for pop in pops:
-    for tissue in tissues:
-        for condition in conditions:
-            subsets[pop,tissue,condition] = unnormalized_data.loc[:,
-                    unnormalized_data.columns.str.contains(pop) & unnormalized_data.columns.str.contains(tissue) & unnormalized_data.columns.str.contains(condition)]
+tidy_wt_norm = tidy(unnormalized_data)
 
-for i,pop in zip(range(len(pops)),pops):
-    for j,tissue in enumerate(tissues):
-        d = concat((subsets[pop,tissue,condition] for condition in conditions), axis=1)
-        print(d)
 
-# plot low weight distributions
-low_wt_data = {}
-for pop in ['Surface','Pachon']:
-    for tissue in ['Liver']:
-        for condition in conditions:
-            low_wt_data[pop,tissue,condition] = unnormalized_data.loc[:,unnormalized_data.columns.str.contains(pop) & unnormalized_data.columns.str.contains(tissue) & unnormalized_data.columns.str.contains(condition) & list(weights_series < 2.)]
+print(tidy_mtic)
+print(tidy_unnorm)
+print(tidy_wt_norm)
 
-for i,pop in zip(range(len(pops)),pops):
-    for tissue in tissues:
-        if pop in ['Surface','Pachon'] and tissue in ['Liver']:
-            d = concat((low_wt_data[pop,tissue,condition] for condition in conditions), axis=1)
-            print(d)
 
-# remove axis labels
-for i in range(len(pops)):
-    for j in [1,2,3,4]:
-        ax[i,j].set_ylabel('')
 
 
