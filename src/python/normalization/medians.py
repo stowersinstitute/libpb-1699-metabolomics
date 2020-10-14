@@ -138,12 +138,22 @@ table = r'''
 '''
 def make_lines(input_data, scheme, tissue):
     lines = ''
-    for pop in pops:
+    for pop in ['Pachon','Surface']:
         subset = input_data.loc[(input_data['Population'] == pop) & (input_data['Tissue'] == tissue)].reset_index()
         lowwt = subset.loc[input_data['Weight'] < 2.].reset_index()
-        lines += r'{scheme} & {tissue} & {pop} & ' + ' & '.join([d.groupby(['Population']).median()['Value'] for d in [subset,lowwt]]) + r'\\'
+
+        print("8")
+        print(subset.groupby(['Population']).median().reset_index()['Value'])
+        print(str(float(subset.groupby(['Population']).median().reset_index()['Value'])))
+        print("89")
+        print(lowwt.groupby(['Population']).median().reset_index()['Value'])
+        print(str(float(lowwt.groupby(['Population']).median().reset_index()['Value'])))
+
+        lines += r'{scheme} & {tissue} & {pop} & ' + ' & '.join([str(float(d.groupby(['Population']).median().reset_index()['Value'])) for d in [subset,lowwt]]) + r'\\'
     return lines
 table += make_lines(tidy_mtic, 'mTIC', 'Liver')
+table += make_lines(tidy_unnorm, 'Unnormalized', 'Liver')
+table += make_lines(tidy_wt_norm, 'Wt. Normalized', 'Liver')
 #print(tidy_mtic)
 #print(tidy_unnorm)
 #print(tidy_wt_norm)
