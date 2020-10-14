@@ -25,6 +25,7 @@ main = shakeArgs shakeOptions $ do
          , "out/fig/with-outliers/metabolites-of-interest.pdf"
          , "out/fig/with-outliers/primary-shared-starvation-response-30vR.pdf"
          , "out/fig/with-outliers/venn-diagrams-cross-pop.pdf"
+         , "out/fig/with-outliers/normalization/density-mtic-normalized.pdf"
          , "out/table/primary/starvation-response/with-outliers/CvS/30vR.tex"
          , "out/work/primary/opls/with-outliers/Nucleotides/Muscle/Ref/PvT.csv" -- OPLS primary cross-pop
          , "out/work/primary/glm/singlefactor/with-outliers/Nucleotides/Muscle/Ref/PvT.csv" -- GLM primary cross-pop
@@ -157,6 +158,10 @@ main = shakeArgs shakeOptions $ do
     "out/fig/with-outliers/venn-diagrams-cross-pop.pdf" %> \out -> do
       need [primary_src, "src/python/venn/primary-pop-compare.py"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/venn/primary-pop-compare.py --exclude-outlier 0 --level 0.05 --output-dir ./out/fig"
+
+    "out/fig/with-outliers/normalization/density-mtic-normalized.pdf" %> \out -> do
+      need [primary_src, "src/python/normalization/normalization.py"]
+      cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/normalization/normalization.py --astyanax ./data/primary/metabolomics-corrected.csv --compounds ./data/kegg/compounds.json --sample-sheet data/primary/sample-sheet.csv --hmdb ./data/hmdb/hmdb.json --output-dir ./out/fig/with-outliers/normalization"
 
     -- significance table primary
     "out/supp/with-outliers/primary-pop-compare-significance.xlsx" %> \out -> do
