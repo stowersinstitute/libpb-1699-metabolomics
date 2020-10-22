@@ -4,3 +4,5 @@
 /renv
 /out.old
 *.kate-swp
+
+!*/renv/activate.R
