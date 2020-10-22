@@ -70,6 +70,9 @@ savannahsunrise = ['#ff9900','#ca431d','#8b104e','#520556']
 savannahsunrise = ['#2e94b9','#fffdc1','#f0b775','#fd5959']
 #https://colorhunt.co/palette/134419
 highnoon = ['#feffdf','#ffe79a','#ffa952','#ef5a5a']
+# winter tundra
+winter_tundra = ['#d9e4dd','#fbf7f0','#cdc9c3','#555555']
+spring_tundra = ['#94b4a4','#d2f5e3','#e5c5b5','#f4d9c6']
 
 #dusk2
 mycmap = LinearSegmentedColormap.from_list('thecmap', thunderbirds2)
