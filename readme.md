@@ -2,6 +2,11 @@
 
 This repository contains the analysis pipeline and Shiny app from the paper "Untargeted Metabolomics of the Cavefish *Astyanax mexicanus* Reveals the Basis of Metabolic Strategies in Adaptation to Extreme Conditions". It should be thought of as a self-contained resource for reproducing the results of the manuscript. The input consists of metabolomics data post peak-calling and normalization in the `data/primary` and `data/lipids` directories.
 
+# Befire You Begin
+
+If you received the software with an `out` directory residing in this directory, the pipeline has already been run.
+Delete the `out` directory (make a backup if you wish) in order to rerun the pipeline as described below.
+
 # Required Software
 
 * GHC 8.6.5 (or later) and Cabal 2.4.1.0 (or later)
