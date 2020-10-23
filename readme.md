@@ -2,6 +2,10 @@
 
 This repository contains the analysis pipeline and Shiny app from the paper "Untargeted Metabolomics of the Cavefish *Astyanax mexicanus* Reveals the Basis of Metabolic Strategies in Adaptation to Extreme Conditions". It should be thought of as a self-contained resource for reproducing the results of the manuscript. The input consists of metabolomics data post peak-calling and normalization in the `data/primary` and `data/lipids` directories.
 
+# Tested Environments
+
+The pipeline has been tested on Fedora Linux 32 and macOS Mojave 10.14.6.
+
 # Befire You Begin
 
 If you received the software with an `out` directory residing in this directory, the pipeline has already been run.
@@ -24,7 +28,7 @@ First, install all required Python packages:
 python3 -m pipenv install
 ```
 
-Then install all required R packages:
+Then install all required R packages. Some R packages require certain system header files to be present, e.g. the `png` package requires header files for `libpng`. If the following command fails consult the documentation of the respective packages that fail to install.
 
 ```
 Rscript -e "renv::restore()"
