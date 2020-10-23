@@ -113,7 +113,7 @@ for i,pop in zip(range(len(pops)),pops):
         if pop in ['Surface','Pachon'] and tissue in ['Liver']:
             d = concat((low_wt_data[pop,tissue,condition] for condition in conditions), axis=1)
 
-unnormalized_data = concat((ame.row_table['KEGG'], read_csv(os.path.join(os.environ['JENNA_METABOLOMICS_PREFIX'],'unnormalized.csv'), skiprows=8).iloc[:, 8:-3]), axis=1).dropna()
+unnormalized_data = concat((ame.row_table['KEGG'], read_csv('data/primary/unnormalized.csv', skiprows=8).iloc[:, 8:-3]), axis=1).dropna()
 unnormalized_data = unnormalized_data.set_index('KEGG')
 unnormalized_data.columns = [' '.join(u) for u in ame.treatment_descriptors]
 unnormalized_data = unnormalized_data.loc[:,['pools' not in c for c in unnormalized_data.columns]]

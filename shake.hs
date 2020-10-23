@@ -234,6 +234,5 @@ main = shakeArgs shakeOptions $ do
 
     -- Common lipids (i.e. name is not systematic)
     "out/table/lipids/common.tex" %> \out -> do
-      need ["src/python/tables/common-lipids.py", "out/work/lipids/glm/singlefactor/with-outliers/Muscle/Pachon/30vR.csv"]
+      need ["src/python/tables/common-lipids.py", "out/work/lipids/glm/singlefactor/with-outliers/Muscle/Pachon/30vR.csv", "out/work/lipids/glm/singlefactor/with-outliers/Muscle/Ref/PvT.csv"]
       cmd_ (AddEnv "PYTHONPATH" "./src/python") "pipenv run python3 ./src/python/tables/common-lipids.py --input-dir ./out/work/lipids/glm/singlefactor --outlier with-outliers --lipids-normalized ./data/lipids/normalized --lipidmaps-json ./data/lipidmaps/lipidmaps-20200724.json --output ./out/table/lipids/common.tex"
-
