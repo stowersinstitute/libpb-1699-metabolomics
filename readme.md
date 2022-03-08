@@ -6,10 +6,14 @@ This repository contains the analysis pipeline and Shiny app from the paper "Unt
 
 The pipeline has been tested on Fedora Linux 32 and macOS Mojave 10.14.6.
 
-# Befire You Begin
+# Before You Begin
 
 If you received the software with an `out` directory residing in this directory, the pipeline has already been run.
-Delete the `out` directory (make a backup if you wish) in order to rerun the pipeline as described below.
+Delete the `out` directory (make a backup if you wish) and run the following command to clean out the directory before attempting to rerun:
+
+```
+git clean -fXd
+```
 
 # Required Software
 
